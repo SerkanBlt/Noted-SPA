@@ -8953,35 +8953,60 @@ const _SHAPES = [
         ].filter(Boolean).join('\n') + titlesSection;
     }
 
-    /* ── Sistem mesajındaki [[Başlık]] pinlerini context'e çevir ── */
-    function _buildPinnedContext(sysText) {
+    /* ── Sistem mesajındaki pin notlarını context'e çevir ──
+         [[Başlık]]  → her sorguda dahil (her zaman)
+         [[?Başlık]] → yalnızca sorguyla eşleşince dahil (koşullu)   */
+    function _buildPinnedContext(sysText, query) {
         if (!sysText || typeof notes === 'undefined' || !notes.length)
             return { ctx: '', ids: new Set() };
 
-        const titles = [...sysText.matchAll(/\[\[([^\]]{1,120})\]\]/g)].map(m => m[1].trim());
-        if (!titles.length) return { ctx: '', ids: new Set() };
+        /* Her zaman pinler */
+        const alwaysTitles = [...sysText.matchAll(/\[\[([^?\]][^\]]{0,119})\]\]/g)]
+            .map(m => m[1].trim());
+        /* Koşullu pinler */
+        const condTitles = [...sysText.matchAll(/\[\[\?([^\]]{1,120})\]\]/g)]
+            .map(m => m[1].trim());
+
+        if (!alwaysTitles.length && !condTitles.length) return { ctx: '', ids: new Set() };
+
+        /* Koşullu pin için sorgu kelimeleri */
+        const raw   = (query || '').toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+        const words = [...new Set(raw.flatMap(w => [w, _trNorm(w)]))];
 
         const fmt        = new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
         const NOTE_LIMIT = 1500;
         const parts = [];
         const ids   = new Set();
 
-        for (const title of titles) {
-            const note = findNoteByTitle(title);
-            if (!note || note.group === 'Çöp Kutusu') continue;
+        const _addNote = (note, label) => {
             ids.add(note.id);
-
             const date  = note.updatedAt ? fmt.format(new Date(note.updatedAt)) : null;
             const group = note.group && note.group !== 'Genel' ? note.group : null;
             const tags  = note.tags && note.tags.length ? note.tags.map(t => '#' + t).join(' ') : null;
             const meta  = [date, group, tags].filter(Boolean).join(' · ');
-            const head  = meta ? `### ${note.title} 📌\n_${meta}_` : `### ${note.title} 📌`;
-
+            const head  = meta ? `### ${note.title} ${label}\n_${meta}_` : `### ${note.title} ${label}`;
             let content = note.contentMd || '(içerik yok)';
             if (content.length > NOTE_LIMIT)
                 content = content.slice(0, NOTE_LIMIT) + '\n_…(not kısaltıldı)_';
-
             parts.push(`${head}\n\n${content}`);
+        };
+
+        /* Her zaman pinler */
+        for (const title of alwaysTitles) {
+            const note = findNoteByTitle(title);
+            if (!note || note.group === 'Çöp Kutusu' || ids.has(note.id)) continue;
+            _addNote(note, '📌');
+        }
+
+        /* Koşullu pinler — sorguyla eşleşiyorsa ekle */
+        for (const title of condTitles) {
+            const note = findNoteByTitle(title);
+            if (!note || note.group === 'Çöp Kutusu' || ids.has(note.id)) continue;
+            const titleLow = title.toLowerCase();
+            const md       = (note.contentMd || '').toLowerCase();
+            const score    = words.reduce((s, w) =>
+                s + (titleLow.includes(w) ? 4 : 0) + (md.includes(w) ? 1 : 0), 0);
+            if (score > 0) _addNote(note, '📎');
         }
 
         return { ctx: parts.join('\n\n---\n\n'), ids };
@@ -9099,8 +9124,8 @@ const _SHAPES = [
         const defaultSys = 'Sen bir not asistanısın. Kullanıcının notlarına dayanarak Türkçe, özlü ve yardımcı yanıtlar ver.';
         const sysText    = cfg.sys || defaultSys;
 
-        /* Pinlenmiş notlar (sistem mesajındaki [[Başlık]] referansları) */
-        const { ctx: pinnedCtx, ids: pinnedIds } = _buildPinnedContext(sysText);
+        /* Pinlenmiş notlar — [[Başlık]] her zaman, [[?Başlık]] yalnızca eşleşince */
+        const { ctx: pinnedCtx, ids: pinnedIds } = _buildPinnedContext(sysText, text);
 
         /* Keyword RAG — pinlenmiş notları hariç tut */
         const ragCtx = _buildContext(text, cfg.ctx ?? 10, pinnedIds);
