@@ -8846,6 +8846,7 @@ const _SHAPES = [
 
     let _open = false, _busy = false, _abort = null, _history = [];
     const _isFileProtocol = location.protocol === 'file:';
+    const _onLocalhost    = ['localhost', '127.0.0.1'].includes(location.hostname);
 
     /* file:// uyarı şeridini göster */
     const fileWarn = document.getElementById('ai-file-warn');
@@ -9242,8 +9243,7 @@ const _SHAPES = [
 
         /* Localhost → server.js proxy (kurumsal ağ proxy'si için)
            Diğer host → Groq API'ye doğrudan (gerçek web sunucusu) */
-        const _onLocalhost = ['localhost', '127.0.0.1'].includes(location.hostname);
-        const _fetchUrl     = _onLocalhost
+        const _fetchUrl = _onLocalhost
             ? '/api/chat'
             : 'https://api.groq.com/openai/v1/chat/completions';
         const _fetchHeaders = _onLocalhost
