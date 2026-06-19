@@ -8761,7 +8761,7 @@ const _SHAPES = [
     const input    = document.getElementById('ai-input');
     const sendBtn  = document.getElementById('ai-send');
 
-    let _open = false, _busy = false, _abort = null;
+    let _open = false, _busy = false, _abort = null, _history = [];
     const _isFileProtocol = location.protocol === 'file:';
 
     /* file:// uyarı şeridini göster */
@@ -8788,6 +8788,7 @@ const _SHAPES = [
         msgs.appendChild(welcome);
         welcome.style.display = '';
         input.value = ''; resize();
+        _history = [];
     }
 
     /* ── Yardımcılar ── */
@@ -8949,16 +8950,32 @@ const _SHAPES = [
 
         if (!result.length) return '';
 
-        const fmt = new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
+        const fmt          = new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
+        const NOTE_LIMIT   = 1500; /* karakter — ~375 token */
+        const CTX_LIMIT    = 7000; /* toplam context — ~1750 token */
 
-        return result.map(({ n }) => {
+        let totalChars = 0;
+        const parts = [];
+
+        for (const { n } of result) {
             const date  = n.updatedAt ? fmt.format(new Date(n.updatedAt)) : null;
             const group = n.group && n.group !== 'Genel' ? n.group : null;
             const tags  = n.tags && n.tags.length ? n.tags.map(t => '#' + t).join(' ') : null;
             const meta  = [date, group, tags].filter(Boolean).join(' · ');
             const head  = meta ? `### ${n.title}\n_${meta}_` : `### ${n.title}`;
-            return `${head}\n\n${n.contentMd || '(içerik yok)'}`;
-        }).join('\n\n---\n\n');
+
+            let content = n.contentMd || '(içerik yok)';
+            if (content.length > NOTE_LIMIT) {
+                content = content.slice(0, NOTE_LIMIT) + '\n_…(not kısaltıldı)_';
+            }
+
+            const entry = `${head}\n\n${content}`;
+            if (totalChars + entry.length > CTX_LIMIT) break; /* bütçe doldu */
+            parts.push(entry);
+            totalChars += entry.length;
+        }
+
+        return parts.join('\n\n---\n\n');
     }
 
     /* ── Gönder ── */
@@ -8993,10 +9010,14 @@ const _SHAPES = [
             ? `${cfg.sys || defaultSys}\n\n## Kullanıcının ilgili notları:\n\n${ctx}`
             : (cfg.sys || defaultSys);
 
+        /* Sohbet geçmişi — son 6 mesaj (3 tur) */
+        const _historySlice = _history.slice(-6);
+
         const _payload = {
             model,
             messages: [
                 { role: 'system', content: sysContent },
+                ..._historySlice,
                 { role: 'user',   content: text }
             ],
             max_tokens  : 1024,
@@ -9034,6 +9055,10 @@ const _SHAPES = [
         .then(data => {
             const reply = data.choices?.[0]?.message?.content?.trim();
             addBot(reply || '(Boş yanıt geldi)');
+            if (reply) {
+                _history.push({ role: 'user',      content: text  });
+                _history.push({ role: 'assistant', content: reply });
+            }
         })
         .catch(err => {
             const el = document.getElementById('ai-typing-row');
