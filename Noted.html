@@ -8923,20 +8923,19 @@ const _SHAPES = [
     const resizeHandle = document.getElementById('ai-panel-resize-handle');
 
     const _updateFullscreen = () => {
-        panel.classList.toggle('ai-fullscreen', panel.offsetWidth >= window.innerWidth - 1);
+        const cur = parseInt(panel.style.width || '0');
+        panel.classList.toggle('ai-fullscreen', cur > 0 && cur >= window.innerWidth);
     };
 
     (function _initPanelWidth() {
         if (window.innerWidth <= 600) return;
         const saved = parseInt(localStorage.getItem(AI_W_KEY) || '0');
-        if (saved >= AI_W_MIN) panel.style.width = Math.min(saved, AI_W_MAX()) + 'px';
+        if (saved >= AI_W_MIN) panel.style.width = saved + 'px';
         _updateFullscreen();
     })();
 
     window.addEventListener('resize', () => {
         if (window.innerWidth <= 600) { panel.style.width = ''; return; }
-        const cur = parseInt(panel.style.width || '0');
-        if (cur > 0) panel.style.width = Math.min(cur, AI_W_MAX()) + 'px';
         _updateFullscreen();
     });
 
