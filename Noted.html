@@ -8871,30 +8871,94 @@ const _SHAPES = [
         editNote(a.dataset.noteId);
     });
 
-    /* ── Not bağlamı oluştur (keyword skorlama) ── */
+    /* ── Türkçe gövde normalleştirme (basit sonek soyma) ── */
+    function _trNorm(word) {
+        const w = word.toLowerCase()
+            .replace(/[âàáä]/g,'a').replace(/[êèéë]/g,'e')
+            .replace(/[îìíï]/g,'i').replace(/[ôòóö]/g,'o')
+            .replace(/[ûùúü]/g,'u');
+        /* Çoğul ve durum ekleri — uzundan kısaya sıralı */
+        const suffixes = [
+            'larından','lerinden','larında','lerinde','larıyla','leriyle',
+            'larına','lerine','larını','lerini','lardan','lerden',
+            'larda','lerde','larca','lerce','ların','lerin',
+            'larım','lerim','lara','lere','ları','leri',
+            'lar','ler',
+            'ndan','nden','ndan','ndaki','ndeki',
+            'ından','inden','undan','ünden',
+            'daki','deki','taki','teki',
+            'dan','den','tan','ten',
+            'nın','nin','nun','nün',
+            'ının','inin','unun','ünün',
+            'da','de','ta','te',
+            'na','ne','ya','ye',
+            'ım','im','um','üm',
+            'ın','in','un','ün',
+            'ıyla','iyle','uyla','üyle',
+            'la','le',
+            'yı','yi','yu','yü',
+            'ı','i','u','ü','a','e',
+        ];
+        for (const s of suffixes) {
+            if (w.length > s.length + 2 && w.endsWith(s)) {
+                return w.slice(0, w.length - s.length);
+            }
+        }
+        return w;
+    }
+
+    /* ── Not bağlamı oluştur (keyword skorlama + metadata) ── */
     function _buildContext(query, maxNotes) {
         if (typeof notes === 'undefined' || !notes.length) return '';
-        const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
-        const scored = notes
-            .filter(n => n.group !== 'Çöp Kutusu')
-            .map(n => {
-                const title = (n.title || '').toLowerCase();
-                const md    = (n.contentMd || '').toLowerCase();
-                let score   = 0;
-                words.forEach(w => {
-                    if (title.includes(w)) score += 3;
-                    if (md.includes(w))    score += 1;
-                });
-                return { n, score };
-            })
-            .sort((a, b) => b.score - a.score || b.n.updatedAt - a.n.updatedAt)
-            .slice(0, maxNotes)
-            .filter(({ score }) => score > 0 || maxNotes <= 3);
 
-        if (!scored.length) return '';
-        return scored.map(({ n }) =>
-            `### ${n.title}\n${n.contentMd || '(içerik yok)'}`
-        ).join('\n\n---\n\n');
+        const raw   = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+        /* Her kelime için orijinal + gövde → tekil küme */
+        const words = [...new Set(raw.flatMap(w => [w, _trNorm(w)]))];
+
+        const pool  = notes.filter(n => n.group !== 'Çöp Kutusu');
+
+        const scored = pool.map(n => {
+            const title = (n.title  || '').toLowerCase();
+            const md    = (n.contentMd || '').toLowerCase();
+            const tags  = (n.tags   || []).join(' ').toLowerCase();
+            const group = (n.group  || '').toLowerCase();
+            let score   = 0;
+            words.forEach(w => {
+                if (title.includes(w))  score += 4;
+                if (tags.includes(w))   score += 3;
+                if (group.includes(w))  score += 2;
+                if (md.includes(w))     score += 1;
+            });
+            return { n, score };
+        });
+
+        /* Yüksek skorlular önce, eşitlerde en yeni önce */
+        scored.sort((a, b) => b.score - a.score || b.n.updatedAt - a.n.updatedAt);
+
+        /* Eşleşen notlar (score > 0) — en fazla maxNotes adet */
+        let result = scored.filter(x => x.score > 0).slice(0, maxNotes);
+
+        /* Fallback: hiç eşleşme yoksa en son 3 notu gönder */
+        if (!result.length) {
+            result = pool
+                .slice()
+                .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                .slice(0, 3)
+                .map(n => ({ n, score: 0 }));
+        }
+
+        if (!result.length) return '';
+
+        const fmt = new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
+
+        return result.map(({ n }) => {
+            const date  = n.updatedAt ? fmt.format(new Date(n.updatedAt)) : null;
+            const group = n.group && n.group !== 'Genel' ? n.group : null;
+            const tags  = n.tags && n.tags.length ? n.tags.map(t => '#' + t).join(' ') : null;
+            const meta  = [date, group, tags].filter(Boolean).join(' · ');
+            const head  = meta ? `### ${n.title}\n_${meta}_` : `### ${n.title}`;
+            return `${head}\n\n${n.contentMd || '(içerik yok)'}`;
+        }).join('\n\n---\n\n');
     }
 
     /* ── Gönder ── */
