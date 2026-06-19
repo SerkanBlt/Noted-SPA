@@ -9269,6 +9269,7 @@ const _SHAPES = [
                 sys    : sysPrompt?.value.trim() || ''
             }));
             _updateConnStatus();
+            _saveSysMdFile(sysPrompt?.value.trim() || '');
             if (setStatus) {
                 setStatus.textContent = 'Kaydedildi ✓';
                 setStatus.style.color = '';
@@ -9276,7 +9277,44 @@ const _SHAPES = [
             }
         } catch (_) {}
     }
-    function openSettings()  { settingsPanel?.classList.add('open');    loadCfg(); }
+    /* ── Noted_System.md ↔ sistem mesajı textarea ── */
+    let _sysMdTimer = null;
+
+    function _saveSysMdFile(text) {
+        if (!_onLocalhost) return;
+        fetch('/api/sysmd', {
+            method : 'POST',
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            body   : text
+        }).catch(() => {});
+    }
+
+    function _loadSysMdFile() {
+        if (!_onLocalhost) return;
+        fetch('/api/sysmd').then(r => {
+            if (!r.ok && r.status !== 204) return;
+            return r.text();
+        }).then(text => {
+            if (!text || !text.trim()) return;
+            if (sysPrompt) sysPrompt.value = text;
+            /* sessionStorage'ı da güncelle */
+            try {
+                const c = getCfg(); c.sys = text.trim();
+                sessionStorage.setItem(AI_CFG_KEY, JSON.stringify(c));
+            } catch(_) {}
+        }).catch(() => {});
+    }
+
+    sysPrompt?.addEventListener('input', () => {
+        clearTimeout(_sysMdTimer);
+        _sysMdTimer = setTimeout(() => _saveSysMdFile(sysPrompt.value), 800);
+    });
+
+    function openSettings()  {
+        settingsPanel?.classList.add('open');
+        loadCfg();
+        _loadSysMdFile(); /* dosyadan tazele */
+    }
     function closeSettings() { settingsPanel?.classList.remove('open'); }
 
     keyClearBtn?.addEventListener('click', () => {

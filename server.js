@@ -68,6 +68,37 @@ try {
 /* ── HTTP sunucusu ── */
 http.createServer((req, res) => {
 
+    /* /api/sysmd GET → Noted_System.md oku */
+    if (req.url === '/api/sysmd' && req.method === 'GET') {
+        const file = path.join(ROOT, 'Noted_System.md');
+        try {
+            const content = fs.readFileSync(file, 'utf8');
+            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+            res.end(content);
+        } catch(_) {
+            res.writeHead(204); res.end(''); /* dosya yoksa boş */
+        }
+        return;
+    }
+
+    /* /api/sysmd POST → Noted_System.md kaydet */
+    if (req.url === '/api/sysmd' && req.method === 'POST') {
+        let body = '';
+        req.on('data', c => body += c);
+        req.on('end', () => {
+            const file = path.join(ROOT, 'Noted_System.md');
+            try {
+                fs.writeFileSync(file, body, 'utf8');
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end('ok');
+            } catch(e) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end(e.message);
+            }
+        });
+        return;
+    }
+
     /* /api/chat → Groq proxy */
     if (req.url === '/api/chat' && req.method === 'POST') {
         let body = '';
