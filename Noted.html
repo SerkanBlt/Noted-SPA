@@ -1586,21 +1586,33 @@ input[type="file"] { display:none; }
         /* Header */
         .ai-panel-head {
             display:flex; align-items:center; justify-content:space-between;
-            padding:13px 14px; border-bottom:1px solid var(--border);
+            padding:10px 14px; border-bottom:1px solid var(--border);
             flex-shrink:0; gap:8px;
         }
-        .ai-panel-head-left { display:flex; align-items:center; gap:10px; }
+        .ai-panel-head-left {
+            display:grid;
+            grid-template-columns:24px 1fr;
+            grid-template-rows:auto auto;
+            column-gap:10px;
+            align-items:center;
+            flex:1;
+        }
         .ai-avatar-ring {
-            width:24px; height:24px; border-radius:8px; flex-shrink:0;
+            grid-column:1; grid-row:1;
+            width:24px; height:24px; border-radius:8px;
             background:var(--accent-dim);
             display:flex; align-items:center; justify-content:center;
             color:var(--accent); font-size:.78rem;
         }
         .ai-panel-name {
+            grid-column:2; grid-row:1;
             font-size:.95rem; font-weight:700; letter-spacing:1px;
-            color:var(--text-muted);
+            color:var(--text-muted); line-height:1.1;
         }
-        .ai-panel-sub  { font-size:.7rem; color:var(--text-muted); }
+        .ai-panel-sub  {
+            grid-column:2; grid-row:2;
+            font-size:.68rem; color:var(--text-muted); line-height:1.1; margin-top:2px;
+        }
         .ai-panel-acts { display:flex; gap:2px; }
         .ai-icon-btn {
             width:28px; height:28px; border-radius:50%; border:none;
@@ -4071,10 +4083,8 @@ input[type="file"] { display:none; }
     <div class="ai-panel-head">
         <div class="ai-panel-head-left">
             <div class="ai-avatar-ring"><i class="fas fa-wand-magic-sparkles"></i></div>
-            <div>
-                <div class="ai-panel-name">NotedAI</div>
-                <div class="ai-panel-sub">Notlarınızla düşünün</div>
-            </div>
+            <div class="ai-panel-name">NotedAI</div>
+            <div class="ai-panel-sub">Notlarınızla düşünün</div>
         </div>
         <div class="ai-panel-acts">
             <button class="ai-icon-btn" id="ai-new-btn" title="Yeni sohbet"><i class="fas fa-plus"></i></button>
