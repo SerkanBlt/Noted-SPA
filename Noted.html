@@ -1758,16 +1758,9 @@ input[type="file"] { display:none; }
             display:flex; align-items:center; justify-content:space-between; margin:0 0 13px;
         }
         .ai-set-section-head h4 { margin:0; }
-        .sys-expand-btn {
-            display:flex; align-items:center; gap:5px;
-            font-size:.7rem; font-weight:600; color:var(--accent);
-            background:none; border:1px solid var(--accent); border-radius:5px;
-            padding:2px 8px; cursor:pointer; opacity:.8; transition:opacity .15s;
-        }
-        .sys-expand-btn:hover { opacity:1; }
         /* ── Sistem mesajı geniş editör modalı ── */
         .sys-modal-overlay {
-            display:none; position:fixed; inset:0; z-index:3200;
+            display:none; position:fixed; inset:0; z-index:9800;
             background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
             align-items:center; justify-content:center;
         }
@@ -1776,7 +1769,7 @@ input[type="file"] { display:none; }
             background:var(--surface); border:1px solid var(--border);
             border-radius:14px; box-shadow:0 24px 60px rgba(0,0,0,.35);
             display:flex; flex-direction:column;
-            width:min(700px,94vw); height:min(520px,88vh);
+            width:min(860px,92vw); height:min(600px,88vh);
             overflow:hidden;
         }
         .sys-modal-head {
@@ -4074,8 +4067,8 @@ input[type="file"] { display:none; }
             <section class="ai-set-section">
                 <div class="ai-set-section-head">
                     <h4>Sistem Mesajı</h4>
-                    <button class="sys-expand-btn" id="sys-expand-btn" title="Geniş editörde aç">
-                        <i class="fas fa-expand-alt"></i> Genişlet
+                    <button class="ai-icon-btn" id="sys-expand-btn" title="Geniş editörde aç">
+                        <i class="fas fa-expand-alt"></i>
                     </button>
                 </div>
                 <div class="ai-set-field">
