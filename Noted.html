@@ -1693,16 +1693,16 @@ input[type="file"] { display:none; }
         /* Alt satır: saat (sol) + token chip'leri (sağ) */
         .ai-msg-foot {
             display:flex; align-items:center; justify-content:space-between;
-            gap:6px; padding:2px 3px 0; width:100%;
+            gap:6px; padding:3px 3px 0; align-self:stretch;
         }
-        .ai-tok-chips { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+        .ai-tok-chips { display:flex; gap:4px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
         .ai-tok-chip {
+            display:inline-flex; align-items:center;
             font-size:.62rem; color:var(--text-muted);
-            background:rgba(0,0,0,.06); border-radius:5px;
+            background:var(--border); border-radius:5px;
             padding:1px 6px; font-variant-numeric:tabular-nums; white-space:nowrap;
         }
         .ai-tok-warn { color:#e5a000 !important; font-weight:600; }
-        [data-theme="dark"] .ai-tok-chip { background:rgba(255,255,255,.07); }
         .ai-msg-foot .ai-msg-time { padding:0; flex-shrink:0; }
 
         /* Markdown content */
@@ -8948,13 +8948,13 @@ const _SHAPES = [
     }
 
     function _buildTokenChips(usage, remaining, limit) {
-        if (!usage) return '';
-        const fmt  = n => n?.toLocaleString('tr-TR') ?? '?';
+        const fmt  = n => (n != null && n >= 0) ? Number(n).toLocaleString('tr-TR') : '–';
         const pct  = (remaining >= 0 && limit > 0) ? remaining / limit : 1;
-        const warn = pct < 0.2;
+        const warn = pct < 0.2 && remaining >= 0;
         const remChip = remaining >= 0
-            ? `<span class="ai-tok-chip${warn ? ' ai-tok-warn' : ''}">⚡ ${fmt(remaining)}${limit > 0 ? `/${fmt(limit)}` : ''}</span>`
+            ? `<span class="ai-tok-chip${warn ? ' ai-tok-warn' : ''}">⚡${fmt(remaining)}${limit > 0 ? `/${fmt(limit)}` : ''}</span>`
             : '';
+        if (!usage) return remChip; /* sadece rate-limit chip'i göster */
         return `<span class="ai-tok-chip">↑${fmt(usage.prompt_tokens)}</span>` +
                `<span class="ai-tok-chip">↓${fmt(usage.completion_tokens)}</span>` +
                `<span class="ai-tok-chip">∑${fmt(usage.total_tokens)}</span>` +
@@ -9353,8 +9353,9 @@ const _SHAPES = [
             const rl        = data._rateLimit;
             const remaining = _onLocalhost ? (rl?.remaining ?? -1) : remH;
             const limit     = _onLocalhost ? (rl?.limit     ?? -1) : limH;
-            const tokenInfo = data.usage ? { usage: data.usage, remaining, limit } : null;
+            const tokenInfo = { usage: data.usage || null, remaining, limit };
             addBot(reply || '(Boş yanıt geldi)', thinking, tokenInfo);
+            console.debug('[noted] token data:', JSON.stringify(data.usage), 'rl:', remaining, limit);
             if (reply) {
                 _history.push({ role: 'user',      content: text  });
                 _history.push({ role: 'assistant', content: reply });
