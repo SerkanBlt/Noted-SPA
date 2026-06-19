@@ -8923,8 +8923,7 @@ const _SHAPES = [
     const resizeHandle = document.getElementById('ai-panel-resize-handle');
 
     const _updateFullscreen = () => {
-        const cur = parseInt(panel.style.width || '0');
-        panel.classList.toggle('ai-fullscreen', cur > 0 && cur >= window.innerWidth);
+        panel.classList.toggle('ai-fullscreen', panel.offsetWidth >= window.innerWidth - 1);
     };
 
     (function _initPanelWidth() {
