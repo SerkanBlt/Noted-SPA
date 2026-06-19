@@ -4083,25 +4083,6 @@ input[type="file"] { display:none; }
         </div>
     </div>
 
-    <!-- Sistem mesajı geniş editör modalı -->
-    <div class="sys-modal-overlay" id="sys-modal-overlay">
-        <div class="sys-modal" role="dialog" aria-modal="true" aria-labelledby="sys-modal-title">
-            <div class="sys-modal-head">
-                <span class="sys-modal-head-title" id="sys-modal-title">Sistem Mesajı</span>
-                <button class="sys-modal-head-close" id="sys-modal-close" title="Kapat"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="sys-modal-body">
-                <textarea class="sys-modal-textarea" id="sys-modal-textarea"
-                    placeholder="AI'nın nasıl davranacağını özelleştirin… (boş bırakılırsa varsayılan kullanılır)"></textarea>
-                <p class="sys-modal-hint"><kbd>[[Başlık]]</kbd> her zaman · <kbd>[[?Başlık]]</kbd> yalnızca eşleşince</p>
-            </div>
-            <div class="sys-modal-foot">
-                <button class="sys-modal-save" id="sys-modal-save"><i class="fas fa-check"></i> Kaydet</button>
-                <button class="sys-modal-cancel" id="sys-modal-cancel">İptal</button>
-            </div>
-        </div>
-    </div>
-
     <div class="ai-file-warn" id="ai-file-warn">
         <i class="fas fa-triangle-exclamation"></i>
         AI için <strong>start_noted.bat</strong> ile başlatın — <code>file://</code> protokolü API erişimini engeller.
@@ -4126,6 +4107,25 @@ input[type="file"] { display:none; }
             <button id="ai-send" title="Gönder (Enter)"><i class="fas fa-arrow-up"></i></button>
         </div>
         <div class="ai-foot-hint">AI yanıtları doğrulanması gereken konularda yanıltıcı olabilir.</div>
+    </div>
+</div>
+
+<!-- Sistem mesajı geniş editör modalı — body düzeyinde, stacking context dışında -->
+<div class="sys-modal-overlay" id="sys-modal-overlay">
+    <div class="sys-modal" role="dialog" aria-modal="true" aria-labelledby="sys-modal-title">
+        <div class="sys-modal-head">
+            <span class="sys-modal-head-title" id="sys-modal-title">Sistem Mesajı</span>
+            <button class="sys-modal-head-close" id="sys-modal-close" title="Kapat"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="sys-modal-body">
+            <textarea class="sys-modal-textarea" id="sys-modal-textarea"
+                placeholder="AI'nın nasıl davranacağını özelleştirin… (boş bırakılırsa varsayılan kullanılır)"></textarea>
+            <p class="sys-modal-hint"><kbd>[[Başlık]]</kbd> her zaman · <kbd>[[?Başlık]]</kbd> yalnızca eşleşince</p>
+        </div>
+        <div class="sys-modal-foot">
+            <button class="sys-modal-save" id="sys-modal-save"><i class="fas fa-check"></i> Kaydet</button>
+            <button class="sys-modal-cancel" id="sys-modal-cancel">İptal</button>
+        </div>
     </div>
 </div>
 
