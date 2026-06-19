@@ -1568,6 +1568,16 @@ input[type="file"] { display:none; }
             box-shadow:-8px 0 40px rgba(0,0,0,.14);
         }
         #ai-chat-panel.open { transform:translateX(0); }
+        #ai-chat-panel.resizing { transition:none; user-select:none; }
+        #ai-panel-resize-handle {
+            position:absolute; top:0; left:0; bottom:0; width:5px;
+            cursor:col-resize; z-index:1;
+        }
+        #ai-panel-resize-handle:hover,
+        #ai-chat-panel.resizing #ai-panel-resize-handle {
+            background:var(--accent); opacity:.35;
+        }
+        body.ai-resizing { cursor:col-resize !important; user-select:none !important; }
 
         /* Header */
         .ai-panel-head {
@@ -4033,6 +4043,7 @@ input[type="file"] { display:none; }
 <!-- AI Sohbet Paneli -->
 <div id="ai-chat-overlay"></div>
 <div id="ai-chat-panel" aria-hidden="true" role="dialog" aria-label="AI Asistan">
+    <div id="ai-panel-resize-handle" title="Paneli genişlet / daralt"></div>
     <div class="ai-panel-head">
         <div class="ai-panel-head-left">
             <div class="ai-avatar-ring"><i class="fas fa-wand-magic-sparkles"></i></div>
@@ -8891,6 +8902,40 @@ const _SHAPES = [
     /* file:// uyarı şeridini göster */
     const fileWarn = document.getElementById('ai-file-warn');
     if (fileWarn && _isFileProtocol) fileWarn.style.display = 'flex';
+
+    /* ── Panel genişlik — sürükle & bırak ── */
+    const AI_W_KEY  = 'noted_ai_panel_w';
+    const AI_W_MIN  = 280;
+    const AI_W_MAX  = () => Math.min(860, Math.round(window.innerWidth * 0.85));
+    const resizeHandle = document.getElementById('ai-panel-resize-handle');
+
+    (function _initPanelWidth() {
+        const saved = parseInt(localStorage.getItem(AI_W_KEY) || '0');
+        if (saved >= AI_W_MIN) panel.style.width = saved + 'px';
+    })();
+
+    if (resizeHandle) {
+        resizeHandle.addEventListener('mousedown', e => {
+            e.preventDefault();
+            panel.classList.add('resizing');
+            document.body.classList.add('ai-resizing');
+            const onMove = ev => {
+                const w = Math.min(AI_W_MAX(), Math.max(AI_W_MIN, window.innerWidth - ev.clientX));
+                panel.style.width = w + 'px';
+            };
+            const onUp = ev => {
+                const w = Math.min(AI_W_MAX(), Math.max(AI_W_MIN, window.innerWidth - ev.clientX));
+                panel.style.width = w + 'px';
+                try { localStorage.setItem(AI_W_KEY, w); } catch(_) {}
+                panel.classList.remove('resizing');
+                document.body.classList.remove('ai-resizing');
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    }
 
     /* ── Aç / kapat ── */
     function open() {
