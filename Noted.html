@@ -8914,48 +8914,6 @@ const _SHAPES = [
         const pool = notes.filter(n => n.group !== 'Çöp Kutusu');
         if (!pool.length) return '';
 
-        /* Grup sayıları */
-        const groupMap = {};
-        pool.forEach(n => {
-            const g = n.group || 'Genel';
-            groupMap[g] = (groupMap[g] || 0) + 1;
-        });
-        const groupLine = Object.entries(groupMap)
-            .sort((a, b) => b[1] - a[1])
-            .map(([g, c]) => `${g} (${c})`)
-            .join(', ');
-
-        /* Etiket frekansı — en sık 10 */
-        const tagMap = {};
-        pool.forEach(n => (n.tags || []).forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; }));
-        const tagLine = Object.entries(tagMap)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10)
-            .map(([t, c]) => `#${t}${c > 1 ? ` (${c})` : ''}`)
-            .join(', ');
-
-        /* En son güncelleme */
-        const lastDate = pool.reduce((max, n) => Math.max(max, n.updatedAt || 0), 0);
-        const lastStr  = lastDate
-            ? new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' })
-                  .format(new Date(lastDate))
-            : null;
-
-        const lines = [
-            `- Toplam not: ${pool.length}`,
-            `- Gruplar: ${groupLine || '—'}`,
-            tagLine ? `- Etiketler: ${tagLine}` : null,
-            lastStr ? `- Son güncelleme: ${lastStr}` : null,
-        ];
-        return lines.filter(Boolean).join('\n');
-    }
-
-    /* ── Koleksiyon meta özeti (her sorguda gönderilir, küçük ve sabit) ── */
-    function _buildMeta() {
-        if (typeof notes === 'undefined' || !notes.length) return '';
-        const pool = notes.filter(n => n.group !== 'Çöp Kutusu');
-        if (!pool.length) return '';
-
         const groupMap = {};
         pool.forEach(n => { const g = n.group || 'Genel'; groupMap[g] = (groupMap[g] || 0) + 1; });
         const groupLine = Object.entries(groupMap)
@@ -9011,28 +8969,41 @@ const _SHAPES = [
             const tags  = (n.tags   || []).join(' ').toLowerCase();
             const group = (n.group  || '').toLowerCase();
             let score   = 0;
+
+            /* Sorgu kelimeleri → not içeriğinde ara */
             words.forEach(w => {
                 if (title.includes(w))  score += 4;
                 if (tags.includes(w))   score += 3;
                 if (group.includes(w))  score += 2;
                 if (md.includes(w))     score += 1;
             });
+
+            /* Başlık kelimeleri → sorguda ara (İngilizce başlık + Türkçe sorgu durumu) */
+            title.split(/[\s\-_/]+/).filter(w => w.length >= 3).forEach(tw => {
+                if (raw.some(qw => qw === tw || qw.includes(tw) || tw.includes(qw)))
+                    score += 3;
+            });
+
             return { n, score };
         });
 
         /* Yüksek skorlular önce, eşitlerde en yeni önce */
-        scored.sort((a, b) => b.score - a.score || b.n.updatedAt - a.n.updatedAt);
+        scored.sort((a, b) => b.score - a.score || (b.n.updatedAt || 0) - (a.n.updatedAt || 0));
 
         /* Eşleşen notlar (score > 0) — en fazla maxNotes adet */
         let result = scored.filter(x => x.score > 0).slice(0, maxNotes);
 
-        /* Fallback: hiç eşleşme yoksa en son 3 notu gönder */
-        if (!result.length) {
-            result = pool
+        /* Fallback: eşleşme 5'ten azsa en son notlarla tamamla */
+        const FILL_TARGET = Math.min(5, maxNotes);
+        if (result.length < FILL_TARGET) {
+            const ids  = new Set(result.map(x => x.n.id));
+            const fill = pool
                 .slice()
                 .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
-                .slice(0, 3)
+                .filter(n => !ids.has(n.id))
+                .slice(0, FILL_TARGET - result.length)
                 .map(n => ({ n, score: 0 }));
+            result = [...result, ...fill];
         }
 
         if (!result.length) return '';
