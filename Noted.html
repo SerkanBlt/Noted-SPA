@@ -1690,17 +1690,19 @@ input[type="file"] { display:none; }
             max-height:300px; overflow-y:auto;
         }
 
-        /* Token kullanım satırı */
-        .ai-token-info {
-            display:flex; flex-wrap:wrap; gap:6px; align-items:center;
-            font-size:.63rem; color:var(--text-muted); padding:3px 3px 0;
+        /* Alt satır: token chip'leri + saat */
+        .ai-msg-foot {
+            display:flex; align-items:center; justify-content:flex-end;
+            gap:5px; padding:2px 3px 0; flex-wrap:wrap;
         }
-        .ai-token-info .ai-tok-chip {
+        .ai-tok-chip {
+            font-size:.63rem; color:var(--text-muted);
             background:var(--surface-2,rgba(0,0,0,.06)); border-radius:5px;
             padding:1px 6px; font-variant-numeric:tabular-nums;
         }
-        .ai-token-info .ai-tok-warn { color:#e5a000; font-weight:600; }
-        [data-theme="dark"] .ai-token-info .ai-tok-chip { background:rgba(255,255,255,.07); }
+        .ai-tok-warn { color:#e5a000 !important; font-weight:600; }
+        [data-theme="dark"] .ai-tok-chip { background:rgba(255,255,255,.07); }
+        .ai-msg-foot .ai-msg-time { padding:0; }
 
         /* Markdown content */
         .ai-bubble p{margin:0 0 7px;} .ai-bubble p:last-child{margin:0;}
@@ -8944,20 +8946,18 @@ const _SHAPES = [
         msgs.appendChild(d); scrollDown(); return d;
     }
 
-    function _buildTokenInfo(usage, remaining, limit) {
+    function _buildTokenChips(usage, remaining, limit) {
         if (!usage) return '';
         const fmt  = n => n?.toLocaleString('tr-TR') ?? '?';
         const pct  = (remaining >= 0 && limit > 0) ? remaining / limit : 1;
         const warn = pct < 0.2;
-        const remLabel = remaining >= 0
-            ? `<span class="ai-tok-chip${warn ? ' ai-tok-warn' : ''}">⚡ kalan ${fmt(remaining)}${limit > 0 ? `/${fmt(limit)}` : ''} TPM</span>`
+        const remChip = remaining >= 0
+            ? `<span class="ai-tok-chip${warn ? ' ai-tok-warn' : ''}">⚡ ${fmt(remaining)}${limit > 0 ? `/${fmt(limit)}` : ''}</span>`
             : '';
-        return `<div class="ai-token-info">
-            <span class="ai-tok-chip">↑ ${fmt(usage.prompt_tokens)}</span>
-            <span class="ai-tok-chip">↓ ${fmt(usage.completion_tokens)}</span>
-            <span class="ai-tok-chip">∑ ${fmt(usage.total_tokens)}</span>
-            ${remLabel}
-        </div>`;
+        return `<span class="ai-tok-chip">↑${fmt(usage.prompt_tokens)}</span>` +
+               `<span class="ai-tok-chip">↓${fmt(usage.completion_tokens)}</span>` +
+               `<span class="ai-tok-chip">∑${fmt(usage.total_tokens)}</span>` +
+               remChip;
     }
 
     /* <think>…</think> bloğunu ayır — hem inline tag hem reasoning_content alanı */
@@ -8982,13 +8982,12 @@ const _SHAPES = [
                 <div class="ai-think-body">${esc(thinking)}</div>
                </details>`
             : '';
-        const tokHtml = tokenInfo ? _buildTokenInfo(tokenInfo.usage, tokenInfo.remaining, tokenInfo.limit) : '';
+        const tokChips = tokenInfo ? _buildTokenChips(tokenInfo.usage, tokenInfo.remaining, tokenInfo.limit) : '';
         d.innerHTML = `<div class="ai-bot-row">
             <div class="ai-bot-av"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="ai-bubble">${thinkHtml}${mdToHtml(text)}</div>
         </div>
-        ${tokHtml}
-        <span class="ai-msg-time">${now()}</span>`;
+        <div class="ai-msg-foot">${tokChips}<span class="ai-msg-time">${now()}</span></div>`;
         msgs.appendChild(d); scrollDown();
     }
 
