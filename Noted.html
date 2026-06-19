@@ -1690,19 +1690,20 @@ input[type="file"] { display:none; }
             max-height:300px; overflow-y:auto;
         }
 
-        /* Alt satır: token chip'leri + saat */
+        /* Alt satır: saat (sol) + token chip'leri (sağ) */
         .ai-msg-foot {
-            display:flex; align-items:center; justify-content:flex-end;
-            gap:5px; padding:2px 3px 0; flex-wrap:wrap;
+            display:flex; align-items:center; justify-content:space-between;
+            gap:6px; padding:2px 3px 0; width:100%;
         }
+        .ai-tok-chips { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
         .ai-tok-chip {
-            font-size:.63rem; color:var(--text-muted);
-            background:var(--surface-2,rgba(0,0,0,.06)); border-radius:5px;
-            padding:1px 6px; font-variant-numeric:tabular-nums;
+            font-size:.62rem; color:var(--text-muted);
+            background:rgba(0,0,0,.06); border-radius:5px;
+            padding:1px 6px; font-variant-numeric:tabular-nums; white-space:nowrap;
         }
         .ai-tok-warn { color:#e5a000 !important; font-weight:600; }
         [data-theme="dark"] .ai-tok-chip { background:rgba(255,255,255,.07); }
-        .ai-msg-foot .ai-msg-time { padding:0; }
+        .ai-msg-foot .ai-msg-time { padding:0; flex-shrink:0; }
 
         /* Markdown content */
         .ai-bubble p{margin:0 0 7px;} .ai-bubble p:last-child{margin:0;}
@@ -8987,7 +8988,10 @@ const _SHAPES = [
             <div class="ai-bot-av"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="ai-bubble">${thinkHtml}${mdToHtml(text)}</div>
         </div>
-        <div class="ai-msg-foot">${tokChips}<span class="ai-msg-time">${now()}</span></div>`;
+        <div class="ai-msg-foot">
+            <span class="ai-msg-time">${now()}</span>
+            ${tokChips ? `<div class="ai-tok-chips">${tokChips}</div>` : ''}
+        </div>`;
         msgs.appendChild(d); scrollDown();
     }
 
