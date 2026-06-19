@@ -1573,10 +1573,6 @@ input[type="file"] { display:none; }
             position:absolute; top:0; left:0; bottom:0; width:5px;
             cursor:col-resize; z-index:1;
         }
-        #ai-panel-resize-handle:hover,
-        #ai-chat-panel.resizing #ai-panel-resize-handle {
-            background:var(--accent); opacity:.35;
-        }
         body.ai-resizing { cursor:col-resize !important; user-select:none !important; }
 
         /* Header */
@@ -8915,26 +8911,49 @@ const _SHAPES = [
     })();
 
     if (resizeHandle) {
-        resizeHandle.addEventListener('mousedown', e => {
-            e.preventDefault();
+        const _applyW = clientX => {
+            const w = Math.min(AI_W_MAX(), Math.max(AI_W_MIN, window.innerWidth - clientX));
+            panel.style.width = w + 'px';
+            return w;
+        };
+        const _startResize = () => {
             panel.classList.add('resizing');
             document.body.classList.add('ai-resizing');
-            const onMove = ev => {
-                const w = Math.min(AI_W_MAX(), Math.max(AI_W_MIN, window.innerWidth - ev.clientX));
-                panel.style.width = w + 'px';
-            };
-            const onUp = ev => {
-                const w = Math.min(AI_W_MAX(), Math.max(AI_W_MIN, window.innerWidth - ev.clientX));
-                panel.style.width = w + 'px';
-                try { localStorage.setItem(AI_W_KEY, w); } catch(_) {}
-                panel.classList.remove('resizing');
-                document.body.classList.remove('ai-resizing');
+        };
+        const _endResize = w => {
+            try { localStorage.setItem(AI_W_KEY, w); } catch(_) {}
+            panel.classList.remove('resizing');
+            document.body.classList.remove('ai-resizing');
+        };
+
+        resizeHandle.addEventListener('mousedown', e => {
+            e.preventDefault();
+            _startResize();
+            const onMove = ev => _applyW(ev.clientX);
+            const onUp   = ev => {
+                _endResize(_applyW(ev.clientX));
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
             };
             document.addEventListener('mousemove', onMove);
             document.addEventListener('mouseup', onUp);
         });
+
+        resizeHandle.addEventListener('touchstart', e => {
+            e.preventDefault();
+            _startResize();
+            const onMove = ev => { ev.preventDefault(); _applyW(ev.touches[0].clientX); };
+            const onEnd  = ev => {
+                const x = (ev.changedTouches[0] || ev.touches[0])?.clientX ?? window.innerWidth / 2;
+                _endResize(_applyW(x));
+                resizeHandle.removeEventListener('touchmove', onMove);
+                resizeHandle.removeEventListener('touchend',  onEnd);
+                resizeHandle.removeEventListener('touchcancel', onEnd);
+            };
+            resizeHandle.addEventListener('touchmove',   onMove, { passive: false });
+            resizeHandle.addEventListener('touchend',    onEnd,  { passive: false });
+            resizeHandle.addEventListener('touchcancel', onEnd,  { passive: false });
+        }, { passive: false });
     }
 
     /* ── Aç / kapat ── */
