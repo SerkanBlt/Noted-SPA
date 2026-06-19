@@ -8908,6 +8908,48 @@ const _SHAPES = [
         return w;
     }
 
+    /* ── Koleksiyon meta özeti (her sorguda gönderilir, küçük ve sabit) ── */
+    function _buildMeta() {
+        if (typeof notes === 'undefined' || !notes.length) return '';
+        const pool = notes.filter(n => n.group !== 'Çöp Kutusu');
+        if (!pool.length) return '';
+
+        /* Grup sayıları */
+        const groupMap = {};
+        pool.forEach(n => {
+            const g = n.group || 'Genel';
+            groupMap[g] = (groupMap[g] || 0) + 1;
+        });
+        const groupLine = Object.entries(groupMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([g, c]) => `${g} (${c})`)
+            .join(', ');
+
+        /* Etiket frekansı — en sık 10 */
+        const tagMap = {};
+        pool.forEach(n => (n.tags || []).forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; }));
+        const tagLine = Object.entries(tagMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([t, c]) => `#${t}${c > 1 ? ` (${c})` : ''}`)
+            .join(', ');
+
+        /* En son güncelleme */
+        const lastDate = pool.reduce((max, n) => Math.max(max, n.updatedAt || 0), 0);
+        const lastStr  = lastDate
+            ? new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' })
+                  .format(new Date(lastDate))
+            : null;
+
+        const lines = [
+            `- Toplam not: ${pool.length}`,
+            `- Gruplar: ${groupLine || '—'}`,
+            tagLine ? `- Etiketler: ${tagLine}` : null,
+            lastStr ? `- Son güncelleme: ${lastStr}` : null,
+        ];
+        return lines.filter(Boolean).join('\n');
+    }
+
     /* ── Not bağlamı oluştur (keyword skorlama + metadata) ── */
     function _buildContext(query, maxNotes) {
         if (typeof notes === 'undefined' || !notes.length) return '';
@@ -9006,9 +9048,15 @@ const _SHAPES = [
         const ctx   = _buildContext(text, cfg.ctx ?? 10);
         const model = cfg.model || 'mistralai/Mistral-7B-Instruct-v0.3';
         const defaultSys = 'Sen bir not asistanısın. Kullanıcının notlarına dayanarak Türkçe, özlü ve yardımcı yanıtlar ver.';
-        const sysContent = ctx
-            ? `${cfg.sys || defaultSys}\n\n## Kullanıcının ilgili notları:\n\n${ctx}`
-            : (cfg.sys || defaultSys);
+
+        /* ── Koleksiyon meta özeti (grup, etiket, toplam) ── */
+        const _meta = _buildMeta();
+
+        const sysContent = [
+            cfg.sys || defaultSys,
+            _meta   ? `## Not Koleksiyonu Yapısı\n${_meta}` : '',
+            ctx     ? `## İlgili Notlar\n\n${ctx}` : ''
+        ].filter(Boolean).join('\n\n');
 
         /* Sohbet geçmişi — son 6 mesaj (3 tur) */
         const _historySlice = _history.slice(-6);
