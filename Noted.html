@@ -1690,6 +1690,18 @@ input[type="file"] { display:none; }
             max-height:300px; overflow-y:auto;
         }
 
+        /* Token kullanım satırı */
+        .ai-token-info {
+            display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+            font-size:.63rem; color:var(--text-muted); padding:3px 3px 0;
+        }
+        .ai-token-info .ai-tok-chip {
+            background:var(--surface-2,rgba(0,0,0,.06)); border-radius:5px;
+            padding:1px 6px; font-variant-numeric:tabular-nums;
+        }
+        .ai-token-info .ai-tok-warn { color:#e5a000; font-weight:600; }
+        [data-theme="dark"] .ai-token-info .ai-tok-chip { background:rgba(255,255,255,.07); }
+
         /* Markdown content */
         .ai-bubble p{margin:0 0 7px;} .ai-bubble p:last-child{margin:0;}
         .ai-bubble code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:.81em;}
@@ -8932,6 +8944,22 @@ const _SHAPES = [
         msgs.appendChild(d); scrollDown(); return d;
     }
 
+    function _buildTokenInfo(usage, remaining, limit) {
+        if (!usage) return '';
+        const fmt  = n => n?.toLocaleString('tr-TR') ?? '?';
+        const pct  = (remaining >= 0 && limit > 0) ? remaining / limit : 1;
+        const warn = pct < 0.2;
+        const remLabel = remaining >= 0
+            ? `<span class="ai-tok-chip${warn ? ' ai-tok-warn' : ''}">⚡ kalan ${fmt(remaining)}${limit > 0 ? `/${fmt(limit)}` : ''} TPM</span>`
+            : '';
+        return `<div class="ai-token-info">
+            <span class="ai-tok-chip">↑ ${fmt(usage.prompt_tokens)}</span>
+            <span class="ai-tok-chip">↓ ${fmt(usage.completion_tokens)}</span>
+            <span class="ai-tok-chip">∑ ${fmt(usage.total_tokens)}</span>
+            ${remLabel}
+        </div>`;
+    }
+
     /* <think>…</think> bloğunu ayır — hem inline tag hem reasoning_content alanı */
     function _extractThinking(text, reasoningContent) {
         let thinking = (reasoningContent || '').trim();
@@ -8943,7 +8971,7 @@ const _SHAPES = [
         return { thinking, reply };
     }
 
-    function addBot(text, thinking) {
+    function addBot(text, thinking, tokenInfo) {
         const el = document.getElementById('ai-typing-row');
         if (el) el.remove();
         const d = document.createElement('div');
@@ -8954,10 +8982,12 @@ const _SHAPES = [
                 <div class="ai-think-body">${esc(thinking)}</div>
                </details>`
             : '';
+        const tokHtml = tokenInfo ? _buildTokenInfo(tokenInfo.usage, tokenInfo.remaining, tokenInfo.limit) : '';
         d.innerHTML = `<div class="ai-bot-row">
             <div class="ai-bot-av"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="ai-bubble">${thinkHtml}${mdToHtml(text)}</div>
         </div>
+        ${tokHtml}
         <span class="ai-msg-time">${now()}</span>`;
         msgs.appendChild(d); scrollDown();
     }
@@ -9302,21 +9332,29 @@ const _SHAPES = [
             body   : _fetchBody
         })
         .then(r => {
+            /* Web modunda rate-limit header'ları burada okunur */
+            const remH = parseInt(r.headers.get('x-ratelimit-remaining-tokens') ?? '-1');
+            const limH = parseInt(r.headers.get('x-ratelimit-limit-tokens') ?? '-1');
             if (!r.ok) return r.text().then(body => {
                 let msg = `HTTP ${r.status}`;
                 try { const e = JSON.parse(body); msg = e.error?.message || e.error || msg; } catch(_) {}
                 throw new Error(`${r.status}: ${msg}`);
             });
-            return r.json();
+            return r.json().then(data => ({ data, remH, limH }));
         })
-        .then(data => {
+        .then(({ data, remH, limH }) => {
             const raw              = data.choices?.[0]?.message?.content?.trim() || '';
             const reasoningContent = data.choices?.[0]?.message?.reasoning_content || '';
             const { thinking, reply } = _extractThinking(raw, reasoningContent);
-            addBot(reply || '(Boş yanıt geldi)', thinking);
+            /* Localhost: rate-limit server.js tarafından _rateLimit alanına enjekte edilir */
+            const rl        = data._rateLimit;
+            const remaining = _onLocalhost ? (rl?.remaining ?? -1) : remH;
+            const limit     = _onLocalhost ? (rl?.limit     ?? -1) : limH;
+            const tokenInfo = data.usage ? { usage: data.usage, remaining, limit } : null;
+            addBot(reply || '(Boş yanıt geldi)', thinking, tokenInfo);
             if (reply) {
                 _history.push({ role: 'user',      content: text  });
-                _history.push({ role: 'assistant', content: reply }); /* thinking history'ye girmiyor */
+                _history.push({ role: 'assistant', content: reply });
             }
         })
         .catch(err => {

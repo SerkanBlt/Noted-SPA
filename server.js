@@ -37,8 +37,14 @@ $encNoBom = New-Object Text.UTF8Encoding($false)
 try {
     $hdrs = @{ Authorization = 'Bearer ${apiKey}' }
     $r    = Invoke-WebRequest -Uri $uri -Method POST -Headers $hdrs -Body $body -ContentType 'application/json; charset=utf-8' -TimeoutSec 60 -UseBasicParsing
-    $bytes = $r.RawContentStream.ToArray()
-    $text  = [Text.Encoding]::UTF8.GetString($bytes)
+    $bytes     = $r.RawContentStream.ToArray()
+    $text      = [Text.Encoding]::UTF8.GetString($bytes)
+    $remaining = try { [int]($r.Headers['x-ratelimit-remaining-tokens']) } catch { -1 }
+    $limitTpm  = try { [int]($r.Headers['x-ratelimit-limit-tokens'])     } catch { -1 }
+    $resetMs   = try { $r.Headers['x-ratelimit-reset-tokens']            } catch { '' }
+    $inject    = ',"_rateLimit":{"remaining":' + $remaining + ',"limit":' + $limitTpm + ',"reset":"' + $resetMs + '"}'
+    $lastBrace = $text.LastIndexOf('}')
+    if ($lastBrace -ge 0) { $text = $text.Substring(0, $lastBrace) + $inject + '}' }
     [IO.File]::WriteAllText('${tmpOut}', $text, $encNoBom)
 } catch {
     $msg = $_.Exception.Message -replace '\\\\', '/' -replace '"', "'"
