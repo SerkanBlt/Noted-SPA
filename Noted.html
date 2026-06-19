@@ -8976,12 +8976,23 @@ const _SHAPES = [
             ? new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' }).format(new Date(lastDate))
             : null;
 
+        /* Tüm not başlıkları — AI semantik çıkarım yapabilsin */
+        const titleLines = pool
+            .slice()
+            .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+            .map(n => {
+                const g = (n.group && n.group !== 'Genel') ? ` [${n.group}]` : '';
+                const t = (n.tags && n.tags.length) ? ` #${n.tags.join(' #')}` : '';
+                return `- ${n.title}${g}${t}`;
+            });
+        const titlesSection = `\n\n## Tüm Not Başlıkları\n${titleLines.join('\n')}`;
+
         return [
             `- Toplam not: ${pool.length}`,
             `- Gruplar: ${groupLine || '—'}`,
             tagLine ? `- Etiketler: ${tagLine}` : null,
             lastStr ? `- Son güncelleme: ${lastStr}` : null,
-        ].filter(Boolean).join('\n');
+        ].filter(Boolean).join('\n') + titlesSection;
     }
 
     /* ── Not bağlamı oluştur (keyword skorlama + metadata) ── */
