@@ -1773,7 +1773,10 @@ input[type="file"] { display:none; }
             padding:1px 4px; font-size:.68rem;
         }
 
-        @media(max-width:600px){ #ai-chat-panel{width:100vw;} }
+        @media(max-width:600px){
+            #ai-chat-panel { width:100vw !important; }
+            #ai-panel-resize-handle { display:none; }
+        }
 
         /* ── AI Settings Panel ── */
         #ai-settings-panel {
@@ -8906,6 +8909,7 @@ const _SHAPES = [
     const resizeHandle = document.getElementById('ai-panel-resize-handle');
 
     (function _initPanelWidth() {
+        if (window.innerWidth <= 600) return;
         const saved = parseInt(localStorage.getItem(AI_W_KEY) || '0');
         if (saved >= AI_W_MIN) panel.style.width = saved + 'px';
     })();
@@ -8939,21 +8943,6 @@ const _SHAPES = [
             document.addEventListener('mouseup', onUp);
         });
 
-        resizeHandle.addEventListener('touchstart', e => {
-            e.preventDefault();
-            _startResize();
-            const onMove = ev => { ev.preventDefault(); _applyW(ev.touches[0].clientX); };
-            const onEnd  = ev => {
-                const x = (ev.changedTouches[0] || ev.touches[0])?.clientX ?? window.innerWidth / 2;
-                _endResize(_applyW(x));
-                resizeHandle.removeEventListener('touchmove', onMove);
-                resizeHandle.removeEventListener('touchend',  onEnd);
-                resizeHandle.removeEventListener('touchcancel', onEnd);
-            };
-            resizeHandle.addEventListener('touchmove',   onMove, { passive: false });
-            resizeHandle.addEventListener('touchend',    onEnd,  { passive: false });
-            resizeHandle.addEventListener('touchcancel', onEnd,  { passive: false });
-        }, { passive: false });
     }
 
     /* ── Aç / kapat ── */
