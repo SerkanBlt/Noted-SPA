@@ -1754,6 +1754,72 @@ input[type="file"] { display:none; }
             font-size:.69rem; font-weight:700; text-transform:uppercase;
             letter-spacing:.07em; color:var(--text-muted); margin:0 0 13px;
         }
+        .ai-set-section-head {
+            display:flex; align-items:center; justify-content:space-between; margin:0 0 13px;
+        }
+        .ai-set-section-head h4 { margin:0; }
+        .sys-expand-btn {
+            display:flex; align-items:center; gap:5px;
+            font-size:.7rem; font-weight:600; color:var(--accent);
+            background:none; border:1px solid var(--accent); border-radius:5px;
+            padding:2px 8px; cursor:pointer; opacity:.8; transition:opacity .15s;
+        }
+        .sys-expand-btn:hover { opacity:1; }
+        /* ── Sistem mesajı geniş editör modalı ── */
+        .sys-modal-overlay {
+            display:none; position:fixed; inset:0; z-index:3200;
+            background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
+            align-items:center; justify-content:center;
+        }
+        .sys-modal-overlay.open { display:flex; }
+        .sys-modal {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:14px; box-shadow:0 24px 60px rgba(0,0,0,.35);
+            display:flex; flex-direction:column;
+            width:min(700px,94vw); height:min(520px,88vh);
+            overflow:hidden;
+        }
+        .sys-modal-head {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:14px 18px 12px; border-bottom:1px solid var(--border);
+        }
+        .sys-modal-head-title {
+            font-size:.78rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:.07em; color:var(--text-muted);
+        }
+        .sys-modal-head-close {
+            background:none; border:none; cursor:pointer; padding:4px;
+            color:var(--text-muted); font-size:1rem; line-height:1;
+            border-radius:5px; transition:color .15s;
+        }
+        .sys-modal-head-close:hover { color:var(--text); }
+        .sys-modal-body { flex:1; padding:14px 18px; display:flex; flex-direction:column; }
+        .sys-modal-textarea {
+            flex:1; width:100%; resize:none; font-family:inherit; font-size:.82rem;
+            line-height:1.6; background:var(--input-bg,var(--surface2));
+            color:var(--text); border:1px solid var(--border); border-radius:8px;
+            padding:12px 14px; outline:none; transition:border-color .15s;
+        }
+        .sys-modal-textarea:focus { border-color:var(--accent); }
+        .sys-modal-hint {
+            font-size:.7rem; color:var(--text-muted); margin-top:8px; line-height:1.4;
+        }
+        .sys-modal-foot {
+            display:flex; align-items:center; gap:10px; padding:12px 18px 14px;
+            border-top:1px solid var(--border);
+        }
+        .sys-modal-save {
+            background:var(--accent); color:#fff; border:none; border-radius:7px;
+            padding:7px 18px; font-size:.82rem; font-weight:600; cursor:pointer;
+            transition:opacity .15s;
+        }
+        .sys-modal-save:hover { opacity:.88; }
+        .sys-modal-cancel {
+            background:none; border:1px solid var(--border); border-radius:7px;
+            padding:7px 16px; font-size:.82rem; color:var(--text-muted);
+            cursor:pointer; transition:border-color .15s,color .15s;
+        }
+        .sys-modal-cancel:hover { border-color:var(--text-muted); color:var(--text); }
         .ai-set-field { margin-bottom:14px; }
         .ai-set-field:last-child { margin-bottom:0; }
         .ai-set-field label {
@@ -4006,7 +4072,12 @@ input[type="file"] { display:none; }
             </section>
 
             <section class="ai-set-section">
-                <h4>Sistem Mesajı</h4>
+                <div class="ai-set-section-head">
+                    <h4>Sistem Mesajı</h4>
+                    <button class="sys-expand-btn" id="sys-expand-btn" title="Geniş editörde aç">
+                        <i class="fas fa-expand-alt"></i> Genişlet
+                    </button>
+                </div>
                 <div class="ai-set-field">
                     <textarea id="ai-sys-prompt" rows="4" placeholder="AI'nın nasıl davranacağını özelleştirin… (boş bırakılırsa varsayılan kullanılır)"></textarea>
                 </div>
@@ -4016,6 +4087,25 @@ input[type="file"] { display:none; }
         <div class="ai-set-foot">
             <button id="ai-set-save"><i class="fas fa-check"></i> Kaydet</button>
             <span id="ai-set-status"></span>
+        </div>
+    </div>
+
+    <!-- Sistem mesajı geniş editör modalı -->
+    <div class="sys-modal-overlay" id="sys-modal-overlay">
+        <div class="sys-modal" role="dialog" aria-modal="true" aria-labelledby="sys-modal-title">
+            <div class="sys-modal-head">
+                <span class="sys-modal-head-title" id="sys-modal-title">Sistem Mesajı</span>
+                <button class="sys-modal-head-close" id="sys-modal-close" title="Kapat"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="sys-modal-body">
+                <textarea class="sys-modal-textarea" id="sys-modal-textarea"
+                    placeholder="AI'nın nasıl davranacağını özelleştirin… (boş bırakılırsa varsayılan kullanılır)"></textarea>
+                <p class="sys-modal-hint"><kbd>[[Başlık]]</kbd> her zaman · <kbd>[[?Başlık]]</kbd> yalnızca eşleşince</p>
+            </div>
+            <div class="sys-modal-foot">
+                <button class="sys-modal-save" id="sys-modal-save"><i class="fas fa-check"></i> Kaydet</button>
+                <button class="sys-modal-cancel" id="sys-modal-cancel">İptal</button>
+            </div>
         </div>
     </div>
 
@@ -9388,6 +9478,43 @@ const _SHAPES = [
     settingsBtn ?.addEventListener('click', openSettings);
     setBackBtn  ?.addEventListener('click', closeSettings);
     setSaveBtn  ?.addEventListener('click', saveCfg);
+
+    /* ── Sistem mesajı geniş editör modalı ── */
+    const sysModalOverlay = document.getElementById('sys-modal-overlay');
+    const sysModalTa      = document.getElementById('sys-modal-textarea');
+    const sysExpandBtn    = document.getElementById('sys-expand-btn');
+    const sysModalClose   = document.getElementById('sys-modal-close');
+    const sysModalSave    = document.getElementById('sys-modal-save');
+    const sysModalCancel  = document.getElementById('sys-modal-cancel');
+
+    function openSysModal() {
+        if (sysModalTa && sysPrompt) sysModalTa.value = sysPrompt.value;
+        sysModalOverlay?.classList.add('open');
+        setTimeout(() => sysModalTa?.focus(), 60);
+    }
+    function closeSysModal() {
+        sysModalOverlay?.classList.remove('open');
+    }
+    function saveSysModal() {
+        if (sysPrompt && sysModalTa) {
+            sysPrompt.value = sysModalTa.value;
+            sysPrompt.dispatchEvent(new Event('input')); /* auto-save tetikle */
+        }
+        closeSysModal();
+    }
+
+    sysExpandBtn ?.addEventListener('click', openSysModal);
+    sysModalClose?.addEventListener('click', closeSysModal);
+    sysModalCancel?.addEventListener('click', closeSysModal);
+    sysModalSave ?.addEventListener('click', saveSysModal);
+    /* Overlay'e tıklayınca kapat */
+    sysModalOverlay?.addEventListener('click', e => {
+        if (e.target === sysModalOverlay) closeSysModal();
+    });
+    /* Escape tuşu */
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && sysModalOverlay?.classList.contains('open')) closeSysModal();
+    });
 
     tempSlider?.addEventListener('input', () => {
         if (tempVal) tempVal.textContent = tempSlider.value;
