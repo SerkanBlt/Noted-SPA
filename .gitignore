@@ -1,2 +1,4 @@
 .vs/
 *.user
+config.json
+Groq API Key.txt

@@ -68,6 +68,18 @@ try {
 /* ── HTTP sunucusu ── */
 http.createServer((req, res) => {
 
+    /* /api/config GET → config.json'dan API key döndür (localhost only) */
+    if (req.url === '/api/config' && req.method === 'GET') {
+        try {
+            const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'config.json'), 'utf8'));
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ groqApiKey: cfg.groqApiKey || '' }));
+        } catch(_) {
+            res.writeHead(204); res.end('');
+        }
+        return;
+    }
+
     /* /api/sysmd GET → Noted_System.md oku */
     if (req.url === '/api/sysmd' && req.method === 'GET') {
         const file = path.join(ROOT, 'Noted_System.md');

@@ -4025,7 +4025,7 @@ input[type="file"] { display:none; }
                         <button class="ai-key-toggle" type="button" title="Göster / Gizle"><i class="fas fa-eye"></i></button>
                         <button class="ai-key-clear" id="ai-key-clear" type="button" title="Anahtarı temizle"><i class="fas fa-xmark"></i></button>
                     </div>
-                    <p class="ai-set-hint"><i class="fas fa-lock" style="font-size:.6rem"></i> Yalnızca bu tarayıcı oturumunda tutulur (sessionStorage), sayfa kapatınca silinir. <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--accent)">Groq key al →</a></p>
+                    <p class="ai-set-hint" id="ai-key-hint"><i class="fas fa-lock" style="font-size:.6rem"></i> Bu tarayıcıda kalıcı tutulur. <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--accent)">Groq key al →</a></p>
                 </div>
                 <div class="ai-set-field">
                     <label for="ai-model">Model</label>
@@ -9327,12 +9327,18 @@ const _SHAPES = [
 
     const AI_CFG_KEY = 'noted_ai_cfg_v1';
     const AI_SYS_KEY = 'noted_ai_sys_v1'; /* sys prompt — localStorage'da kalıcı */
+    const AI_KEY_LS  = 'noted_ai_key_v1'; /* api key  — localStorage'da kalıcı */
     const keyClearBtn = document.getElementById('ai-key-clear');
     const panelSub    = panel.querySelector('.ai-panel-sub');
 
     function getCfg() {
         try {
             const c = JSON.parse(sessionStorage.getItem(AI_CFG_KEY) || '{}');
+            /* api key yoksa localStorage'dan doldur */
+            if (!c.apiKey) {
+                const saved = localStorage.getItem(AI_KEY_LS);
+                if (saved) c.apiKey = saved;
+            }
             /* sys prompt boşsa localStorage'dan doldur */
             if (!c.sys) {
                 const saved = localStorage.getItem(AI_SYS_KEY);
@@ -9400,6 +9406,7 @@ const _SHAPES = [
                 ctx    : parseInt(ctxCount?.value ?? 10),
                 sys    : sysVal
             }));
+            try { if (key) localStorage.setItem(AI_KEY_LS, key); } catch(_) {}
             try { localStorage.setItem(AI_SYS_KEY, sysVal); } catch(_) {}
             _updateConnStatus();
             _saveSysMdFile(sysVal);
@@ -9419,6 +9426,28 @@ const _SHAPES = [
             method : 'POST',
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
             body   : text
+        }).catch(() => {});
+    }
+
+    /* ── Sunucu config'inden API key otomatik yükle (yalnızca localhost) ── */
+    function _loadServerConfig() {
+        if (!_onLocalhost) return;
+        fetch('/api/config').then(r => r.ok ? r.json() : null).then(data => {
+            if (!data?.groqApiKey) return;
+            const key = data.groqApiKey.trim();
+            if (!key.startsWith('gsk_')) return;
+            /* sessionStorage ve localStorage'a yaz */
+            try {
+                const c = getCfg(); c.apiKey = key;
+                sessionStorage.setItem(AI_CFG_KEY, JSON.stringify(c));
+                localStorage.setItem(AI_KEY_LS, key);
+            } catch(_) {}
+            /* UI'ı güncelle */
+            if (apiKeyInput && !apiKeyInput.value) apiKeyInput.value = key;
+            _updateConnStatus();
+            /* Hint güncelle */
+            const hint = document.getElementById('ai-key-hint');
+            if (hint) hint.innerHTML = '<i class="fas fa-server" style="font-size:.6rem"></i> Sunucu config\'inden otomatik yüklendi.';
         }).catch(() => {});
     }
 
@@ -9460,6 +9489,7 @@ const _SHAPES = [
         try {
             const c = getCfg(); c.apiKey = '';
             sessionStorage.setItem(AI_CFG_KEY, JSON.stringify(c));
+            localStorage.removeItem(AI_KEY_LS);
         } catch(_) {}
         _updateConnStatus();
         if (setStatus) {
@@ -9520,6 +9550,7 @@ const _SHAPES = [
     });
 
     loadCfg();
+    _loadServerConfig(); /* localhost'ta config.json'dan API key otomatik al */
 
     /* ── Olaylar ── */
     openBtn  ?.addEventListener('click', () => _open ? close() : open());
