@@ -1706,6 +1706,21 @@ input[type="file"] { display:none; }
         }
         @keyframes ai-blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
 
+        /* Not içi AI toolbar butonları */
+        .tb.tb-ai { color:var(--accent); }
+        .tb.tb-ai.tb-ai-busy { opacity:.5; cursor:wait; pointer-events:none; }
+        .tb.tb-ai.tb-ai-busy i { animation:ai-tb-spin .8s linear infinite; }
+        @keyframes ai-tb-spin { to { transform:rotate(360deg); } }
+        .tb-ai-notif {
+            position:fixed; z-index:9300; padding:5px 11px; border-radius:8px;
+            font-size:.78rem; pointer-events:none; max-width:280px;
+            background:var(--surface); border:1px solid var(--border);
+            color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,.2);
+            opacity:0; transform:translateY(-6px);
+            transition:opacity .18s, transform .18s;
+        }
+        .tb-ai-notif.show { opacity:1; transform:translateY(0); }
+
         /* Düşünme (thinking) bloğu */
         .ai-think {
             margin-bottom:8px; border-radius:10px;
@@ -4566,6 +4581,11 @@ input[type="file"] { display:none; }
     <button class="tb tb-fsize" id="tb-fsize-dec" title="Yazı küçült">A-</button>
     <span class="tb-fsize-val" id="tb-fsize-val">18</span>
     <button class="tb tb-fsize" id="tb-fsize-inc" title="Yazı büyüt">A+</button>
+    <div class="tb-sep"></div>
+    <button class="tb tb-ai" data-ai-action="expand"    title="Genişlet — seçili metni AI ile genişlet"><i class="fas fa-expand"></i></button>
+    <button class="tb tb-ai" data-ai-action="summarize" title="Özetle — seçili metni AI ile özetle"><i class="fas fa-compress"></i></button>
+    <button class="tb tb-ai" data-ai-action="fix"       title="Düzelt — yazım hatalarını AI ile düzelt"><i class="fas fa-spell-check"></i></button>
+    <button class="tb tb-ai" data-ai-action="continue"  title="Devam Et — seçili metnin devamını yaz"><i class="fas fa-angles-right"></i></button>
 </div>
 
 <!-- Kolon Düzeni dropdown -->
@@ -6191,9 +6211,58 @@ $('toolbar').addEventListener('mousedown', e => {
         } else {
             runSpecial(btn.dataset.special);
         }
+    } else if (btn.dataset.aiAction) {
+        const sel = window.getSelection();
+        const selectedText = sel ? sel.toString().trim() : '';
+        if (!selectedText) return;
+        /* Range'i klonla — async sonuçta restore için */
+        const savedRange = sel.getRangeAt(0).cloneRange();
+        const savedEt    = _activeEditTarget || $content;
+
+        btn.classList.add('tb-ai-busy');
+
+        if (typeof window._inlineAI !== 'function') {
+            btn.classList.remove('tb-ai-busy');
+            _tbAiNotif(btn, '⚠️ AI paneli henüz yüklenmedi.');
+            return;
+        }
+
+        window._inlineAI(
+            btn.dataset.aiAction,
+            selectedText,
+            result => {
+                btn.classList.remove('tb-ai-busy');
+                if (!result) return;
+                savedEt.focus();
+                const s = window.getSelection();
+                s.removeAllRanges();
+                s.addRange(savedRange);
+                document.execCommand('insertText', false, result);
+            },
+            errMsg => {
+                btn.classList.remove('tb-ai-busy');
+                _tbAiNotif(btn, '⚠️ ' + errMsg);
+            }
+        );
+        return; /* updateToolbarState async sonrası gereksiz */
     }
     updateToolbarState();
 });
+
+function _tbAiNotif(anchorBtn, msg) {
+    const n = document.createElement('div');
+    n.className = 'tb-ai-notif';
+    n.textContent = msg;
+    document.body.appendChild(n);
+    const r = anchorBtn.getBoundingClientRect();
+    n.style.top  = (r.bottom + 6) + 'px';
+    n.style.left = Math.max(4, r.left - 60) + 'px';
+    requestAnimationFrame(() => n.classList.add('show'));
+    setTimeout(() => {
+        n.classList.remove('show');
+        setTimeout(() => n.remove(), 220);
+    }, 3200);
+}
 
 /* ══ TODO KLAVYE YÖNETİMİ ══ */
 /* $content + panel içerikleri için ortak handler — capture phase */
@@ -9885,6 +9954,79 @@ const _SHAPES = [
             else close();
         }
     });
+
+    /* ── Not içi AI — toolbar butonları için dışa açık API ── */
+    window._inlineAI = async function(action, selectedText, onResult, onError) {
+        if (_isFileProtocol) { onError('file:// protokolü desteklenmiyor.'); return; }
+        const cfg = getCfg();
+        if (!cfg.apiKey) { onError('API anahtarı ayarlanmamış. AI Ayarlarından Groq key girin.'); return; }
+
+        const prompts = {
+            expand:    'Aşağıdaki metni genişlet ve detaylandır. Yalnızca genişletilmiş metni döndür, giriş cümlesi veya açıklama ekleme:',
+            summarize: 'Aşağıdaki metni özetle. Yalnızca özeti döndür, giriş cümlesi veya açıklama ekleme:',
+            fix:       'Aşağıdaki metnin Türkçe yazım ve dilbilgisi hatalarını düzelt. Yalnızca düzeltilmiş metni döndür, açıklama ekleme:',
+            continue:  'Aşağıdaki metnin devamını yaz. Yalnızca devam metnini döndür, giriş cümlesi veya açıklama ekleme:'
+        };
+        const prompt = prompts[action];
+        if (!prompt) { onError('Geçersiz eylem.'); return; }
+
+        const model = cfg.model || 'llama-3.3-70b-versatile';
+        const payload = {
+            model,
+            messages: [
+                { role: 'system', content: 'Sen bir metin editörü asistanısın. Yalnızca istenen dönüşümü yap, hiçbir açıklama veya giriş ekleme. Yanıtını düz metin olarak ver.' },
+                { role: 'user', content: `${prompt}\n\n${selectedText}` }
+            ],
+            max_tokens: 1024,
+            temperature: 0.5,
+            stream: !_onLocalhost,
+            ...(!_onLocalhost ? { stream_options: { include_usage: true } } : {})
+        };
+
+        const fetchUrl = _onLocalhost
+            ? '/api/chat'
+            : 'https://api.groq.com/openai/v1/chat/completions';
+        const fetchHeaders = _onLocalhost
+            ? { 'Content-Type': 'application/json' }
+            : { 'Content-Type': 'application/json', 'Authorization': `Bearer ${cfg.apiKey}` };
+        const fetchBody = _onLocalhost
+            ? JSON.stringify({ _apiKey: cfg.apiKey, ...payload })
+            : JSON.stringify(payload);
+
+        try {
+            const r = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: fetchBody });
+            if (!r.ok) {
+                const body = await r.text();
+                let msg = `HTTP ${r.status}`;
+                try { const e = JSON.parse(body); msg = e.error?.message || e.error || msg; } catch(_) {}
+                throw new Error(msg);
+            }
+            if (!_onLocalhost) {
+                const reader = r.body.getReader();
+                const decoder = new TextDecoder();
+                let rawText = '', sseBuffer = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    sseBuffer += decoder.decode(value, { stream: true });
+                    const lines = sseBuffer.split('\n');
+                    sseBuffer = lines.pop() ?? '';
+                    for (const line of lines) {
+                        if (!line.startsWith('data: ')) continue;
+                        const chunk = line.slice(6).trim();
+                        if (chunk === '[DONE]') continue;
+                        try { rawText += JSON.parse(chunk).choices?.[0]?.delta?.content ?? ''; } catch(_) {}
+                    }
+                }
+                onResult(rawText.trim());
+            } else {
+                const data = await r.json();
+                onResult((data.choices?.[0]?.message?.content || '').trim());
+            }
+        } catch (err) {
+            onError(err.message || 'Bilinmeyen hata');
+        }
+    };
 })();
 
 /* ══ BOOKMARK GUTTER ══ */
