@@ -1576,6 +1576,8 @@ input[type="file"] { display:none; }
             border-radius:0; border:none; border-left:1px solid var(--border);
         }
         body:has(#ai-chat-panel.open.ai-fullscreen) { overflow:hidden; }
+        #ai-chat-panel.ai-fullscreen .ai-msgs { scrollbar-width:none; }
+        #ai-chat-panel.ai-fullscreen .ai-msgs::-webkit-scrollbar { display:none; }
         #ai-panel-resize-handle {
             position:absolute; top:0; left:0; bottom:0; width:5px;
             cursor:col-resize; z-index:1;
