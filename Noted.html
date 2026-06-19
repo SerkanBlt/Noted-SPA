@@ -8950,6 +8950,40 @@ const _SHAPES = [
         return lines.filter(Boolean).join('\n');
     }
 
+    /* ── Koleksiyon meta özeti (her sorguda gönderilir, küçük ve sabit) ── */
+    function _buildMeta() {
+        if (typeof notes === 'undefined' || !notes.length) return '';
+        const pool = notes.filter(n => n.group !== 'Çöp Kutusu');
+        if (!pool.length) return '';
+
+        const groupMap = {};
+        pool.forEach(n => { const g = n.group || 'Genel'; groupMap[g] = (groupMap[g] || 0) + 1; });
+        const groupLine = Object.entries(groupMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(([g, c]) => `${g} (${c})`)
+            .join(', ');
+
+        const tagMap = {};
+        pool.forEach(n => (n.tags || []).forEach(t => { tagMap[t] = (tagMap[t] || 0) + 1; }));
+        const tagLine = Object.entries(tagMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([t, c]) => `#${t}${c > 1 ? ` (${c})` : ''}`)
+            .join(', ');
+
+        const lastDate = pool.reduce((max, n) => Math.max(max, n.updatedAt || 0), 0);
+        const lastStr  = lastDate
+            ? new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' }).format(new Date(lastDate))
+            : null;
+
+        return [
+            `- Toplam not: ${pool.length}`,
+            `- Gruplar: ${groupLine || '—'}`,
+            tagLine ? `- Etiketler: ${tagLine}` : null,
+            lastStr ? `- Son güncelleme: ${lastStr}` : null,
+        ].filter(Boolean).join('\n');
+    }
+
     /* ── Not bağlamı oluştur (keyword skorlama + metadata) ── */
     function _buildContext(query, maxNotes) {
         if (typeof notes === 'undefined' || !notes.length) return '';
