@@ -9395,7 +9395,7 @@ const _SHAPES = [
         addUser(text); input.value = ''; resize();
         showTyping();
 
-        const model      = cfg.model || 'mistralai/Mistral-7B-Instruct-v0.3';
+        const model      = cfg.model || 'llama-3.3-70b-versatile';
         const defaultSys = 'Sen bir not asistanısın. Kullanıcının notlarına dayanarak Türkçe, özlü ve yardımcı yanıtlar ver.';
         const sysText    = cfg.sys || defaultSys;
 
@@ -9557,7 +9557,7 @@ const _SHAPES = [
         panelSub.style.color  = hasKey ? 'var(--success, #3fb950)' : 'var(--text-muted)';
     }
     function _resolveModel() {
-        if (!modelSel) return 'mistralai/Mistral-7B-Instruct-v0.3';
+        if (!modelSel) return 'llama-3.3-70b-versatile';
         if (modelSel.value === '__custom__') return customModelInput?.value.trim() || '';
         return modelSel.value;
     }
@@ -9603,7 +9603,7 @@ const _SHAPES = [
             const sysVal = sysPrompt?.value.trim() || '';
             sessionStorage.setItem(AI_CFG_KEY, JSON.stringify({
                 apiKey : key,
-                model  : model || 'mistralai/Mistral-7B-Instruct-v0.3',
+                model  : model || 'llama-3.3-70b-versatile',
                 temp   : parseFloat(tempSlider?.value ?? 0.7),
                 ctx    : parseInt(ctxCount?.value ?? 10),
                 sys    : sysVal
