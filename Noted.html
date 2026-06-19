@@ -1665,6 +1665,31 @@ input[type="file"] { display:none; }
             30%{opacity:1;transform:translateY(-4px);}
         }
 
+        /* Düşünme (thinking) bloğu */
+        .ai-think {
+            margin-bottom:8px; border-radius:10px;
+            border:1px solid color-mix(in srgb,var(--border) 80%,var(--accent) 20%);
+            background:color-mix(in srgb,var(--surface) 96%,var(--accent) 4%);
+            overflow:hidden;
+        }
+        .ai-think summary {
+            list-style:none; cursor:pointer; padding:6px 11px;
+            font-size:.72rem; font-weight:600; color:var(--text-muted);
+            display:flex; align-items:center; gap:6px; user-select:none;
+        }
+        .ai-think summary::-webkit-details-marker { display:none; }
+        .ai-think summary .ai-think-arrow {
+            font-size:.62rem; transition:transform .2s; display:inline-block;
+        }
+        .ai-think[open] summary .ai-think-arrow { transform:rotate(90deg); }
+        .ai-think summary:hover { color:var(--text); }
+        .ai-think-body {
+            padding:8px 12px 10px; font-size:.77rem; line-height:1.6;
+            color:var(--text-muted); border-top:1px solid var(--border);
+            white-space:pre-wrap; font-family:monospace;
+            max-height:300px; overflow-y:auto;
+        }
+
         /* Markdown content */
         .ai-bubble p{margin:0 0 7px;} .ai-bubble p:last-child{margin:0;}
         .ai-bubble code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:.81em;}
@@ -8907,14 +8932,31 @@ const _SHAPES = [
         msgs.appendChild(d); scrollDown(); return d;
     }
 
-    function addBot(text) {
+    /* <think>…</think> bloğunu ayır — hem inline tag hem reasoning_content alanı */
+    function _extractThinking(text, reasoningContent) {
+        let thinking = (reasoningContent || '').trim();
+        let reply    = text;
+        if (!thinking) {
+            const m = text.match(/^<think>([\s\S]*?)<\/think>\s*/);
+            if (m) { thinking = m[1].trim(); reply = text.slice(m[0].length).trim(); }
+        }
+        return { thinking, reply };
+    }
+
+    function addBot(text, thinking) {
         const el = document.getElementById('ai-typing-row');
         if (el) el.remove();
         const d = document.createElement('div');
         d.className = 'ai-msg bot';
+        const thinkHtml = thinking
+            ? `<details class="ai-think">
+                <summary><span class="ai-think-arrow">▶</span> Düşünme süreci</summary>
+                <div class="ai-think-body">${esc(thinking)}</div>
+               </details>`
+            : '';
         d.innerHTML = `<div class="ai-bot-row">
             <div class="ai-bot-av"><i class="fas fa-wand-magic-sparkles"></i></div>
-            <div class="ai-bubble">${mdToHtml(text)}</div>
+            <div class="ai-bubble">${thinkHtml}${mdToHtml(text)}</div>
         </div>
         <span class="ai-msg-time">${now()}</span>`;
         msgs.appendChild(d); scrollDown();
@@ -9268,11 +9310,13 @@ const _SHAPES = [
             return r.json();
         })
         .then(data => {
-            const reply = data.choices?.[0]?.message?.content?.trim();
-            addBot(reply || '(Boş yanıt geldi)');
+            const raw              = data.choices?.[0]?.message?.content?.trim() || '';
+            const reasoningContent = data.choices?.[0]?.message?.reasoning_content || '';
+            const { thinking, reply } = _extractThinking(raw, reasoningContent);
+            addBot(reply || '(Boş yanıt geldi)', thinking);
             if (reply) {
                 _history.push({ role: 'user',      content: text  });
-                _history.push({ role: 'assistant', content: reply });
+                _history.push({ role: 'assistant', content: reply }); /* thinking history'ye girmiyor */
             }
         })
         .catch(err => {
