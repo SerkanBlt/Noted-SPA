@@ -9204,11 +9204,20 @@ const _SHAPES = [
     });
 
     const AI_CFG_KEY = 'noted_ai_cfg_v1';
+    const AI_SYS_KEY = 'noted_ai_sys_v1'; /* sys prompt — localStorage'da kalıcı */
     const keyClearBtn = document.getElementById('ai-key-clear');
     const panelSub    = panel.querySelector('.ai-panel-sub');
 
     function getCfg() {
-        try { return JSON.parse(sessionStorage.getItem(AI_CFG_KEY) || '{}'); }
+        try {
+            const c = JSON.parse(sessionStorage.getItem(AI_CFG_KEY) || '{}');
+            /* sys prompt boşsa localStorage'dan doldur */
+            if (!c.sys) {
+                const saved = localStorage.getItem(AI_SYS_KEY);
+                if (saved) c.sys = saved;
+            }
+            return c;
+        }
         catch(_) { return {}; }
     }
     function _updateConnStatus() {
@@ -9261,15 +9270,17 @@ const _SHAPES = [
                 }
                 return;
             }
+            const sysVal = sysPrompt?.value.trim() || '';
             sessionStorage.setItem(AI_CFG_KEY, JSON.stringify({
                 apiKey : key,
                 model  : model || 'mistralai/Mistral-7B-Instruct-v0.3',
                 temp   : parseFloat(tempSlider?.value ?? 0.7),
                 ctx    : parseInt(ctxCount?.value ?? 10),
-                sys    : sysPrompt?.value.trim() || ''
+                sys    : sysVal
             }));
+            try { localStorage.setItem(AI_SYS_KEY, sysVal); } catch(_) {}
             _updateConnStatus();
-            _saveSysMdFile(sysPrompt?.value.trim() || '');
+            _saveSysMdFile(sysVal);
             if (setStatus) {
                 setStatus.textContent = 'Kaydedildi ✓';
                 setStatus.style.color = '';
@@ -9297,17 +9308,22 @@ const _SHAPES = [
         }).then(text => {
             if (!text || !text.trim()) return;
             if (sysPrompt) sysPrompt.value = text;
-            /* sessionStorage'ı da güncelle */
+            /* sessionStorage ve localStorage'ı güncelle */
             try {
                 const c = getCfg(); c.sys = text.trim();
                 sessionStorage.setItem(AI_CFG_KEY, JSON.stringify(c));
+                localStorage.setItem(AI_SYS_KEY, text.trim());
             } catch(_) {}
         }).catch(() => {});
     }
 
     sysPrompt?.addEventListener('input', () => {
         clearTimeout(_sysMdTimer);
-        _sysMdTimer = setTimeout(() => _saveSysMdFile(sysPrompt.value), 800);
+        _sysMdTimer = setTimeout(() => {
+            const val = sysPrompt.value;
+            _saveSysMdFile(val);
+            try { localStorage.setItem(AI_SYS_KEY, val.trim()); } catch(_) {}
+        }, 800);
     });
 
     function openSettings()  {
