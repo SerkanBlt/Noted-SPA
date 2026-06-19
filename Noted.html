@@ -1825,14 +1825,7 @@ input[type="file"] { display:none; }
         }
         .ai-set-title { font-size:.9rem; font-weight:600; color:var(--text); }
 
-        .ai-set-body { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
-        #ai-settings-panel .ai-set-section:last-child {
-            flex:1; display:flex; flex-direction:column; min-height:0;
-        }
-        #ai-settings-panel .ai-set-section:last-child .ai-set-field {
-            flex:1; display:flex; flex-direction:column; min-height:0;
-        }
-        #ai-sys-prompt { flex:1; min-height:120px; resize:none; }
+        .ai-set-body { flex:1; overflow-y:auto; }
         .ai-set-section {
             padding:16px 18px 14px; border-bottom:1px solid var(--border);
         }
@@ -4178,9 +4171,6 @@ input[type="file"] { display:none; }
                     <button class="ai-icon-btn" id="sys-expand-btn" title="Geniş editörde aç">
                         <i class="fas fa-expand-alt"></i>
                     </button>
-                </div>
-                <div class="ai-set-field">
-                    <textarea id="ai-sys-prompt" rows="4" placeholder="AI'nın nasıl davranacağını özelleştirin… (boş bırakılırsa varsayılan kullanılır)"></textarea>
                 </div>
             </section>
 
