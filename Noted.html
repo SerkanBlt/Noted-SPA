@@ -6360,21 +6360,36 @@ function _showAiGutterInd(savedRange) {
                 const mdHtml = typeof window._mdToHtml === 'function'
                     ? window._mdToHtml(result)
                     : result.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-                /* execCommand('insertHTML') ile div sarmalayıcısı browser tarafından
-                   kaldırılabiliyor; Range API ile doğrudan DOM node olarak ekliyoruz. */
+                /* 1) Seçimi sil ve inline placeholder ekle (execCommand p/div kırılmasını halleder) */
+                const tmpId = 'ai-ins-' + Date.now();
+                document.execCommand('insertHTML', false, `<span id="${tmpId}"></span>`);
+                const ph = document.getElementById(tmpId);
+                /* 2) wrapper'ı oluştur */
                 const wrapper = document.createElement('div');
                 wrapper.className = 'ai-block';
                 wrapper.setAttribute('data-generated-by', 'ai');
                 if (modelName) wrapper.setAttribute('data-model', modelName);
                 wrapper.innerHTML = mdHtml;
-                const range = s.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(wrapper);
-                /* Cursor'u wrapper'ın sonuna taşı */
-                range.setStartAfter(wrapper);
-                range.collapse(true);
-                s.removeAllRanges();
-                s.addRange(range);
+                /* 3) placeholder'dan yukarı çıkarak savedEt'in (= $content) doğrudan çocuğunu bul */
+                if (ph) {
+                    let topBlock = ph;
+                    while (topBlock.parentElement && topBlock.parentElement !== savedEt) {
+                        topBlock = topBlock.parentElement;
+                    }
+                    savedEt.insertBefore(wrapper, topBlock.nextSibling || null);
+                    ph.remove();
+                    /* topBlock boşaldıysa temizle */
+                    if (topBlock !== savedEt && !topBlock.textContent.trim()
+                            && !topBlock.querySelector('img,input,video,canvas')) {
+                        topBlock.remove();
+                    }
+                } else {
+                    savedEt.appendChild(wrapper);
+                }
+                /* 4) Cursor'u wrapper sonuna taşı */
+                const cr = document.createRange();
+                cr.setStartAfter(wrapper); cr.collapse(true);
+                s.removeAllRanges(); s.addRange(cr);
                 ind.success();
             },
             errMsg => {
@@ -10181,14 +10196,12 @@ $content.addEventListener('click', function(e) {
     }
     if (!block) return;
 
-    /* AI blok: etiketi gizle/göster */
+    /* AI blok: etiketi sadece kaldır (tek yönlü — kullanıcı ekleyemez) */
     if (block.classList && block.classList.contains('ai-block')) {
-        if (block.hasAttribute('data-ai-hidden')) {
-            block.removeAttribute('data-ai-hidden');
-        } else {
+        if (!block.hasAttribute('data-ai-hidden')) {
             block.setAttribute('data-ai-hidden', '1');
+            _markDirty();
         }
-        _markDirty();
         return;
     }
 
