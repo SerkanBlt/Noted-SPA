@@ -9697,7 +9697,7 @@ const _SHAPES = [
         const _tbls = [];
         const _ec   = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         t = t.replace(
-            /^([ \t]*\|?[^\n]*\|[^\n]*\n[ \t]*\|?[ \t]*:?-[-: |]*-:?[ \t]*\n(?:[ \t]*\|?[^\n]*\|[^\n]*\n?)*)/gm,
+            /^([ \t]*\|?[^\n]*\|[^\n]*\n[ \t]*\|?[ \t]*:?-[-: |]*-:?[ \t]*\|?[ \t]*\n(?:[ \t]*\|?[^\n]*\|[^\n]*\n?)*)/gm,
             m => {
                 const rows = m.trim().split('\n').filter(r => /\|/.test(r));
                 if (rows.length < 3) return m;
@@ -14067,7 +14067,7 @@ document.addEventListener('keydown', function ngArrowNav(e) {
             const txt = (e.clipboardData || window.clipboardData)?.getData('text/plain') || '';
             if (!txt || typeof window._mdToHtml !== 'function') return;
             /* Separator satırı yoksa normal paste devam etsin */
-            if (!/^[ \t]*\|?[ \t]*:?-{2,}[-: |]*[ \t]*$/m.test(txt)) return;
+            if (!/^[ \t]*\|?[ \t]*:?-{2,}[-: |]*[ \t]*\r?$/m.test(txt)) return;
             /* En az iki | içeren satır gerekli (başlık + veri) */
             if (txt.split('\n').filter(l => /\|/.test(l)).length < 2) return;
 
