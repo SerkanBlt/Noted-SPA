@@ -6383,10 +6383,10 @@ function _showAiGutterInd(savedRange) {
 
         /* Ton seçici */
         if (item.dataset.aiAction === 'tone') {
-            popup.classList.remove('open');
-            if (!tonePop) return;
+            if (!tonePop) { popup.classList.remove('open'); return; }
             _updateToneBadge();
-            const rect = item.getBoundingClientRect();
+            const rect = item.getBoundingClientRect(); /* popup kapanmadan önce al */
+            popup.classList.remove('open');
             let top  = rect.top;
             let left = rect.right + 4;
             if (left + 170 > window.innerWidth - 4) left = rect.left - 174;
