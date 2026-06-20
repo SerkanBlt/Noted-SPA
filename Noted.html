@@ -6375,29 +6375,61 @@ function _showAiGutterInd(savedRange) {
     }
     _updateToneBadge();
 
+    /* Ton popup'ını konumlandır ve aç — rect nesnesini veya DOM elementini kabul eder */
+    function _openTonePopup(rectOrEl) {
+        if (!tonePop) return;
+        _updateToneBadge();
+        const r = (rectOrEl && typeof rectOrEl.getBoundingClientRect === 'function')
+            ? rectOrEl.getBoundingClientRect() : rectOrEl;
+        let top  = r.top;
+        let left = r.right + 4;
+        if (left + 170 > window.innerWidth - 4) left = r.left - 174;
+        if (top  + 160 > window.innerHeight)    top  = window.innerHeight - 164;
+        tonePop.style.top  = top  + 'px';
+        tonePop.style.left = left + 'px';
+        tonePop.classList.add('open');
+    }
+
+    /* Hover ile flyout — ana popup açıkken AI Tonu üzerine gelince açılır */
+    let _toneCloseTimer;
+    const _toneBtn = popup.querySelector('[data-ai-action="tone"]');
+    if (_toneBtn && tonePop) {
+        _toneBtn.addEventListener('mouseenter', () => {
+            clearTimeout(_toneCloseTimer);
+            _openTonePopup(_toneBtn);
+        });
+        _toneBtn.addEventListener('mouseleave', () => {
+            _toneCloseTimer = setTimeout(() => tonePop.classList.remove('open'), 150);
+        });
+        tonePop.addEventListener('mouseenter', () => clearTimeout(_toneCloseTimer));
+        tonePop.addEventListener('mouseleave', () => {
+            _toneCloseTimer = setTimeout(() => tonePop.classList.remove('open'), 150);
+        });
+        /* Dokunma: ilk dokunuşta aç, ikincisinde kapat */
+        _toneBtn.addEventListener('touchstart', e => {
+            e.preventDefault();
+            if (tonePop.classList.contains('open')) tonePop.classList.remove('open');
+            else _openTonePopup(_toneBtn);
+        }, { passive: false });
+    }
+
     /* ── Ana popup: eylem seçimi ── */
     popup.addEventListener('mousedown', e => {
         const item = e.target.closest('.ai-act-item');
         if (!item) return;
         e.preventDefault();
 
-        /* Ton seçici */
+        /* Ton butonu — click/mousedown ile de açılsın (hover'a ek olarak) */
         if (item.dataset.aiAction === 'tone') {
             if (!tonePop) { popup.classList.remove('open'); return; }
-            _updateToneBadge();
-            const rect = item.getBoundingClientRect(); /* popup kapanmadan önce al */
+            const savedRect = item.getBoundingClientRect(); /* popup kapanmadan önce al */
             popup.classList.remove('open');
-            let top  = rect.top;
-            let left = rect.right + 4;
-            if (left + 170 > window.innerWidth - 4) left = rect.left - 174;
-            if (top  + 160 > window.innerHeight)   top  = window.innerHeight - 164;
-            tonePop.style.top  = top  + 'px';
-            tonePop.style.left = left + 'px';
-            tonePop.classList.add('open');
+            _openTonePopup(savedRect);
             return;
         }
 
         popup.classList.remove('open');
+        tonePop && tonePop.classList.remove('open');
         _restoreToolbarSel();
 
         const sel = window.getSelection();
