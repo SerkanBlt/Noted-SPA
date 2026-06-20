@@ -406,6 +406,24 @@
             color:var(--text-muted); font-size:.85rem;
             text-align:center; padding:40px 0;
         }
+        /* Toggle switch — AI ayarlar sekmesi */
+        .toggle-sw { position:relative; display:inline-block; width:34px; height:20px; flex-shrink:0; }
+        .toggle-sw input { opacity:0; width:0; height:0; position:absolute; }
+        .toggle-sw-slider { position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:20px; transition:.2s; }
+        .toggle-sw-slider::before { content:''; position:absolute; height:14px; width:14px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; }
+        .toggle-sw input:checked + .toggle-sw-slider { background:var(--accent); }
+        .toggle-sw input:checked + .toggle-sw-slider::before { transform:translateX(14px); }
+        .ai-toggle-field { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+        .ai-toggle-label { font-size:.8rem; color:var(--text); }
+        #cfg-ai-save {
+            flex:1; padding:8px 0; border-radius:9px;
+            border:none; background:var(--accent); color:#fff;
+            font-size:.85rem; font-weight:600; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:6px;
+            transition:filter .15s;
+        }
+        #cfg-ai-save:hover { filter:brightness(1.1); }
+        #cfg-ai-status { font-size:.76rem; color:var(--text-muted); white-space:nowrap; }
 
         /* Responsive — dar ekranda collapsible düğmeleri gizle, hamburger göster */
         @media (max-width:640px) {
@@ -4787,6 +4805,7 @@ input[type="file"] { display:none; }
             <button class="stab" data-stab="tab1">Genel</button>
             <button class="stab" data-stab="tab2">Görünüm</button>
             <button class="stab" data-stab="tab3">Gelişmiş</button>
+            <button class="stab" data-stab="ai"><i class="fas fa-wand-magic-sparkles" style="margin-right:5px;font-size:.75rem"></i>AI</button>
         </div>
         <div id="settings-body">
             <div class="stab-panel active" id="stab-shortcuts">
@@ -4835,6 +4854,108 @@ input[type="file"] { display:none; }
             <div class="stab-panel" id="stab-tab3">
                 <div class="stab-empty"><i class="fas fa-code stab-icon"></i>Gelişmiş ayarlar yakında eklenecek</div>
             </div>
+
+            <!-- AI Ayarlar Sekmesi -->
+            <div class="stab-panel" id="stab-ai">
+
+                <section class="ai-set-section">
+                    <h4>Not İçi AI</h4>
+                    <div class="ai-set-field">
+                        <div class="ai-toggle-field">
+                            <span class="ai-toggle-label">Markdown biçimlendirme</span>
+                            <label class="toggle-sw" title="AI yanıtlarında başlık, liste, kalın vb. render edilsin">
+                                <input type="checkbox" id="cfg-ai-md" checked>
+                                <span class="toggle-sw-slider"></span>
+                            </label>
+                        </div>
+                        <p class="ai-set-hint">AI yanıtlarında başlık, liste, <strong>kalın</strong>, <em>italik</em> gibi markdown biçimlendirme uygulanır.</p>
+                    </div>
+                    <div class="ai-set-field">
+                        <label for="cfg-ai-tone">Varsayılan Ton</label>
+                        <select id="cfg-ai-tone">
+                            <option value="informative">Bilgilendirici</option>
+                            <option value="professional">Profesyonel</option>
+                            <option value="friendly">Samimi</option>
+                            <option value="creative">Yaratıcı</option>
+                        </select>
+                        <p class="ai-set-hint">AI eylem menüsündeki "AI Tonu" seçimiyle de değiştirilebilir.</p>
+                    </div>
+                    <div class="ai-set-field">
+                        <label for="cfg-ai-action">Varsayılan Eylem &nbsp;<kbd class="sc2-key">Alt</kbd> + <kbd class="sc2-key">A</kbd></label>
+                        <select id="cfg-ai-action">
+                            <option value="expand">Genişlet</option>
+                            <option value="summarize">Özetle</option>
+                            <option value="fix">Düzelt</option>
+                            <option value="continue">Devam Et</option>
+                        </select>
+                        <p class="ai-set-hint">Metin seçiliyken <strong>Alt+A</strong> bu eylemi otomatik çalıştırır.</p>
+                    </div>
+                    <div class="ai-set-field">
+                        <div class="ai-toggle-field">
+                            <span class="ai-toggle-label">AI bloğunda bookmark etkin</span>
+                            <label class="toggle-sw" title="Gutter tıklaması AI bloklarına da standart bookmark ekleyebilsin">
+                                <input type="checkbox" id="cfg-ai-bm" checked>
+                                <span class="toggle-sw-slider"></span>
+                            </label>
+                        </div>
+                        <p class="ai-set-hint">Etkin: gutter tıklaması AI bloklarına standart bookmark ekler. AI etiketi her zaman görünür kalır.</p>
+                    </div>
+                </section>
+
+                <section class="ai-set-section">
+                    <h4>AI Asistan</h4>
+                    <div class="ai-set-field">
+                        <label for="cfg-api-key">API Anahtarı</label>
+                        <div class="ai-key-wrap">
+                            <input type="password" id="cfg-api-key" placeholder="gsk_…" autocomplete="off" spellcheck="false">
+                            <button class="ai-key-toggle" type="button" id="cfg-key-toggle" title="Göster / Gizle"><i class="fas fa-eye"></i></button>
+                            <button class="ai-key-clear" id="cfg-key-clear" type="button" title="Anahtarı temizle"><i class="fas fa-xmark"></i></button>
+                        </div>
+                        <p class="ai-set-hint"><i class="fas fa-lock" style="font-size:.6rem"></i> Bu tarayıcıda kalıcı tutulur. <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--accent)">Groq key al →</a></p>
+                    </div>
+                    <div class="ai-set-field">
+                        <label for="cfg-model">Model</label>
+                        <select id="cfg-model">
+                            <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile — 12K TPM (Önerilen)</option>
+                            <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant — 6K TPM (Hızlı)</option>
+                            <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17B — 30K TPM (Yeni)</option>
+                            <option value="qwen/qwen3-32b">Qwen3 32B — 6K TPM, 60 RPM</option>
+                            <option value="qwen/qwen3.6-27b">Qwen 3.6 27B — 8K TPM</option>
+                            <option value="openai/gpt-oss-20b">GPT OSS 20B — 8K TPM</option>
+                            <option value="openai/gpt-oss-120b">GPT OSS 120B — 8K TPM</option>
+                            <option value="__custom__">Özel model ID…</option>
+                        </select>
+                    </div>
+                    <div class="ai-set-field" id="cfg-custom-model-wrap" style="display:none">
+                        <label for="cfg-custom-model">Özel Model ID</label>
+                        <input type="text" id="cfg-custom-model" placeholder="llama-3.3-70b-versatile" autocomplete="off" spellcheck="false">
+                        <p class="ai-set-hint">Groq'un desteklediği model adını yazın. <a href="https://console.groq.com/docs/models" target="_blank" rel="noopener" style="color:var(--accent)">Model listesi →</a></p>
+                    </div>
+                    <div class="ai-set-field">
+                        <div class="ai-set-label-row">
+                            <label for="cfg-temp">Sıcaklık</label>
+                            <span id="cfg-temp-val">0.7</span>
+                        </div>
+                        <input type="range" id="cfg-temp" min="0" max="1" step="0.1" value="0.7">
+                        <p class="ai-set-hint">Düşük → tutarlı &nbsp;·&nbsp; Yüksek → yaratıcı</p>
+                    </div>
+                    <div class="ai-set-field">
+                        <label for="cfg-ctx">Bağlama alınacak not sayısı</label>
+                        <input type="number" id="cfg-ctx" min="1" max="50" value="10">
+                        <p class="ai-set-hint">Soruyla en ilgili notlar seçilerek AI'ya gönderilir.</p>
+                    </div>
+                    <div class="ai-set-field">
+                        <label for="cfg-sys">Sistem Mesajı</label>
+                        <textarea id="cfg-sys" rows="4" placeholder="AI asistanın nasıl davranmasını istediğinizi yazın…"></textarea>
+                    </div>
+                </section>
+
+                <div class="ai-set-foot" style="position:sticky;bottom:0;background:var(--surface);margin:0 -20px;padding:12px 20px">
+                    <button id="cfg-ai-save"><i class="fas fa-check"></i> Kaydet</button>
+                    <span id="cfg-ai-status"></span>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -6391,7 +6512,7 @@ function _showAiGutterInd(savedRange) {
     }
     _updateToneBadge();
 
-    /* Ton popup'ını konumlandır ve aç — rect nesnesini veya DOM elementini kabul eder */
+    /* Ton popup konumlama */
     function _openTonePopup(rectOrEl) {
         if (!tonePop) return;
         _updateToneBadge();
@@ -6406,22 +6527,14 @@ function _showAiGutterInd(savedRange) {
         tonePop.classList.add('open');
     }
 
-    /* Hover ile flyout — ana popup açıkken AI Tonu üzerine gelince açılır */
+    /* Hover flyout */
     let _toneCloseTimer;
     const _toneBtn = popup.querySelector('[data-ai-action="tone"]');
     if (_toneBtn && tonePop) {
-        _toneBtn.addEventListener('mouseenter', () => {
-            clearTimeout(_toneCloseTimer);
-            _openTonePopup(_toneBtn);
-        });
-        _toneBtn.addEventListener('mouseleave', () => {
-            _toneCloseTimer = setTimeout(() => tonePop.classList.remove('open'), 150);
-        });
+        _toneBtn.addEventListener('mouseenter', () => { clearTimeout(_toneCloseTimer); _openTonePopup(_toneBtn); });
+        _toneBtn.addEventListener('mouseleave', () => { _toneCloseTimer = setTimeout(() => tonePop.classList.remove('open'), 150); });
         tonePop.addEventListener('mouseenter', () => clearTimeout(_toneCloseTimer));
-        tonePop.addEventListener('mouseleave', () => {
-            _toneCloseTimer = setTimeout(() => tonePop.classList.remove('open'), 150);
-        });
-        /* Dokunma: ilk dokunuşta aç, ikincisinde kapat */
+        tonePop.addEventListener('mouseleave', () => { _toneCloseTimer = setTimeout(() => tonePop.classList.remove('open'), 150); });
         _toneBtn.addEventListener('touchstart', e => {
             e.preventDefault();
             if (tonePop.classList.contains('open')) tonePop.classList.remove('open');
@@ -6429,33 +6542,10 @@ function _showAiGutterInd(savedRange) {
         }, { passive: false });
     }
 
-    /* ── Ana popup: eylem seçimi ── */
-    popup.addEventListener('mousedown', e => {
-        const item = e.target.closest('.ai-act-item');
-        if (!item) return;
-        e.preventDefault();
-
-        /* Ton butonu — click/mousedown ile de açılsın (hover'a ek olarak) */
-        if (item.dataset.aiAction === 'tone') {
-            if (!tonePop) { popup.classList.remove('open'); return; }
-            const savedRect = item.getBoundingClientRect(); /* popup kapanmadan önce al */
-            popup.classList.remove('open');
-            _openTonePopup(savedRect);
-            return;
-        }
-
-        popup.classList.remove('open');
-        tonePop && tonePop.classList.remove('open');
-        _restoreToolbarSel();
-
-        const sel = window.getSelection();
-        const selectedText = sel ? sel.toString().trim() : '';
-        if (!selectedText) return;
-
-        const savedRange = sel.getRangeAt(0).cloneRange();
-        const savedEt    = _activeEditTarget || $content;
-        const ind        = _showAiGutterInd(savedRange);
-        const aiBtn      = $('tb-ai-btn');
+    /* ── AI akışı: seçili metne eylem uygula ve sonucu ekle ── */
+    function _runAiFlow(action, selectedText, savedRange, savedEt) {
+        const aiBtn = $('tb-ai-btn');
+        const ind   = _showAiGutterInd(savedRange);
         if (aiBtn) aiBtn.classList.add('tb-ai-busy');
 
         if (typeof window._inlineAI !== 'function') {
@@ -6464,72 +6554,89 @@ function _showAiGutterInd(savedRange) {
             _tbAiNotif(aiBtn, '⚠️ AI paneli henüz yüklenmedi.');
             return;
         }
+        const useMd = localStorage.getItem('noted-ai-md') !== 'false';
 
-        window._inlineAI(
-            item.dataset.aiAction,
-            selectedText,
-            (result, modelName) => {
-                if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
-                if (!result) { ind.error(); return; }
-                _aiInserting = true;
-                setTimeout(() => { _aiInserting = false; }, 120);
-                savedEt.focus();
-                const s = window.getSelection();
-                const mdHtml = typeof window._mdToHtml === 'function'
-                    ? window._mdToHtml(result)
-                    : result.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+        window._inlineAI(action, selectedText, (result, modelName) => {
+            if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
+            if (!result) { ind.error(); return; }
+            _aiInserting = true;
+            setTimeout(() => { _aiInserting = false; }, 120);
+            savedEt.focus();
+            const s = window.getSelection();
+            const mdHtml = (useMd && typeof window._mdToHtml === 'function')
+                ? window._mdToHtml(result)
+                : result.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 
-                /* Seçimin bitişini kapsayan, savedEt'in doğrudan çocuğunu bul */
-                const _getTopBlock = node => {
-                    let n = node && node.nodeType === 3 ? node.parentElement : node;
-                    while (n && n.parentElement !== savedEt) n = n.parentElement;
-                    return (n && n !== savedEt) ? n : null;
-                };
-                const endBlock = _getTopBlock(savedRange.endContainer);
+            const _getTopBlock = node => {
+                let n = node && node.nodeType === 3 ? node.parentElement : node;
+                while (n && n.parentElement !== savedEt) n = n.parentElement;
+                return (n && n !== savedEt) ? n : null;
+            };
+            const endBlock = _getTopBlock(savedRange.endContainer);
+            const wrapper  = document.createElement('div');
+            wrapper.className = 'ai-block';
+            wrapper.setAttribute('data-generated-by', 'ai');
+            if (modelName) wrapper.setAttribute('data-model', modelName);
+            wrapper.innerHTML = mdHtml;
 
-                /* wrapper oluştur */
-                const wrapper = document.createElement('div');
-                wrapper.className = 'ai-block';
-                wrapper.setAttribute('data-generated-by', 'ai');
-                if (modelName) wrapper.setAttribute('data-model', modelName);
-                wrapper.innerHTML = mdHtml;
-
-                if (endBlock) {
-                    /* Seçim bitişinden bloğun sonuna kadar olan "sonraki" içeriği çıkar */
-                    const tailRange = document.createRange();
-                    try {
-                        tailRange.setStart(savedRange.endContainer, savedRange.endOffset);
-                        tailRange.setEnd(endBlock, endBlock.childNodes.length);
-                    } catch(_) { tailRange.collapse(true); }
-                    const tailFrag = tailRange.extractContents();
-                    const hasTail  = tailFrag.textContent.trim() !== '';
-
-                    /* AI wrapper'ı endBlock'tan sonraya ekle */
-                    savedEt.insertBefore(wrapper, endBlock.nextSibling || null);
-
-                    /* Seçim sonrasındaki metin varsa AI'dan sonraki paragrafa taşı */
-                    if (hasTail) {
-                        const tailPara = document.createElement('p');
-                        tailPara.appendChild(tailFrag);
-                        savedEt.insertBefore(tailPara, wrapper.nextSibling || null);
-                    }
-                } else {
-                    savedEt.appendChild(wrapper);
+            if (endBlock) {
+                const tailRange = document.createRange();
+                try {
+                    tailRange.setStart(savedRange.endContainer, savedRange.endOffset);
+                    tailRange.setEnd(endBlock, endBlock.childNodes.length);
+                } catch(_) { tailRange.collapse(true); }
+                const tailFrag = tailRange.extractContents();
+                const hasTail  = tailFrag.textContent.trim() !== '';
+                savedEt.insertBefore(wrapper, endBlock.nextSibling || null);
+                if (hasTail) {
+                    const tailPara = document.createElement('p');
+                    tailPara.appendChild(tailFrag);
+                    savedEt.insertBefore(tailPara, wrapper.nextSibling || null);
                 }
-
-                /* Cursor'u wrapper sonuna taşı */
-                const cr = document.createRange();
-                cr.setStartAfter(wrapper); cr.collapse(true);
-                s.removeAllRanges(); s.addRange(cr);
-                $content.dispatchEvent(new Event('input', { bubbles: true }));
-                ind.success();
-            },
-            errMsg => {
-                if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
-                ind.error();
-                _tbAiNotif(aiBtn, '⚠️ ' + errMsg);
+            } else {
+                savedEt.appendChild(wrapper);
             }
-        );
+            const cr = document.createRange();
+            cr.setStartAfter(wrapper); cr.collapse(true);
+            s.removeAllRanges(); s.addRange(cr);
+            $content.dispatchEvent(new Event('input', { bubbles: true }));
+            ind.success();
+        }, errMsg => {
+            if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
+            ind.error();
+            _tbAiNotif(aiBtn, '⚠️ ' + errMsg);
+        });
+    }
+
+    /* Seçili metni al ve AI akışını başlat — Alt+A için dışa açık */
+    function _execAiAction(action) {
+        const sel = window.getSelection();
+        const selectedText = sel ? sel.toString().trim() : '';
+        if (!selectedText) return;
+        const savedRange = sel.getRangeAt(0).cloneRange();
+        const savedEt    = _activeEditTarget || $content;
+        _runAiFlow(action, selectedText, savedRange, savedEt);
+    }
+    window._execInlineAI = _execAiAction;
+
+    /* ── Ana popup: eylem seçimi ── */
+    popup.addEventListener('mousedown', e => {
+        const item = e.target.closest('.ai-act-item');
+        if (!item) return;
+        e.preventDefault();
+
+        if (item.dataset.aiAction === 'tone') {
+            if (!tonePop) { popup.classList.remove('open'); return; }
+            const savedRect = item.getBoundingClientRect();
+            popup.classList.remove('open');
+            _openTonePopup(savedRect);
+            return;
+        }
+
+        popup.classList.remove('open');
+        tonePop && tonePop.classList.remove('open');
+        _restoreToolbarSel();
+        _execAiAction(item.dataset.aiAction);
     });
 
     /* ── Ton seçici popup ── */
@@ -6544,7 +6651,6 @@ function _showAiGutterInd(savedRange) {
         });
     }
 
-    /* Dışarı tıklayınca kapat */
     document.addEventListener('click', e => {
         if (popup.classList.contains('open') &&
             !popup.contains(e.target) && !e.target.closest('#tb-ai-btn')) {
@@ -6556,6 +6662,16 @@ function _showAiGutterInd(savedRange) {
         }
     });
 })();
+
+/* ── Alt+A kısayolu — varsayılan AI eylemi ── */
+document.addEventListener('keydown', e => {
+    if (!e.altKey || (e.key !== 'a' && e.key !== 'A')) return;
+    if (typeof window._execInlineAI !== 'function') return;
+    const sel = window.getSelection();
+    if (!sel || !sel.toString().trim()) return;
+    e.preventDefault();
+    window._execInlineAI(localStorage.getItem('noted-ai-default-action') || 'expand');
+});
 
 /* ══ TODO KLAVYE YÖNETİMİ ══ */
 /* $content + panel içerikleri için ortak handler — capture phase */
@@ -10377,7 +10493,10 @@ $content.addEventListener('click', function(e) {
             }
             return;
         }
-        /* data-generated-by="ai": AI etiketi kalıcı, bookmark toggle normal devam eder */
+        /* data-generated-by="ai": AI etiketi kalıcı */
+        /* Ayarda AI bookmark kapatıldıysa gutter tıklaması bir şey yapmaz */
+        if (localStorage.getItem('noted-ai-bm-click') === 'false') return;
+        /* Aksi hâlde bookmark toggle normal devam eder */
     }
 
     if (block.hasAttribute('data-bookmark')) {
@@ -10832,7 +10951,7 @@ $content.addEventListener('input', () => {
     }, true);
 
     /* Sekme geçişi */
-    const tabMap = { shortcuts:'stab-shortcuts', tab1:'stab-tab1', tab2:'stab-tab2', tab3:'stab-tab3' };
+    const tabMap = { shortcuts:'stab-shortcuts', tab1:'stab-tab1', tab2:'stab-tab2', tab3:'stab-tab3', ai:'stab-ai' };
     if (modal) {
         modal.querySelectorAll('.stab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -10845,6 +10964,146 @@ $content.addEventListener('input', () => {
             });
         });
     }
+})();
+
+/* ── Ayarlar modalı AI sekmesi ── */
+(function initAiSettingsTab() {
+    const AI_CFG_KEY = 'noted_ai_cfg_v1';
+    const AI_SYS_KEY = 'noted_ai_sys_v1';
+    const AI_KEY_LS  = 'noted_ai_key_v1';
+
+    const tab        = document.querySelector('.stab[data-stab="ai"]');
+    const saveBtn    = document.getElementById('cfg-ai-save');
+    const statusEl   = document.getElementById('cfg-ai-status');
+    if (!tab || !saveBtn) return;
+
+    /* ── Yardımcılar ── */
+    function _getCfg() {
+        try {
+            const c = JSON.parse(sessionStorage.getItem(AI_CFG_KEY) || '{}');
+            if (!c.apiKey) { const k = localStorage.getItem(AI_KEY_LS); if (k) c.apiKey = k; }
+            if (!c.sys)    { const s = localStorage.getItem(AI_SYS_KEY); if (s) c.sys = s; }
+            return c;
+        } catch(_) { return {}; }
+    }
+    function _$(id) { return document.getElementById(id); }
+    function _setStatus(msg, isErr) {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.style.color = isErr ? '#e5534b' : 'var(--accent)';
+        if (!isErr) setTimeout(() => { if (statusEl) { statusEl.textContent = ''; statusEl.style.color = ''; } }, 2000);
+    }
+
+    /* ── Sekme tıklanınca yükle ── */
+    function _loadAll() {
+        const c = _getCfg();
+
+        /* Not içi AI */
+        const mdTog = _$('cfg-ai-md');
+        if (mdTog) mdTog.checked = localStorage.getItem('noted-ai-md') !== 'false';
+
+        const toneSel = _$('cfg-ai-tone');
+        if (toneSel) toneSel.value = localStorage.getItem('noted-ai-tone') || 'informative';
+
+        const actSel = _$('cfg-ai-action');
+        if (actSel) actSel.value = localStorage.getItem('noted-ai-default-action') || 'expand';
+
+        const bmTog = _$('cfg-ai-bm');
+        if (bmTog) bmTog.checked = localStorage.getItem('noted-ai-bm-click') !== 'false';
+
+        /* AI Asistan */
+        const keyInput = _$('cfg-api-key');
+        if (keyInput) keyInput.value = c.apiKey || '';
+
+        const modelSel = _$('cfg-model');
+        const customWrap = _$('cfg-custom-model-wrap');
+        const customInput = _$('cfg-custom-model');
+        if (modelSel) {
+            const known = [...modelSel.options].find(o => o.value === c.model);
+            if (known) {
+                modelSel.value = c.model;
+                if (customWrap) customWrap.style.display = 'none';
+            } else if (c.model) {
+                modelSel.value = '__custom__';
+                if (customInput) customInput.value = c.model;
+                if (customWrap) customWrap.style.display = '';
+            }
+        }
+
+        const tempRange = _$('cfg-temp');
+        const tempDisp  = _$('cfg-temp-val');
+        if (tempRange) { tempRange.value = c.temp ?? 0.7; if (tempDisp) tempDisp.textContent = tempRange.value; }
+
+        const ctxIn = _$('cfg-ctx');
+        if (ctxIn) ctxIn.value = c.ctx ?? 10;
+
+        const sysTA = _$('cfg-sys');
+        if (sysTA) sysTA.value = c.sys || '';
+    }
+
+    tab.addEventListener('click', _loadAll);
+
+    /* ── Sıcaklık slider canlı gösterimi ── */
+    const tempRange = _$('cfg-temp');
+    const tempDisp  = _$('cfg-temp-val');
+    if (tempRange && tempDisp) {
+        tempRange.addEventListener('input', () => { tempDisp.textContent = tempRange.value; });
+    }
+
+    /* ── Model değişince özel model alanını göster/gizle ── */
+    const modelSel   = _$('cfg-model');
+    const customWrap = _$('cfg-custom-model-wrap');
+    if (modelSel && customWrap) {
+        modelSel.addEventListener('change', () => {
+            customWrap.style.display = modelSel.value === '__custom__' ? '' : 'none';
+        });
+    }
+
+    /* ── Kaydet ── */
+    saveBtn.addEventListener('click', () => {
+        /* Not içi */
+        const mdTog  = _$('cfg-ai-md');
+        const bmTog  = _$('cfg-ai-bm');
+        const toneSel = _$('cfg-ai-tone');
+        const actSel  = _$('cfg-ai-action');
+        if (mdTog)   localStorage.setItem('noted-ai-md',              mdTog.checked  ? 'true' : 'false');
+        if (bmTog)   localStorage.setItem('noted-ai-bm-click',        bmTog.checked  ? 'true' : 'false');
+        if (toneSel) localStorage.setItem('noted-ai-tone',            toneSel.value);
+        if (actSel)  localStorage.setItem('noted-ai-default-action',  actSel.value);
+
+        /* AI Asistan */
+        const keyInput    = _$('cfg-api-key');
+        const customInput = _$('cfg-custom-model');
+        const sysTA       = _$('cfg-sys');
+        const ctxIn       = _$('cfg-ctx');
+
+        const key   = keyInput?.value.trim() || '';
+        const model = modelSel?.value === '__custom__'
+            ? (customInput?.value.trim() || '')
+            : (modelSel?.value || 'llama-3.3-70b-versatile');
+
+        if (key && !key.startsWith('gsk_')) { _setStatus('⚠ Geçersiz anahtar (gsk_…)', true); return; }
+        if (modelSel?.value === '__custom__' && !model) { _setStatus('⚠ Özel model ID boş', true); return; }
+
+        const sysVal = sysTA?.value.trim() || '';
+        const temp   = parseFloat(tempRange?.value ?? 0.7);
+        const ctx    = parseInt(ctxIn?.value ?? 10);
+
+        try {
+            sessionStorage.setItem(AI_CFG_KEY, JSON.stringify({ apiKey: key, model, temp, ctx, sys: sysVal }));
+            if (key) localStorage.setItem(AI_KEY_LS, key);
+            localStorage.setItem(AI_SYS_KEY, sysVal);
+        } catch(_) {}
+
+        /* Ton badge'ini güncelle (popup açıksa) */
+        const toneBadge = document.querySelector('#ai-action-popup .ai-tone-name');
+        if (toneBadge && toneSel) {
+            const LABELS = { professional:'Profesyonel', friendly:'Samimi', informative:'Bilgilendirici', creative:'Yaratıcı' };
+            toneBadge.textContent = LABELS[toneSel.value] || '';
+        }
+
+        _setStatus('Kaydedildi ✓', false);
+    });
 })();
 
 /* ══ OTOMATİK KAYIT ══ */
