@@ -3882,15 +3882,20 @@ input[type="file"] { display:none; }
             outline: none; padding: 0;
             position: relative;
         }
-        /* Tablo hücreleri: dikey hizalama varsayılanı orta */
-        .noted-grid.grid-table tbody td { vertical-align: middle; }
+        /* Hücreler ve başlıklar: varsayılan dikey hizalama orta */
+        .noted-grid tbody td,
+        .noted-grid thead th { vertical-align: middle; }
         /* Kullanıcı hizalama override — data attribute ile */
-        .noted-grid td[data-valign="top"]    { vertical-align: top    !important; }
-        .noted-grid td[data-valign="middle"] { vertical-align: middle !important; }
-        .noted-grid td[data-valign="bottom"] { vertical-align: bottom !important; }
-        .noted-grid td[data-halign="center"] .ng-cell { text-align: center; }
-        .noted-grid td[data-halign="right"]  .ng-cell { text-align: right;  }
-        .noted-grid td[data-halign="left"]   .ng-cell { text-align: left;   }
+        .noted-grid td[data-valign="top"]    { vertical-align: top; }
+        .noted-grid td[data-valign="middle"] { vertical-align: middle; }
+        .noted-grid td[data-valign="bottom"] { vertical-align: bottom; }
+        .noted-grid td[data-halign="center"] .ng-cell  { text-align: center; }
+        .noted-grid td[data-halign="right"]  .ng-cell  { text-align: right;  }
+        .noted-grid td[data-halign="left"]   .ng-cell  { text-align: left;   }
+        /* Başlık yatay hizalama — sütun hizalamasını takip eder */
+        .noted-grid th[data-halign="center"] .ng-title { text-align: center; }
+        .noted-grid th[data-halign="right"]  .ng-title { text-align: right;  }
+        .noted-grid th[data-halign="left"]   .ng-title { text-align: left;   }
         /* Hizalama popup */
         .ng-align-popup {
             position: fixed; z-index: 9999;
@@ -12791,10 +12796,16 @@ function _gridSetColAlign(table, valign, halign) {
         td.dataset.valign = valign;
         if (halign === 'left') delete td.dataset.halign; else td.dataset.halign = halign;
     };
+    const applyThHalign = th => {
+        if (halign === 'left') delete th.dataset.halign; else th.dataset.halign = halign;
+    };
+    const headRow = table.querySelector('thead tr');
     if (colIdx < 0) {
         table.querySelectorAll('tbody td').forEach(apply);
+        if (headRow) [...headRow.children].forEach(applyThHalign);
     } else {
         table.querySelectorAll('tbody tr').forEach(row => { if (row.children[colIdx]) apply(row.children[colIdx]); });
+        if (headRow && headRow.children[colIdx]) applyThHalign(headRow.children[colIdx]);
     }
     _markDirty();
 }
