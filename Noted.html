@@ -9662,6 +9662,8 @@ const _SHAPES = [
     /* ── Basit Markdown → HTML ── */
     function mdToHtml(t, applyMd) {
         if (applyMd === undefined) applyMd = true;
+        
+        t = t.replace(/\r\n?/g, '\n');
 
         /* Pre-pass: HTML tablolarını Markdown tablosuna çevir */
         t = t.replace(/<table[\s\S]*?<\/table>/gi, m => {
