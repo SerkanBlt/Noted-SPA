@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- Noted v1.15.5 — not listesi görünüm modları (Standart/Geniş/Kompakt/Cascade/Pil), Bağlantı Haritası 3D küre + sürükleme/zoom, temiz başlangıç, hamburger menü sağda, sağ tık menü engeli, v1.15 yayını -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
@@ -6658,12 +6658,26 @@ function _showAiGutterInd(savedRange) {
             } else {
                 savedEt.appendChild(wrapper);
             }
+
+            let gridsRestored = false;
+            let lastInserted = wrapper;
+            Array.from(wrapper.querySelectorAll('.ng-wrap')).forEach(wrap => {
+                wrapper.parentNode.insertBefore(wrap, lastInserted.nextSibling);
+                const p = document.createElement('p'); p.innerHTML = '<br>';
+                wrapper.parentNode.insertBefore(p, wrap.nextSibling);
+                lastInserted = p;
+                gridsRestored = true;
+            });
+            if (wrapper.innerHTML.trim() === '' || (wrapper.children.length === 0 && !wrapper.textContent.trim())) {
+                wrapper.remove();
+            }
+
             const cr = document.createRange();
-            cr.setStartAfter(wrapper); cr.collapse(true);
+            cr.setStartAfter(lastInserted.parentNode ? lastInserted : (savedEt.lastChild || savedEt)); cr.collapse(true);
             s.removeAllRanges(); s.addRange(cr);
             $content.dispatchEvent(new Event('input', { bubbles: true }));
             /* ng-wrap içeriyorsa toolbar + resize handle'ları bağla */
-            if (wrapper.querySelector('.ng-wrap') && typeof _restoreGrids === 'function') _restoreGrids();
+            if (gridsRestored && typeof _restoreGrids === 'function') _restoreGrids();
             ind.success();
         }, errMsg => {
             if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
@@ -9648,6 +9662,35 @@ const _SHAPES = [
     /* ── Basit Markdown → HTML ── */
     function mdToHtml(t, applyMd) {
         if (applyMd === undefined) applyMd = true;
+
+        /* Pre-pass: HTML tablolarını Markdown tablosuna çevir */
+        t = t.replace(/<table[\s\S]*?<\/table>/gi, m => {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = m;
+            const table = tmp.querySelector('table');
+            if (!table) return m;
+            const rows = [];
+            table.querySelectorAll('tr').forEach(tr => {
+                const cells = [];
+                tr.querySelectorAll('th, td').forEach(td => {
+                    cells.push(td.textContent.trim().replace(/\n/g, ' ').replace(/\|/g, '-'));
+                });
+                if (cells.length > 0) rows.push(cells);
+            });
+            if (rows.length < 1) return m;
+            const cols = rows[0].length;
+            let mdStr = '\n\n';
+            mdStr += '| ' + rows[0].join(' | ') + ' |\n';
+            mdStr += '|' + Array(cols).fill('---').join('|') + '|\n';
+            for (let i = 1; i < rows.length; i++) {
+                const padded = [...rows[i]];
+                while (padded.length < cols) padded.push('');
+                mdStr += '| ' + padded.slice(0, cols).join(' | ') + ' |\n';
+            }
+            mdStr += '\n\n';
+            return mdStr;
+        });
+
         /* ── Pre-pass: markdown tabloları HTML'e çevir (her zaman, applyMd'den bağımsız) ── */
         const _tbls = [];
         const _ec   = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -10059,10 +10102,24 @@ const _SHAPES = [
         wrapper.innerHTML = cl.innerHTML;
 
         $content.appendChild(wrapper);
+
+        let gridsRestored = false;
+        Array.from(wrapper.querySelectorAll('.ng-wrap')).forEach(wrap => {
+            wrapper.parentNode.insertBefore(wrap, wrapper.nextSibling);
+            const p = document.createElement('p'); p.innerHTML = '<br>';
+            wrapper.parentNode.insertBefore(p, wrap.nextSibling);
+            gridsRestored = true;
+        });
+        if (wrapper.innerHTML.trim() === '' || (wrapper.children.length === 0 && !wrapper.textContent.trim())) {
+            wrapper.remove();
+        }
+
         $content.dispatchEvent(new Event('input', { bubbles: true }));
-        if (wrapper.querySelector('.ng-wrap') && typeof _restoreGrids === 'function') _restoreGrids();
+        if (gridsRestored && typeof _restoreGrids === 'function') _restoreGrids();
         if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
-        wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        const scrollTarget = wrapper.parentNode ? wrapper : ($content.lastElementChild || $content);
+        if (scrollTarget.scrollIntoView) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     msgs.addEventListener('click', e => {
