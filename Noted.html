@@ -6357,18 +6357,24 @@ function _showAiGutterInd(savedRange) {
                 const s = window.getSelection();
                 s.removeAllRanges();
                 s.addRange(savedRange);
-                const tmpId  = 'ai-ins-' + Date.now();
                 const mdHtml = typeof window._mdToHtml === 'function'
                     ? window._mdToHtml(result)
                     : result.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-                document.execCommand('insertHTML', false,
-                    `<div class="ai-block" id="${tmpId}">${mdHtml}</div>`);
-                const newEl = document.getElementById(tmpId);
-                if (newEl) {
-                    newEl.removeAttribute('id');
-                    newEl.setAttribute('data-generated-by', 'ai');
-                    if (modelName) newEl.setAttribute('data-model', modelName);
-                }
+                /* execCommand('insertHTML') ile div sarmalayıcısı browser tarafından
+                   kaldırılabiliyor; Range API ile doğrudan DOM node olarak ekliyoruz. */
+                const wrapper = document.createElement('div');
+                wrapper.className = 'ai-block';
+                wrapper.setAttribute('data-generated-by', 'ai');
+                if (modelName) wrapper.setAttribute('data-model', modelName);
+                wrapper.innerHTML = mdHtml;
+                const range = s.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(wrapper);
+                /* Cursor'u wrapper'ın sonuna taşı */
+                range.setStartAfter(wrapper);
+                range.collapse(true);
+                s.removeAllRanges();
+                s.addRange(range);
                 ind.success();
             },
             errMsg => {
