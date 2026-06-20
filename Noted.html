@@ -1738,13 +1738,13 @@ input[type="file"] { display:none; }
         .ai-gutter-ind i { animation:ai-tb-spin .8s linear infinite; }
         .ai-gutter-ind.ai-gutter-ok { color:var(--success,#3fb950); }
         .ai-gutter-ind.ai-gutter-ok i { animation:none; }
-        /* AI blockquote — çizgi üst solunda AI etiketi */
-        #content blockquote.ai-bq,
-        .fp-editor-content blockquote.ai-bq { position:relative; font-style:normal; color:var(--text); }
-        #content blockquote.ai-bq::before,
-        .fp-editor-content blockquote.ai-bq::before {
+        /* AI paragraf — bookmark alanında AI etiketi */
+        #content > p.ai-block,
+        .fp-editor-content > p.ai-block { position:relative; }
+        #content > p.ai-block::before,
+        .fp-editor-content > p.ai-block::before {
             content:'AI';
-            position:absolute; top:3px; left:-22px;
+            position:absolute; top:2px; left:-22px;
             font-size:.56rem; font-weight:900; font-style:normal;
             letter-spacing:.06em; line-height:1;
             color:var(--accent); opacity:.9;
@@ -6359,7 +6359,7 @@ function _showAiGutterInd(savedRange) {
                     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                     .replace(/\n/g,'<br>');
                 document.execCommand('insertHTML', false,
-                    `<blockquote class="ai-bq">${escaped}</blockquote>`);
+                    `<p class="ai-block">${escaped}</p>`);
                 ind.success();
             },
             errMsg => {
@@ -10148,13 +10148,18 @@ const _SHAPES = [
 
 /* ══ BOOKMARK GUTTER ══ */
 let _aiInserting = false; /* AI text eklerken bookmark tetiklenmesin */
+let _bmMousedownInGutter = false; /* mousedown gutter içinde başlamadıysa bookmark koyma */
 $content.addEventListener('mousemove', function(e) {
     const xInContent = e.clientX - $content.getBoundingClientRect().left;
     this.style.cursor = xInContent < 28 ? 'pointer' : '';
 });
 $content.addEventListener('mouseleave', function() { this.style.cursor = ''; });
+$content.addEventListener('mousedown', function(e) {
+    _bmMousedownInGutter = (e.clientX - $content.getBoundingClientRect().left) < 28;
+});
 $content.addEventListener('click', function(e) {
     if (_aiInserting) return;
+    if (!_bmMousedownInGutter) return;
     const xInContent = e.clientX - $content.getBoundingClientRect().left;
     if (xInContent > 28) return;
     const rect = $content.getBoundingClientRect();
