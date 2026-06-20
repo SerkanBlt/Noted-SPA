@@ -9701,12 +9701,23 @@ const _SHAPES = [
             m => {
                 const rows = m.trim().split('\n').filter(r => /\|/.test(r));
                 if (rows.length < 3) return m;
+                const applyInline = c => c
+                    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+                    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+                    .replace(/`([^`]+)`/g,'<code>$1</code>')
+                    .replace(/\[\[([^\]]{1,120})\]\]/g, (_, esc_title) => {
+                        const raw = esc_title.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+                        const note = typeof findNoteByTitle === 'function' ? findNoteByTitle(raw) : null;
+                        const cls  = note ? 'ai-wikilink' : 'ai-wikilink broken';
+                        const id   = note ? ` data-note-id="${note.id}"` : '';
+                        return `<a class="${cls}" href="#"${id}><i class="fas fa-link"></i>${esc_title}</a>`;
+                    });
                 /* Leading/trailing | olmayan satırları da destekle */
                 const parseCells = r => {
                     let s = r.trim();
                     if (s.startsWith('|')) s = s.slice(1);
                     if (s.endsWith('|')) s = s.slice(0, -1);
-                    return s.split('|').map(c => _ec(c.trim()));
+                    return s.split('|').map(c => applyInline(_ec(c.trim())));
                 };
                 const heads = parseCells(rows[0]);
                 const cols  = heads.length;
