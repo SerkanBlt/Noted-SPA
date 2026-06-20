@@ -1738,11 +1738,11 @@ input[type="file"] { display:none; }
         .ai-gutter-ind i { animation:ai-tb-spin .8s linear infinite; }
         .ai-gutter-ind.ai-gutter-ok { color:var(--success,#3fb950); }
         .ai-gutter-ind.ai-gutter-ok i { animation:none; }
-        /* AI paragraf — bookmark alanında AI etiketi */
-        #content > p.ai-block,
-        .fp-editor-content > p.ai-block { position:relative; }
-        #content > p.ai-block::before,
-        .fp-editor-content > p.ai-block::before {
+        /* AI blok — bookmark alanında AI etiketi */
+        #content > .ai-block,
+        .fp-editor-content > .ai-block { position:relative; }
+        #content > .ai-block::before,
+        .fp-editor-content > .ai-block::before {
             content:'AI';
             position:absolute; top:2px; left:-22px;
             font-size:.56rem; font-weight:900; font-style:normal;
@@ -1750,8 +1750,8 @@ input[type="file"] { display:none; }
             color:var(--accent); opacity:.9;
             pointer-events:none; user-select:none;
         }
-        #content > p.ai-block[data-ai-hidden]::before,
-        .fp-editor-content > p.ai-block[data-ai-hidden]::before { display:none; }
+        #content > .ai-block[data-ai-hidden]::before,
+        .fp-editor-content > .ai-block[data-ai-hidden]::before { display:none; }
         /* Hata bildirimi */
         .tb-ai-notif {
             position:fixed; z-index:9300; padding:5px 11px; border-radius:8px;
@@ -6357,12 +6357,12 @@ function _showAiGutterInd(savedRange) {
                 const s = window.getSelection();
                 s.removeAllRanges();
                 s.addRange(savedRange);
-                const escaped = result
-                    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-                    .replace(/\n/g,'<br>');
-                const tmpId = 'ai-ins-' + Date.now();
+                const tmpId  = 'ai-ins-' + Date.now();
+                const mdHtml = typeof window._mdToHtml === 'function'
+                    ? window._mdToHtml(result)
+                    : result.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
                 document.execCommand('insertHTML', false,
-                    `<p class="ai-block" id="${tmpId}">${escaped}</p>`);
+                    `<div class="ai-block" id="${tmpId}">${mdHtml}</div>`);
                 const newEl = document.getElementById(tmpId);
                 if (newEl) {
                     newEl.removeAttribute('id');
@@ -10057,6 +10057,7 @@ const _SHAPES = [
     });
 
     /* ── Not içi AI — toolbar butonları için dışa açık API ── */
+    window._mdToHtml = mdToHtml;  /* markdown → HTML dönüştürücü */
     window._inlineAI = async function(action, selectedText, onResult, onError) {
         if (_isFileProtocol) { onError('file:// protokolü desteklenmiyor.'); return; }
         const cfg = getCfg();
