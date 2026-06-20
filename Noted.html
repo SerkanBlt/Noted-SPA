@@ -1750,6 +1750,8 @@ input[type="file"] { display:none; }
             color:var(--accent); opacity:.9;
             pointer-events:none; user-select:none;
         }
+        #content > p.ai-block[data-ai-hidden]::before,
+        .fp-editor-content > p.ai-block[data-ai-hidden]::before { display:none; }
         /* Hata bildirimi */
         .tb-ai-notif {
             position:fixed; z-index:9300; padding:5px 11px; border-radius:8px;
@@ -6346,7 +6348,7 @@ function _showAiGutterInd(savedRange) {
         window._inlineAI(
             item.dataset.aiAction,
             selectedText,
-            result => {
+            (result, modelName) => {
                 if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
                 if (!result) { ind.error(); return; }
                 _aiInserting = true;
@@ -6358,8 +6360,15 @@ function _showAiGutterInd(savedRange) {
                 const escaped = result
                     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                     .replace(/\n/g,'<br>');
+                const tmpId = 'ai-ins-' + Date.now();
                 document.execCommand('insertHTML', false,
-                    `<p class="ai-block">${escaped}</p>`);
+                    `<p class="ai-block" id="${tmpId}">${escaped}</p>`);
+                const newEl = document.getElementById(tmpId);
+                if (newEl) {
+                    newEl.removeAttribute('id');
+                    newEl.setAttribute('data-generated-by', 'ai');
+                    if (modelName) newEl.setAttribute('data-model', modelName);
+                }
                 ind.success();
             },
             errMsg => {
@@ -10111,13 +10120,13 @@ const _SHAPES = [
                     }
                 }
                 const { reply: r1 } = _extractThinking(rawText.trim(), '');
-                onResult(r1 || rawText.trim());
+                onResult(r1 || rawText.trim(), model);
             } else {
                 const data = await r.json();
                 const raw = (data.choices?.[0]?.message?.content || '').trim();
                 const rc  = data.choices?.[0]?.message?.reasoning_content || '';
                 const { reply: r2 } = _extractThinking(raw, rc);
-                onResult(r2 || raw);
+                onResult(r2 || raw, model);
             }
         } catch (err) {
             onError(err.message || 'Bilinmeyen hata');
@@ -10165,6 +10174,17 @@ $content.addEventListener('click', function(e) {
     }
     if (!block) return;
 
+    /* AI blok: etiketi gizle/göster */
+    if (block.classList && block.classList.contains('ai-block')) {
+        if (block.hasAttribute('data-ai-hidden')) {
+            block.removeAttribute('data-ai-hidden');
+        } else {
+            block.setAttribute('data-ai-hidden', '1');
+        }
+        _markDirty();
+        return;
+    }
+
     if (block.hasAttribute('data-bookmark')) {
         block.removeAttribute('data-bookmark');
     } else {
@@ -10172,6 +10192,19 @@ $content.addEventListener('click', function(e) {
     }
     _markDirty();
 });
+
+/* AI üretilen içerik kullanıcı tarafından düzenlenince işaretle */
+$content.addEventListener('input', () => {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const node = sel.anchorNode;
+    const el   = node && (node.nodeType === 3 ? node.parentElement : node);
+    const aiEl = el && el.closest('[data-generated-by="ai"]');
+    if (aiEl && !aiEl.hasAttribute('data-modified-by-user')) {
+        aiEl.setAttribute('data-modified-by-user', 'true');
+        _markDirty();
+    }
+}, true);
 
 /* ══ CF-TRIGGER (footer çekmece) ══ */
 (function() {
