@@ -1763,6 +1763,11 @@ input[type="file"] { display:none; }
         /* Eski ai-block (data-generated-by olmayan) için gizleme desteği */
         #content > .ai-block:not([data-generated-by="ai"])[data-ai-hidden]::before,
         .fp-editor-content > .ai-block:not([data-generated-by="ai"])[data-ai-hidden]::before { display:none; }
+        /* AI blok içi paragraf boşluğu — CSS reset margin:0'ı ezer */
+        .ai-block p { margin-top:0.55em; margin-bottom:0.55em; }
+        .ai-block p:first-child { margin-top:0; }
+        .ai-block p:last-child  { margin-bottom:0; }
+        .ai-block { margin-top:0.4em; margin-bottom:0.4em; }
         /* AI Ton seçici popup */
         .ai-tone-popup { min-width:160px; }
         .ai-act-header {
