@@ -8677,48 +8677,27 @@ function applySlashCommand(type) {
     }
 }
 
-/* Alıntı (blockquote) içinde boş satırda iki kez Enter → normal metne çık */
-let bqEmptyEnterCount = 0;
-$content.addEventListener('keydown', function blockquoteExitOnDoubleEnter(e) {
-    if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) {
-        if (!['Shift','Control','Alt','Meta'].includes(e.key)) bqEmptyEnterCount = 0;
-        return;
-    }
+/* Alıntı (blockquote) sonunda Enter → normal paragraf */
+$content.addEventListener('keydown', function blockquoteExitOnEnter(e) {
+    if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
     const sel = window.getSelection();
-    if (!sel || !sel.rangeCount || !sel.isCollapsed) { bqEmptyEnterCount = 0; return; }
-    const node = sel.anchorNode;
+    if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const node = range.startContainer;
     if (!node) return;
     const el = node.nodeType === 3 ? node.parentElement : node;
     const bq = el ? el.closest('blockquote') : null;
-    if (!bq || !$content.contains(bq)) { bqEmptyEnterCount = 0; return; }
+    if (!bq || !$content.contains(bq)) return;
 
-    /* Cursor'un bulunduğu satırın metni boş mu? */
-    const lineText = (node.nodeType === 3 ? node.textContent : el.textContent).trim();
-    if (lineText !== '') { bqEmptyEnterCount = 0; return; }
+    /* Cursor'dan blockquote sonuna kadar kalan içerik var mı? */
+    const tail = document.createRange();
+    tail.setStart(range.startContainer, range.startOffset);
+    tail.setEnd(bq, bq.childNodes.length);
+    if (tail.toString().trim() !== '') return; /* Ortada — normal Enter */
 
-    bqEmptyEnterCount++;
-    if (bqEmptyEnterCount < 2) return; /* İlk Enter: normal davran */
-
-    /* İkinci Enter: blockquote'dan çık */
+    /* Blokquote sonunda: normal metne geç */
     e.preventDefault();
-    bqEmptyEnterCount = 0;
-
-    /* Boş satırı bq'dan kaldır */
-    let lineEl = el;
-    while (lineEl && lineEl.parentElement !== bq) lineEl = lineEl.parentElement;
-    if (lineEl && bq.contains(lineEl)) lineEl.remove();
-    /* Bq boşaldıysa sil */
-    if (!bq.textContent.trim()) bq.remove();
-
-    /* Sonrasına paragraf ekle ve cursor oraya git */
-    const p = document.createElement('p'); p.innerHTML = '<br>';
-    const ref = bq.parentNode ? (bq.nextSibling || null) : null;
-    const parent = bq.parentNode || $content;
-    if (bq.parentNode) parent.insertBefore(p, ref);
-    else $content.appendChild(p);
-
-    const r = document.createRange(); r.setStart(p, 0); r.collapse(true);
-    sel.removeAllRanges(); sel.addRange(r);
+    insertEmptyParaAfter(bq);
     $content.dispatchEvent(new Event('input', { bubbles: true }));
 }, false);
 
