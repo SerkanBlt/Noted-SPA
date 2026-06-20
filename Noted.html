@@ -1797,11 +1797,6 @@ input[type="file"] { display:none; }
             border-radius:0 4px 4px 0;
         }
         .ai-block hr { border:none; border-top:1px solid var(--border); margin:.6em 0; }
-        .ai-block .md-table { border-collapse:collapse; width:100%; font-size:.8rem; margin:.5em 0; }
-        .ai-block .md-table th,
-        .ai-block .md-table td { border:1px solid var(--border); padding:.22em .55em; text-align:left; vertical-align:top; }
-        .ai-block .md-table thead tr { background:var(--sidebar-bg); font-weight:700; }
-        .ai-block .md-table tbody tr:nth-child(even) { background:var(--sidebar-bg); }
         /* AI Ton seçici popup */
         .ai-tone-popup { min-width:160px; }
         .ai-act-header {
@@ -6605,6 +6600,8 @@ function _showAiGutterInd(savedRange) {
             cr.setStartAfter(wrapper); cr.collapse(true);
             s.removeAllRanges(); s.addRange(cr);
             $content.dispatchEvent(new Event('input', { bubbles: true }));
+            /* ng-wrap içeriyorsa toolbar + resize handle'ları bağla */
+            if (wrapper.querySelector('.ng-wrap') && typeof _restoreGrids === 'function') _restoreGrids();
             ind.success();
         }, errMsg => {
             if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
@@ -9594,12 +9591,27 @@ const _SHAPES = [
             m => {
                 const rows = m.trim().split('\n').filter(r => r.includes('|'));
                 if (rows.length < 3) return m;
-                const cells = r => r.split('|').slice(1,-1).map(c => _ec(c.trim()));
-                const th  = `<tr>${cells(rows[0]).map(h=>`<th>${h}</th>`).join('')}</tr>`;
-                const trs = rows.slice(2)
-                    .map(r => `<tr>${cells(r).map(c=>`<td>${c}</td>`).join('')}</tr>`)
-                    .join('');
-                _tbls.push(`<table class="md-table"><thead>${th}</thead><tbody>${trs}</tbody></table>`);
+                const parseCells = r => r.split('|').slice(1,-1).map(c => _ec(c.trim()));
+                const heads = parseCells(rows[0]);
+                const cols  = heads.length;
+                /* colgroup */
+                const cg = `<colgroup>${heads.map(() => '<col>').join('')}</colgroup>`;
+                /* thead — resize handle son sütun hariç */
+                const thCells = heads.map((h, i) => {
+                    const rh = i < cols-1 ? `<div class="ng-resize" contenteditable="false" data-col="${i}"></div>` : '';
+                    return `<th style="position:relative"><div class="ng-title" contenteditable="true" spellcheck="false" data-ph="Başlık ${i+1}">${h}</div>${rh}</th>`;
+                }).join('');
+                /* tbody */
+                const trs = rows.slice(2).map(r => {
+                    const cs = parseCells(r);
+                    const tds = heads.map((_, i) => {
+                        const rh = i < cols-1 ? `<div class="ng-resize" contenteditable="false" data-col="${i}"></div>` : '';
+                        return `<td style="position:relative"><div class="ng-cell" contenteditable="true" spellcheck="false" data-ph="…">${cs[i] || ''}</div>${rh}</td>`;
+                    }).join('');
+                    return `<tr>${tds}</tr>`;
+                }).join('');
+                const tbl  = `<table class="noted-grid grid-table" data-grid-type="table" data-cols="${cols}" contenteditable="false">${cg}<thead><tr>${thCells}</tr></thead><tbody>${trs}</tbody></table>`;
+                _tbls.push(`<div class="ng-wrap ng-wrap-table" data-grid-type="table">${tbl}</div>`);
                 return `�${_tbls.length-1}�`;
             }
         );
