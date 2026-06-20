@@ -5154,7 +5154,7 @@ function getColor(str) {
 }
 function sanitize(html) {
     return typeof DOMPurify !== 'undefined'
-        ? DOMPurify.sanitize(html, { ADD_ATTR: ['data-note-id', 'data-wikilink', 'target', 'data-grid-type', 'data-gridtype', 'data-cols', 'data-ph', 'data-col', 'data-placeholder', 'data-stab', 'data-type', 'data-tpl', 'contenteditable', 'spellcheck', 'data-bookmark', 'data-shape', 'data-sx', 'data-sy', 'data-sw', 'data-sh', 'data-stroke', 'data-fill-mode', 'data-rotate', 'preserveAspectRatio'] })
+        ? DOMPurify.sanitize(html, { ADD_ATTR: ['data-note-id', 'data-wikilink', 'target', 'data-grid-type', 'data-gridtype', 'data-cols', 'data-ph', 'data-col', 'data-placeholder', 'data-stab', 'data-type', 'data-tpl', 'contenteditable', 'spellcheck', 'data-bookmark', 'data-shape', 'data-sx', 'data-sy', 'data-sw', 'data-sh', 'data-stroke', 'data-fill-mode', 'data-rotate', 'preserveAspectRatio', 'data-valign', 'data-halign'] })
         : html;
 }
 function saveNotes() {
@@ -9637,11 +9637,17 @@ const _SHAPES = [
         const _tbls = [];
         const _ec   = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         t = t.replace(
-            /^(\|[^\n]+\|\s*\n\|[-| :]+\|\s*\n(?:\|[^\n]+\|\s*?\n?)*)/gm,
+            /^(\|[^\n]+\n\|[-| :]+\n(?:\|[^\n]+\n?)*)/gm,
             m => {
                 const rows = m.trim().split('\n').filter(r => r.includes('|'));
                 if (rows.length < 3) return m;
-                const parseCells = r => r.split('|').slice(1,-1).map(c => _ec(c.trim()));
+                /* Trailing | olmayan satırları da destekle */
+                const parseCells = r => {
+                    const parts = r.trim().split('|');
+                    if (parts[0] === '') parts.shift();
+                    if (parts.length > 0 && parts[parts.length - 1].trim() === '') parts.pop();
+                    return parts.map(c => _ec(c.trim()));
+                };
                 const heads = parseCells(rows[0]);
                 const cols  = heads.length;
                 /* colgroup */
