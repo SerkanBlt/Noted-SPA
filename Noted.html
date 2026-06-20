@@ -3882,6 +3882,36 @@ input[type="file"] { display:none; }
             outline: none; padding: 0;
             position: relative;
         }
+        /* Tablo hücreleri: dikey hizalama varsayılanı orta */
+        .noted-grid.grid-table tbody td { vertical-align: middle; }
+        /* Kullanıcı hizalama override — data attribute ile */
+        .noted-grid td[data-valign="top"]    { vertical-align: top    !important; }
+        .noted-grid td[data-valign="middle"] { vertical-align: middle !important; }
+        .noted-grid td[data-valign="bottom"] { vertical-align: bottom !important; }
+        .noted-grid td[data-halign="center"] .ng-cell { text-align: center; }
+        .noted-grid td[data-halign="right"]  .ng-cell { text-align: right;  }
+        .noted-grid td[data-halign="left"]   .ng-cell { text-align: left;   }
+        /* Hizalama popup */
+        .ng-align-popup {
+            position: fixed; z-index: 9999;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 5px;
+            box-shadow: 0 4px 16px var(--shadow);
+            display: none;
+            grid-template-columns: repeat(3, 28px);
+            gap: 3px;
+        }
+        .ng-align-popup.open { display: grid; }
+        .ng-align-btn {
+            width: 28px; height: 28px; padding: 0;
+            border: 1px solid transparent; border-radius: 4px;
+            background: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted);
+            transition: background .1s, color .1s, border-color .1s;
+        }
+        .ng-align-btn:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+        .ng-align-btn.ng-align-active { background: var(--accent); color: #fff; border-color: var(--accent); }
         .noted-grid td:focus, .noted-grid th:focus { outline: none; }
 
         /* ── Panel (başlık satırı + border) ── */
@@ -12390,6 +12420,18 @@ function _createGridToolbar(wrap, table) {
         bar.appendChild(makeBtn('fa-arrow-down',     'Seçili Satırı Alta Taşı','', () => _gridMoveRow(getTable(),  1)));
         bar.appendChild(makeBtn('fa-arrow-left',     'Seçili Kolonu Sola Taşı','', () => _gridMoveCol(getTable(), -1)));
         bar.appendChild(makeBtn('fa-arrow-right',    'Seçili Kolonu Sağa Taşı','', () => _gridMoveCol(getTable(),  1)));
+        bar.appendChild(makeBtn('fa-align-left',     'Hücre Hizalama',         '', () => {
+            const pop  = _getOrCreateAlignPopup();
+            _ngAlignTable = getTable();
+            _updateAlignActive();
+            if (pop.classList.contains('open')) { pop.classList.remove('open'); return; }
+            const alignBtn = bar.querySelector('[title="Hücre Hizalama"]');
+            const rect = alignBtn ? alignBtn.getBoundingClientRect() : bar.getBoundingClientRect();
+            const popW = 104, popH = 108;
+            pop.style.left = Math.min(rect.left, window.innerWidth  - popW - 8) + 'px';
+            pop.style.top  = (rect.bottom + popH > window.innerHeight ? rect.top - popH - 4 : rect.bottom + 4) + 'px';
+            pop.classList.add('open');
+        }));
         bar.appendChild(makeBtn('fa-minus',          'Seçili Satırı Sil',  'danger', () => _gridDeleteRow(getTable())));
         bar.appendChild(makeBtn('fa-table-columns',  'Seçili Kolonu Sil',  'danger', () => _gridDeleteCol(getTable())));
         bar.appendChild(makeBtn('fa-trash',          'Bloğu Sil',          'danger', deleteBlock));
@@ -12669,6 +12711,92 @@ function _gridMoveCol(table, dir) {
 
     _bindGridResize(table);
     active.focus(); _markDirty(); updateFooterVisibility();
+}
+
+/* ── Hizalama popup ── */
+let _ngAlignPopup = null;
+let _ngAlignTable = null;
+
+function _alignSvg(v, h) {
+    const bx = {left:3, center:5, right:7}[h];
+    const by = {top:3, middle:7, bottom:10}[v];
+    return `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="14" height="14" stroke="currentColor" stroke-width="1.2"/><rect x="${bx}" y="${by}" width="6" height="3" fill="currentColor"/></svg>`;
+}
+
+function _getOrCreateAlignPopup() {
+    if (_ngAlignPopup) return _ngAlignPopup;
+    const pop = document.createElement('div');
+    pop.className = 'ng-align-popup';
+    [['top','left'],['top','center'],['top','right'],
+     ['middle','left'],['middle','center'],['middle','right'],
+     ['bottom','left'],['bottom','center'],['bottom','right']
+    ].forEach(([v, h]) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'ng-align-btn';
+        btn.dataset.valign = v;
+        btn.dataset.halign = h;
+        const vL = v==='top'?'Üst':v==='middle'?'Orta':'Alt';
+        const hL = h==='left'?'Sol':h==='center'?'Ortala':'Sağ';
+        btn.title = `${vL} ${hL}`;
+        btn.innerHTML = _alignSvg(v, h);
+        btn.addEventListener('mousedown', e => e.preventDefault());
+        btn.addEventListener('click', () => {
+            if (!_ngAlignTable) return;
+            _gridSetColAlign(_ngAlignTable, v, h);
+            _updateAlignActive();
+        });
+        pop.appendChild(btn);
+    });
+    document.body.appendChild(pop);
+    document.addEventListener('mousedown', e => {
+        if (pop.classList.contains('open') && !pop.contains(e.target)) pop.classList.remove('open');
+    });
+    _ngAlignPopup = pop;
+    return pop;
+}
+
+function _updateAlignActive() {
+    if (!_ngAlignPopup || !_ngAlignTable) return;
+    let cell = window._lastGridCell || null;
+    if (!cell || !_ngAlignTable.contains(cell)) {
+        const et = (_savedToolbarSel && _savedToolbarSel.et) || document.activeElement;
+        cell = et ? et.closest('td, th') : null;
+    }
+    const tr      = cell && _ngAlignTable.contains(cell) ? cell.closest('tr') : null;
+    const colIdx  = tr ? [...tr.children].indexOf(cell) : 0;
+    const isTable = _ngAlignTable.dataset.gridType === 'table';
+    const firstTr = _ngAlignTable.querySelector('tbody tr');
+    const td      = firstTr ? firstTr.children[colIdx] : null;
+    const curV    = (td && td.dataset.valign)  || (isTable ? 'middle' : 'top');
+    const curH    = (td && td.dataset.halign)  || 'left';
+    _ngAlignPopup.querySelectorAll('.ng-align-btn').forEach(btn =>
+        btn.classList.toggle('ng-align-active', btn.dataset.valign === curV && btn.dataset.halign === curH)
+    );
+}
+
+function _gridSetColAlign(table, valign, halign) {
+    let cell = window._lastGridCell || null;
+    if (!cell || !table.contains(cell)) {
+        const et = (_savedToolbarSel && _savedToolbarSel.et) || document.activeElement;
+        cell = et ? et.closest('td, th') : null;
+    }
+    if (!cell || !table.contains(cell)) {
+        const f = table.querySelector(':focus');
+        cell = f ? f.closest('td, th') : null;
+    }
+    const tr     = cell ? cell.closest('tr') : null;
+    const colIdx = tr ? [...tr.children].indexOf(cell) : -1;
+    const apply  = td => {
+        td.dataset.valign = valign;
+        if (halign === 'left') delete td.dataset.halign; else td.dataset.halign = halign;
+    };
+    if (colIdx < 0) {
+        table.querySelectorAll('tbody td').forEach(apply);
+    } else {
+        table.querySelectorAll('tbody tr').forEach(row => { if (row.children[colIdx]) apply(row.children[colIdx]); });
+    }
+    _markDirty();
 }
 
 /* _positionGridAddBtn kaldırıldı — toolbar üstlendi */
