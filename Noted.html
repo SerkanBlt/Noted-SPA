@@ -3944,7 +3944,7 @@ input[type="file"] { display:none; }
         /* Panel içerik hücreleri */
         .noted-grid.grid-panel tbody td {
             padding: 10px 14px;
-            min-height: 64px;
+            height: 64px; /* min-height table cell'lerde çalışmaz; height min-height gibi davranır */
             font-family: var(--font-body);
             line-height: 1.45;
             color: var(--text);
@@ -3981,6 +3981,7 @@ input[type="file"] { display:none; }
         }
         .noted-grid.grid-table tbody td {
             padding: 6px 10px;
+            height: 40px; /* min-height table cell'lerde çalışmaz; height min-height gibi davranır */
             font-family: var(--font-body);
             color: var(--text);
         }
