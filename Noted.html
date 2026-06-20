@@ -3882,13 +3882,20 @@ input[type="file"] { display:none; }
             outline: none; padding: 0;
             position: relative;
         }
-        /* Hücreler ve başlıklar: varsayılan dikey hizalama orta */
+        /* Hücreler ve başlıklar: flex ile gerçek dikey ortalama
+           vertical-align:middle td içindeki display:block çocuğu ortalamaz;
+           justify-content flex container içinde çalışır               */
         .noted-grid tbody td,
-        .noted-grid thead th { vertical-align: middle; }
-        /* Kullanıcı hizalama override — data attribute ile */
-        .noted-grid td[data-valign="top"]    { vertical-align: top; }
-        .noted-grid td[data-valign="middle"] { vertical-align: middle; }
-        .noted-grid td[data-valign="bottom"] { vertical-align: bottom; }
+        .noted-grid thead th {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        /* Kullanıcı valign override — justify-content ile */
+        .noted-grid td[data-valign="top"],    .noted-grid th[data-valign="top"]    { justify-content: flex-start; }
+        .noted-grid td[data-valign="middle"], .noted-grid th[data-valign="middle"] { justify-content: center;     }
+        .noted-grid td[data-valign="bottom"], .noted-grid th[data-valign="bottom"] { justify-content: flex-end;   }
+        /* Yatay hizalama */
         .noted-grid td[data-halign="center"] .ng-cell  { text-align: center; }
         .noted-grid td[data-halign="right"]  .ng-cell  { text-align: right;  }
         .noted-grid td[data-halign="left"]   .ng-cell  { text-align: left;   }
@@ -3944,7 +3951,7 @@ input[type="file"] { display:none; }
         /* Panel içerik hücreleri */
         .noted-grid.grid-panel tbody td {
             padding: 10px 14px;
-            height: 64px; /* min-height table cell'lerde çalışmaz; height min-height gibi davranır */
+            min-height: 64px; /* flex container olduğu için min-height artık çalışır */
             font-family: var(--font-body);
             line-height: 1.45;
             color: var(--text);
@@ -3981,7 +3988,7 @@ input[type="file"] { display:none; }
         }
         .noted-grid.grid-table tbody td {
             padding: 6px 10px;
-            height: 40px; /* min-height table cell'lerde çalışmaz; height min-height gibi davranır */
+            min-height: 40px; /* flex container olduğu için min-height artık çalışır */
             font-family: var(--font-body);
             color: var(--text);
         }
@@ -4127,7 +4134,9 @@ input[type="file"] { display:none; }
         .noted-grid th { position: relative; }
         .noted-grid.grid-panel thead th,
         .noted-grid.grid-table thead th {
-            display: table-cell; /* th default — arka plan çalışsın */
+            display: flex; /* arka plan + flex içerik hizalaması */
+            flex-direction: column;
+            justify-content: center;
         }
         /* Tablo satır seçimi (Shift+Click) */
         .noted-grid.grid-table tbody tr.row-selected td { background: var(--accent-dim) !important; outline: 1px solid var(--accent); }
