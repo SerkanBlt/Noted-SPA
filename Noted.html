@@ -3882,19 +3882,25 @@ input[type="file"] { display:none; }
             outline: none; padding: 0;
             position: relative;
         }
-        /* Hücreler ve başlıklar: flex ile gerçek dikey ortalama
-           vertical-align:middle td içindeki display:block çocuğu ortalamaz;
-           justify-content flex container içinde çalışır               */
+        /* Hücreler ve başlıklar: varsayılan dikey hizalama */
         .noted-grid tbody td,
-        .noted-grid thead th {
+        .noted-grid thead th { vertical-align: middle; }
+        /* ng-v-wrap: td/th içinde flex container ile gerçek dikey ortalama
+           td display:table-cell kalır (layout korunur), wrapper flex yapar */
+        .ng-v-wrap {
             display: flex;
             flex-direction: column;
             justify-content: center;
+            width: 100%;
+            height: 100%; /* td'nin height:Xpx ile çalışır */
         }
-        /* Kullanıcı valign override — justify-content ile */
-        .noted-grid td[data-valign="top"],    .noted-grid th[data-valign="top"]    { justify-content: flex-start; }
-        .noted-grid td[data-valign="middle"], .noted-grid th[data-valign="middle"] { justify-content: center;     }
-        .noted-grid td[data-valign="bottom"], .noted-grid th[data-valign="bottom"] { justify-content: flex-end;   }
+        /* Valign override — wrapper justify-content üzerinden */
+        .noted-grid td[data-valign="top"]    > .ng-v-wrap,
+        .noted-grid th[data-valign="top"]    > .ng-v-wrap { justify-content: flex-start; }
+        .noted-grid td[data-valign="middle"] > .ng-v-wrap,
+        .noted-grid th[data-valign="middle"] > .ng-v-wrap { justify-content: center;     }
+        .noted-grid td[data-valign="bottom"] > .ng-v-wrap,
+        .noted-grid th[data-valign="bottom"] > .ng-v-wrap { justify-content: flex-end;   }
         /* Yatay hizalama */
         .noted-grid td[data-halign="center"] .ng-cell  { text-align: center; }
         .noted-grid td[data-halign="right"]  .ng-cell  { text-align: right;  }
@@ -3951,7 +3957,7 @@ input[type="file"] { display:none; }
         /* Panel içerik hücreleri */
         .noted-grid.grid-panel tbody td {
             padding: 10px 14px;
-            min-height: 64px; /* flex container olduğu için min-height artık çalışır */
+            height: 64px; /* table-cell'de min-height çalışmaz; height min-height gibi davranır */
             font-family: var(--font-body);
             line-height: 1.45;
             color: var(--text);
@@ -3988,7 +3994,7 @@ input[type="file"] { display:none; }
         }
         .noted-grid.grid-table tbody td {
             padding: 6px 10px;
-            min-height: 40px; /* flex container olduğu için min-height artık çalışır */
+            height: 40px; /* table-cell'de min-height çalışmaz; height min-height gibi davranır */
             font-family: var(--font-body);
             color: var(--text);
         }
@@ -4134,9 +4140,7 @@ input[type="file"] { display:none; }
         .noted-grid th { position: relative; }
         .noted-grid.grid-panel thead th,
         .noted-grid.grid-table thead th {
-            display: flex; /* arka plan + flex içerik hizalaması */
-            flex-direction: column;
-            justify-content: center;
+            display: table-cell; /* th default — arka plan çalışsın */
         }
         /* Tablo satır seçimi (Shift+Click) */
         .noted-grid.grid-table tbody tr.row-selected td { background: var(--accent-dim) !important; outline: 1px solid var(--accent); }
@@ -8027,6 +8031,7 @@ function editNote(id) {
     document.body.classList.remove('cf-ready');
     $title.value=n.title; $editId.value=n.id; editorGroup=n.group;
     $content.innerHTML=sanitize(n.content);
+    _upgradeGridWraps($content);
     if (typeof window._resetEditorZoom === 'function') window._resetEditorZoom();
     initShapeOverlays();
 
@@ -9644,14 +9649,14 @@ const _SHAPES = [
                 /* thead — resize handle son sütun hariç */
                 const thCells = heads.map((h, i) => {
                     const rh = i < cols-1 ? `<div class="ng-resize" contenteditable="false" data-col="${i}"></div>` : '';
-                    return `<th style="position:relative"><div class="ng-title" contenteditable="true" spellcheck="false" data-ph="Başlık ${i+1}">${h}</div>${rh}</th>`;
+                    return `<th style="position:relative"><div class="ng-v-wrap"><div class="ng-title" contenteditable="true" spellcheck="false" data-ph="Başlık ${i+1}">${h}</div></div>${rh}</th>`;
                 }).join('');
                 /* tbody */
                 const trs = rows.slice(2).map(r => {
                     const cs = parseCells(r);
                     const tds = heads.map((_, i) => {
                         const rh = i < cols-1 ? `<div class="ng-resize" contenteditable="false" data-col="${i}"></div>` : '';
-                        return `<td style="position:relative"><div class="ng-cell" contenteditable="true" spellcheck="false" data-ph="…">${cs[i] || ''}</div>${rh}</td>`;
+                        return `<td style="position:relative"><div class="ng-v-wrap"><div class="ng-cell" contenteditable="true" spellcheck="false" data-ph="…">${cs[i] || ''}</div></div>${rh}</td>`;
                     }).join('');
                     return `<tr>${tds}</tr>`;
                 }).join('');
@@ -12293,6 +12298,24 @@ function closeQuickSwitcher() {
  *   rows : satır sayısı — sadece table (varsayılan 3, panel 1 içerik satırı)
  *   colWidths: [px, px, ...] — kaydedilmiş genişlikler (isteğe bağlı)
  */
+/* Eski notlardaki tablo hücrelerine ng-v-wrap ekler (wrapper olmadan kaydedilmiş notlar) */
+function _upgradeGridWraps(root) {
+    root.querySelectorAll('.noted-grid tbody td').forEach(td => {
+        const cell = td.querySelector('.ng-cell');
+        if (cell && cell.parentElement === td) {
+            const w = document.createElement('div'); w.className = 'ng-v-wrap';
+            td.insertBefore(w, cell); w.appendChild(cell);
+        }
+    });
+    root.querySelectorAll('.noted-grid thead th').forEach(th => {
+        const title = th.querySelector('.ng-title');
+        if (title && title.parentElement === th) {
+            const w = document.createElement('div'); w.className = 'ng-v-wrap';
+            th.insertBefore(w, title); w.appendChild(title);
+        }
+    });
+}
+
 function createGrid(type, cols, rows, colWidths) {
     cols = cols || 3;
     rows = rows || (type === 'table' ? 3 : 1);
@@ -12333,7 +12356,10 @@ function createGrid(type, cols, rows, colWidths) {
             title.addEventListener('keydown', e => { if (e.key==='Enter'){e.preventDefault();title.blur();} });
             title.addEventListener('mousedown', e => e.stopPropagation());
             title.addEventListener('focus', () => { _activeEditTarget = title; _saveToolbarSel(); });
-            th.appendChild(title);
+            const thWrap = document.createElement('div');
+            thWrap.className = 'ng-v-wrap';
+            thWrap.appendChild(title);
+            th.appendChild(thWrap);
         } else {
             /* Kolon: başlık hücresi görünmez ama resize için var */
             th.className = 'ng-col-header';
@@ -12370,7 +12396,10 @@ function createGrid(type, cols, rows, colWidths) {
             cell.spellcheck = false;
             cell.dataset.ph = type === 'column' ? ('Sütun ' + (c+1) + '…') : '…';
             cell.addEventListener('focus', () => { _activeEditTarget = cell; setTimeout(_saveToolbarSel, 0); });
-            td.appendChild(cell);
+            const vWrap = document.createElement('div');
+            vWrap.className = 'ng-v-wrap';
+            vWrap.appendChild(cell);
+            td.appendChild(vWrap);
             /* Resize handle: tüm tiplerde (kolon dahil) */
             if (c < cols - 1) _appendResizeHandle(td, table, c);
             tr.appendChild(td);
@@ -12525,7 +12554,8 @@ function _gridAddRow(table) {
         div.className = 'ng-cell'; div.contentEditable = 'true';
         div.spellcheck = false; div.dataset.ph = '…';
         div.addEventListener('focus', () => { _activeEditTarget = div; setTimeout(_saveToolbarSel, 0); });
-        td.appendChild(div);
+        const rWrap = document.createElement('div'); rWrap.className = 'ng-v-wrap'; rWrap.appendChild(div);
+        td.appendChild(rWrap);
         if (c < cols - 1 && table.dataset.gridType !== 'column') _appendResizeHandle(td, table, c);
         tr.appendChild(td);
     }
@@ -12638,7 +12668,8 @@ function _gridAddCol(table) {
             title.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();title.blur();} });
             title.addEventListener('mousedown', e => e.stopPropagation());
             title.addEventListener('focus', () => { _activeEditTarget = title; _saveToolbarSel(); });
-            cell.appendChild(title);
+            const acWrap = document.createElement('div'); acWrap.className = 'ng-v-wrap'; acWrap.appendChild(title);
+            cell.appendChild(acWrap);
             /* önceki son hücreye resize handle ekle */
             const prevCell = tr.lastElementChild;
             if (prevCell) _appendResizeHandle(prevCell, table, colIdx - 1);
@@ -12649,7 +12680,8 @@ function _gridAddCol(table) {
             div.spellcheck = false;
             div.dataset.ph = table.dataset.gridType === 'column' ? 'Sütun '+(colIdx+1)+'…' : '…';
             div.addEventListener('focus', () => { _activeEditTarget = div; setTimeout(_saveToolbarSel, 0); });
-            cell.appendChild(div);
+            const acWrap2 = document.createElement('div'); acWrap2.className = 'ng-v-wrap'; acWrap2.appendChild(div);
+            cell.appendChild(acWrap2);
             const prevCell = tr.lastElementChild;
             if (prevCell) _appendResizeHandle(prevCell, table, colIdx - 1);
         }
@@ -13187,7 +13219,8 @@ document.addEventListener('keydown', function ngTabNav(e) {
                 const div = document.createElement('div');
                 div.className = 'ng-cell'; div.contentEditable = 'true';
                 div.spellcheck = false; div.dataset.ph = '…';
-                newTd.appendChild(div);
+                const tabWrap = document.createElement('div'); tabWrap.className = 'ng-v-wrap'; tabWrap.appendChild(div);
+                newTd.appendChild(tabWrap);
                 if (c < cols - 1 && table.dataset.gridType !== 'column') _appendResizeHandle(newTd, table, c);
                 newTr.appendChild(newTd);
             }
