@@ -1706,11 +1706,39 @@ input[type="file"] { display:none; }
         }
         @keyframes ai-blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
 
-        /* Not içi AI toolbar butonları */
-        .tb.tb-ai { color:var(--accent); }
-        .tb.tb-ai.tb-ai-busy { opacity:.5; cursor:wait; pointer-events:none; }
-        .tb.tb-ai.tb-ai-busy i { animation:ai-tb-spin .8s linear infinite; }
+        /* Not içi AI — toolbar butonu */
+        .tb.tb-ai-main { color:var(--accent); }
+        .tb.tb-ai-main.tb-ai-busy { opacity:.5; cursor:wait; pointer-events:none; }
+        .tb.tb-ai-main.tb-ai-busy i { animation:ai-tb-spin .8s linear infinite; }
         @keyframes ai-tb-spin { to { transform:rotate(360deg); } }
+        /* AI eylem dropdown popup */
+        .ai-action-popup {
+            position:fixed; z-index:9260; display:none; flex-direction:column; gap:2px;
+            padding:4px; background:var(--surface); border:1px solid var(--border);
+            border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.22); min-width:132px;
+        }
+        .ai-action-popup.open { display:flex; }
+        .ai-act-item {
+            display:flex; align-items:center; gap:8px;
+            padding:6px 10px; border-radius:7px;
+            background:none; border:none; cursor:pointer;
+            color:var(--text); font-size:.82rem; text-align:left; white-space:nowrap;
+        }
+        .ai-act-item:hover { background:var(--hover,rgba(120,120,120,.12)); color:var(--accent); }
+        .ai-act-item i { color:var(--accent); }
+        /* Gutter ilerleme göstergesi */
+        .ai-gutter-ind {
+            position:fixed; z-index:9250; width:18px; height:18px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:.68rem; color:var(--accent); pointer-events:none;
+            opacity:0; transform:scale(.6);
+            transition:opacity .18s, transform .18s;
+        }
+        .ai-gutter-ind.show { opacity:1; transform:scale(1); }
+        .ai-gutter-ind i { animation:ai-tb-spin .8s linear infinite; }
+        .ai-gutter-ind.ai-gutter-ok { color:var(--success,#3fb950); }
+        .ai-gutter-ind.ai-gutter-ok i { animation:none; }
+        /* Hata bildirimi */
         .tb-ai-notif {
             position:fixed; z-index:9300; padding:5px 11px; border-radius:8px;
             font-size:.78rem; pointer-events:none; max-width:280px;
@@ -4442,6 +4470,13 @@ input[type="file"] { display:none; }
     <div class="tp-label" id="tp-label">1 × 1</div>
     <div class="tp-grid" id="tp-grid"></div>
 </div>
+<!-- AI eylem seçici popup -->
+<div id="ai-action-popup" class="ai-action-popup">
+    <button class="ai-act-item" data-ai-action="expand"><i class="fas fa-expand fa-fw"></i> Genişlet</button>
+    <button class="ai-act-item" data-ai-action="summarize"><i class="fas fa-compress fa-fw"></i> Özetle</button>
+    <button class="ai-act-item" data-ai-action="fix"><i class="fas fa-spell-check fa-fw"></i> Düzelt</button>
+    <button class="ai-act-item" data-ai-action="continue"><i class="fas fa-angles-right fa-fw"></i> Devam Et</button>
+</div>
 <!-- v1.3: Wiki-bağlantı otomatik tamamlama -->
 <div id="wl-autocomplete" class="wl-autocomplete">
     <div class="wl-ac-hdr">Not Bağla</div>
@@ -4582,10 +4617,7 @@ input[type="file"] { display:none; }
     <span class="tb-fsize-val" id="tb-fsize-val">18</span>
     <button class="tb tb-fsize" id="tb-fsize-inc" title="Yazı büyüt">A+</button>
     <div class="tb-sep"></div>
-    <button class="tb tb-ai" data-ai-action="expand"    title="Genişlet — seçili metni AI ile genişlet"><i class="fas fa-expand"></i></button>
-    <button class="tb tb-ai" data-ai-action="summarize" title="Özetle — seçili metni AI ile özetle"><i class="fas fa-compress"></i></button>
-    <button class="tb tb-ai" data-ai-action="fix"       title="Düzelt — yazım hatalarını AI ile düzelt"><i class="fas fa-spell-check"></i></button>
-    <button class="tb tb-ai" data-ai-action="continue"  title="Devam Et — seçili metnin devamını yaz"><i class="fas fa-angles-right"></i></button>
+    <button class="tb tb-ai-main" id="tb-ai-btn" data-special="ai-action" title="AI Eylemleri"><i class="fas fa-wand-magic-sparkles"></i></button>
 </div>
 
 <!-- Kolon Düzeni dropdown -->
@@ -6208,53 +6240,30 @@ $('toolbar').addEventListener('mousedown', e => {
             popup.style.top  = top + 'px';
             popup.style.left = left + 'px';
             popup.classList.toggle('open', !popup.classList.contains('open'));
+        } else if (btn.dataset.special === 'ai-action') {
+            _saveToolbarSel();
+            const popup = $('ai-action-popup');
+            const rect  = btn.getBoundingClientRect();
+            let top  = rect.bottom + 4;
+            let left = rect.left;
+            if (left + 140 > window.innerWidth - 4) left = window.innerWidth - 144;
+            if (top + 180 > window.innerHeight) top = rect.top - 184;
+            popup.style.top  = top  + 'px';
+            popup.style.left = left + 'px';
+            popup.classList.toggle('open', !popup.classList.contains('open'));
         } else {
             runSpecial(btn.dataset.special);
         }
-    } else if (btn.dataset.aiAction) {
-        const sel = window.getSelection();
-        const selectedText = sel ? sel.toString().trim() : '';
-        if (!selectedText) return;
-        /* Range'i klonla — async sonuçta restore için */
-        const savedRange = sel.getRangeAt(0).cloneRange();
-        const savedEt    = _activeEditTarget || $content;
-
-        btn.classList.add('tb-ai-busy');
-
-        if (typeof window._inlineAI !== 'function') {
-            btn.classList.remove('tb-ai-busy');
-            _tbAiNotif(btn, '⚠️ AI paneli henüz yüklenmedi.');
-            return;
-        }
-
-        window._inlineAI(
-            btn.dataset.aiAction,
-            selectedText,
-            result => {
-                btn.classList.remove('tb-ai-busy');
-                if (!result) return;
-                savedEt.focus();
-                const s = window.getSelection();
-                s.removeAllRanges();
-                s.addRange(savedRange);
-                document.execCommand('insertText', false, result);
-            },
-            errMsg => {
-                btn.classList.remove('tb-ai-busy');
-                _tbAiNotif(btn, '⚠️ ' + errMsg);
-            }
-        );
-        return; /* updateToolbarState async sonrası gereksiz */
     }
     updateToolbarState();
 });
 
-function _tbAiNotif(anchorBtn, msg) {
+function _tbAiNotif(anchorEl, msg) {
     const n = document.createElement('div');
     n.className = 'tb-ai-notif';
     n.textContent = msg;
     document.body.appendChild(n);
-    const r = anchorBtn.getBoundingClientRect();
+    const r = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : { bottom: 60, left: 8 };
     n.style.top  = (r.bottom + 6) + 'px';
     n.style.left = Math.max(4, r.left - 60) + 'px';
     requestAnimationFrame(() => n.classList.add('show'));
@@ -6263,6 +6272,92 @@ function _tbAiNotif(anchorBtn, msg) {
         setTimeout(() => n.remove(), 220);
     }, 3200);
 }
+
+function _showAiGutterInd(savedRange) {
+    const rangeRect   = savedRange.getBoundingClientRect();
+    const contentRect = $content.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'ai-gutter-ind';
+    el.innerHTML = '<i class="fas fa-spinner"></i>';
+    el.style.top  = (rangeRect.top + rangeRect.height / 2 - 9) + 'px';
+    el.style.left = (contentRect.left + 4) + 'px';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    return {
+        success() {
+            el.innerHTML = '<i class="fas fa-check"></i>';
+            el.classList.add('ai-gutter-ok');
+            setTimeout(() => {
+                el.style.transition = 'opacity .3s, transform .3s';
+                el.style.opacity    = '0';
+                el.style.transform  = 'scale(.6)';
+                setTimeout(() => el.remove(), 320);
+            }, 1400);
+        },
+        error() {
+            el.style.opacity   = '0';
+            el.style.transform = 'scale(.6)';
+            setTimeout(() => el.remove(), 220);
+        }
+    };
+}
+
+/* ── Not içi AI eylem popup ── */
+(function initAiActionPopup() {
+    const popup = $('ai-action-popup');
+    if (!popup) return;
+
+    popup.addEventListener('mousedown', e => {
+        const item = e.target.closest('.ai-act-item');
+        if (!item) return;
+        e.preventDefault();
+        popup.classList.remove('open');
+        _restoreToolbarSel();
+
+        const sel = window.getSelection();
+        const selectedText = sel ? sel.toString().trim() : '';
+        if (!selectedText) return;
+
+        const savedRange = sel.getRangeAt(0).cloneRange();
+        const savedEt    = _activeEditTarget || $content;
+        const ind        = _showAiGutterInd(savedRange);
+        const aiBtn      = $('tb-ai-btn');
+        if (aiBtn) aiBtn.classList.add('tb-ai-busy');
+
+        if (typeof window._inlineAI !== 'function') {
+            if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
+            ind.error();
+            _tbAiNotif(aiBtn, '⚠️ AI paneli henüz yüklenmedi.');
+            return;
+        }
+
+        window._inlineAI(
+            item.dataset.aiAction,
+            selectedText,
+            result => {
+                if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
+                if (!result) { ind.error(); return; }
+                savedEt.focus();
+                const s = window.getSelection();
+                s.removeAllRanges();
+                s.addRange(savedRange);
+                document.execCommand('insertText', false, result);
+                ind.success();
+            },
+            errMsg => {
+                if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
+                ind.error();
+                _tbAiNotif(aiBtn, '⚠️ ' + errMsg);
+            }
+        );
+    });
+
+    document.addEventListener('click', e => {
+        if (!popup.classList.contains('open')) return;
+        if (popup.contains(e.target) || e.target.closest('#tb-ai-btn')) return;
+        popup.classList.remove('open');
+    });
+})();
 
 /* ══ TODO KLAVYE YÖNETİMİ ══ */
 /* $content + panel içerikleri için ortak handler — capture phase */
