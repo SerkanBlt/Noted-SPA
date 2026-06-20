@@ -1741,8 +1741,9 @@ input[type="file"] { display:none; }
         /* AI blok — bookmark alanında AI etiketi */
         #content > .ai-block,
         .fp-editor-content > .ai-block { position:relative; }
-        #content > .ai-block::before,
-        .fp-editor-content > .ai-block::before {
+        /* data-generated-by="ai" olan bloklar: AI etiketi kalıcı, gizlenemez */
+        #content > .ai-block[data-generated-by="ai"]::before,
+        .fp-editor-content > .ai-block[data-generated-by="ai"]::before {
             content:'AI';
             position:absolute; top:2px; left:-22px;
             font-size:.56rem; font-weight:900; font-style:normal;
@@ -1750,8 +1751,35 @@ input[type="file"] { display:none; }
             color:var(--accent); opacity:.9;
             pointer-events:none; user-select:none;
         }
-        #content > .ai-block[data-ai-hidden]::before,
-        .fp-editor-content > .ai-block[data-ai-hidden]::before { display:none; }
+        /* Kullanıcı AI bloğuna bookmark koyunca gutter'da ikon da göster */
+        #content > .ai-block[data-generated-by="ai"][data-bookmark]::after,
+        .fp-editor-content > .ai-block[data-generated-by="ai"][data-bookmark]::after {
+            content:'\f02e';
+            font-family:'Font Awesome 6 Free'; font-weight:900;
+            position:absolute; bottom:3px; left:-20px;
+            font-size:.62rem; color:var(--accent);
+            pointer-events:none; user-select:none; opacity:.85;
+        }
+        /* Eski ai-block (data-generated-by olmayan) için gizleme desteği */
+        #content > .ai-block:not([data-generated-by="ai"])[data-ai-hidden]::before,
+        .fp-editor-content > .ai-block:not([data-generated-by="ai"])[data-ai-hidden]::before { display:none; }
+        /* AI Ton seçici popup */
+        .ai-tone-popup { min-width:160px; }
+        .ai-act-header {
+            font-size:.72rem; font-weight:700; color:var(--text-muted);
+            padding:4px 10px 2px; user-select:none;
+        }
+        .ai-act-sep { height:1px; background:var(--border); margin:2px 4px; }
+        .ai-act-item .ai-tone-name {
+            margin-left:auto; font-size:.72rem;
+            color:var(--accent); opacity:.85;
+        }
+        .ai-act-item.ai-tone-active { color:var(--accent); }
+        .ai-act-item.ai-tone-active::after {
+            content:'\f00c';
+            font-family:'Font Awesome 6 Free'; font-weight:900;
+            margin-left:auto; font-size:.75rem; color:var(--accent);
+        }
         /* Hata bildirimi */
         .tb-ai-notif {
             position:fixed; z-index:9300; padding:5px 11px; border-radius:8px;
@@ -4490,6 +4518,16 @@ input[type="file"] { display:none; }
     <button class="ai-act-item" data-ai-action="summarize"><i class="fas fa-compress fa-fw"></i> Özetle</button>
     <button class="ai-act-item" data-ai-action="fix"><i class="fas fa-spell-check fa-fw"></i> Düzelt</button>
     <button class="ai-act-item" data-ai-action="continue"><i class="fas fa-angles-right fa-fw"></i> Devam Et</button>
+    <div class="ai-act-sep"></div>
+    <button class="ai-act-item" data-ai-action="tone"><i class="fas fa-sliders fa-fw"></i> AI Tonu <span class="ai-tone-name"></span></button>
+</div>
+<!-- AI Ton seçici popup -->
+<div id="ai-tone-popup" class="ai-action-popup ai-tone-popup">
+    <div class="ai-act-header">AI Yanıt Tonu</div>
+    <button class="ai-act-item" data-ai-tone="professional"><i class="fas fa-briefcase fa-fw"></i> Profesyonel</button>
+    <button class="ai-act-item" data-ai-tone="friendly"><i class="fas fa-face-smile fa-fw"></i> Samimi</button>
+    <button class="ai-act-item" data-ai-tone="informative"><i class="fas fa-circle-info fa-fw"></i> Bilgilendirici</button>
+    <button class="ai-act-item" data-ai-tone="creative"><i class="fas fa-lightbulb fa-fw"></i> Yaratıcı</button>
 </div>
 <!-- v1.3: Wiki-bağlantı otomatik tamamlama -->
 <div id="wl-autocomplete" class="wl-autocomplete">
@@ -6318,13 +6356,47 @@ function _showAiGutterInd(savedRange) {
 
 /* ── Not içi AI eylem popup ── */
 (function initAiActionPopup() {
-    const popup = $('ai-action-popup');
+    const popup     = $('ai-action-popup');
+    const tonePop   = $('ai-tone-popup');
     if (!popup) return;
 
+    const TONE_LABELS = { professional:'Profesyonel', friendly:'Samimi', informative:'Bilgilendirici', creative:'Yaratıcı' };
+    const TONE_KEY    = 'noted-ai-tone';
+
+    function _updateToneBadge() {
+        const cur   = localStorage.getItem(TONE_KEY) || 'informative';
+        const badge = popup.querySelector('.ai-tone-name');
+        if (badge) badge.textContent = TONE_LABELS[cur] || 'Bilgilendirici';
+        if (tonePop) {
+            tonePop.querySelectorAll('.ai-act-item[data-ai-tone]').forEach(el => {
+                el.classList.toggle('ai-tone-active', el.dataset.aiTone === cur);
+            });
+        }
+    }
+    _updateToneBadge();
+
+    /* ── Ana popup: eylem seçimi ── */
     popup.addEventListener('mousedown', e => {
         const item = e.target.closest('.ai-act-item');
         if (!item) return;
         e.preventDefault();
+
+        /* Ton seçici */
+        if (item.dataset.aiAction === 'tone') {
+            popup.classList.remove('open');
+            if (!tonePop) return;
+            _updateToneBadge();
+            const rect = item.getBoundingClientRect();
+            let top  = rect.top;
+            let left = rect.right + 4;
+            if (left + 170 > window.innerWidth - 4) left = rect.left - 174;
+            if (top  + 160 > window.innerHeight)   top  = window.innerHeight - 164;
+            tonePop.style.top  = top  + 'px';
+            tonePop.style.left = left + 'px';
+            tonePop.classList.add('open');
+            return;
+        }
+
         popup.classList.remove('open');
         _restoreToolbarSel();
 
@@ -6355,41 +6427,53 @@ function _showAiGutterInd(savedRange) {
                 setTimeout(() => { _aiInserting = false; }, 120);
                 savedEt.focus();
                 const s = window.getSelection();
-                s.removeAllRanges();
-                s.addRange(savedRange);
                 const mdHtml = typeof window._mdToHtml === 'function'
                     ? window._mdToHtml(result)
                     : result.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-                /* 1) Seçimi sil ve inline placeholder ekle (execCommand p/div kırılmasını halleder) */
-                const tmpId = 'ai-ins-' + Date.now();
-                document.execCommand('insertHTML', false, `<span id="${tmpId}"></span>`);
-                const ph = document.getElementById(tmpId);
-                /* 2) wrapper'ı oluştur */
+
+                /* Seçimin bitişini kapsayan, savedEt'in doğrudan çocuğunu bul */
+                const _getTopBlock = node => {
+                    let n = node && node.nodeType === 3 ? node.parentElement : node;
+                    while (n && n.parentElement !== savedEt) n = n.parentElement;
+                    return (n && n !== savedEt) ? n : null;
+                };
+                const endBlock = _getTopBlock(savedRange.endContainer);
+
+                /* wrapper oluştur */
                 const wrapper = document.createElement('div');
                 wrapper.className = 'ai-block';
                 wrapper.setAttribute('data-generated-by', 'ai');
                 if (modelName) wrapper.setAttribute('data-model', modelName);
                 wrapper.innerHTML = mdHtml;
-                /* 3) placeholder'dan yukarı çıkarak savedEt'in (= $content) doğrudan çocuğunu bul */
-                if (ph) {
-                    let topBlock = ph;
-                    while (topBlock.parentElement && topBlock.parentElement !== savedEt) {
-                        topBlock = topBlock.parentElement;
-                    }
-                    savedEt.insertBefore(wrapper, topBlock.nextSibling || null);
-                    ph.remove();
-                    /* topBlock boşaldıysa temizle */
-                    if (topBlock !== savedEt && !topBlock.textContent.trim()
-                            && !topBlock.querySelector('img,input,video,canvas')) {
-                        topBlock.remove();
+
+                if (endBlock) {
+                    /* Seçim bitişinden bloğun sonuna kadar olan "sonraki" içeriği çıkar */
+                    const tailRange = document.createRange();
+                    try {
+                        tailRange.setStart(savedRange.endContainer, savedRange.endOffset);
+                        tailRange.setEnd(endBlock, endBlock.childNodes.length);
+                    } catch(_) { tailRange.collapse(true); }
+                    const tailFrag = tailRange.extractContents();
+                    const hasTail  = tailFrag.textContent.trim() !== '';
+
+                    /* AI wrapper'ı endBlock'tan sonraya ekle */
+                    savedEt.insertBefore(wrapper, endBlock.nextSibling || null);
+
+                    /* Seçim sonrasındaki metin varsa AI'dan sonraki paragrafa taşı */
+                    if (hasTail) {
+                        const tailPara = document.createElement('p');
+                        tailPara.appendChild(tailFrag);
+                        savedEt.insertBefore(tailPara, wrapper.nextSibling || null);
                     }
                 } else {
                     savedEt.appendChild(wrapper);
                 }
-                /* 4) Cursor'u wrapper sonuna taşı */
+
+                /* Cursor'u wrapper sonuna taşı */
                 const cr = document.createRange();
                 cr.setStartAfter(wrapper); cr.collapse(true);
                 s.removeAllRanges(); s.addRange(cr);
+                $content.dispatchEvent(new Event('input', { bubbles: true }));
                 ind.success();
             },
             errMsg => {
@@ -6400,10 +6484,28 @@ function _showAiGutterInd(savedRange) {
         );
     });
 
+    /* ── Ton seçici popup ── */
+    if (tonePop) {
+        tonePop.addEventListener('mousedown', e => {
+            const item = e.target.closest('.ai-act-item[data-ai-tone]');
+            if (!item) return;
+            e.preventDefault();
+            localStorage.setItem(TONE_KEY, item.dataset.aiTone);
+            tonePop.classList.remove('open');
+            _updateToneBadge();
+        });
+    }
+
+    /* Dışarı tıklayınca kapat */
     document.addEventListener('click', e => {
-        if (!popup.classList.contains('open')) return;
-        if (popup.contains(e.target) || e.target.closest('#tb-ai-btn')) return;
-        popup.classList.remove('open');
+        if (popup.classList.contains('open') &&
+            !popup.contains(e.target) && !e.target.closest('#tb-ai-btn')) {
+            popup.classList.remove('open');
+        }
+        if (tonePop && tonePop.classList.contains('open') &&
+            !tonePop.contains(e.target)) {
+            tonePop.classList.remove('open');
+        }
     });
 })();
 
@@ -10093,11 +10195,19 @@ const _SHAPES = [
         const prompt = prompts[action];
         if (!prompt) { onError('Geçersiz eylem.'); return; }
 
+        const toneMap = {
+            professional: 'Yanıtlarını profesyonel, resmi ve öz bir dilde ver.',
+            friendly:     'Yanıtlarını samimi, sıcak ve dostane bir dilde ver.',
+            informative:  'Yanıtlarını açıklayıcı, kapsamlı ve bilgilendirici bir dilde ver.',
+            creative:     'Yanıtlarını yaratıcı, özgün ve akıcı bir dilde ver.'
+        };
+        const tone    = localStorage.getItem('noted-ai-tone') || 'informative';
+        const toneStr = toneMap[tone] || toneMap.informative;
         const model = cfg.model || 'llama-3.3-70b-versatile';
         const payload = {
             model,
             messages: [
-                { role: 'system', content: 'Sen bir metin editörü asistanısın. Yalnızca istenen dönüşümü yap, hiçbir açıklama veya giriş ekleme. Yanıtını düz metin olarak ver.' },
+                { role: 'system', content: `Sen bir metin editörü asistanısın. Yalnızca istenen dönüşümü yap, hiçbir açıklama veya giriş ekleme. ${toneStr}` },
                 { role: 'user', content: `${prompt}\n\n${selectedText}` }
             ],
             max_tokens: 1024,
@@ -10196,13 +10306,17 @@ $content.addEventListener('click', function(e) {
     }
     if (!block) return;
 
-    /* AI blok: etiketi sadece kaldır (tek yönlü — kullanıcı ekleyemez) */
+    /* AI blok: data-generated-by="ai" olanlar — etiketi gizleme, bookmark toggle'a izin ver */
     if (block.classList && block.classList.contains('ai-block')) {
-        if (!block.hasAttribute('data-ai-hidden')) {
-            block.setAttribute('data-ai-hidden', '1');
-            _markDirty();
+        if (block.getAttribute('data-generated-by') !== 'ai') {
+            /* Eski ai-block — sadece tek yönlü gizle */
+            if (!block.hasAttribute('data-ai-hidden')) {
+                block.setAttribute('data-ai-hidden', '1');
+                _markDirty();
+            }
+            return;
         }
-        return;
+        /* data-generated-by="ai": AI etiketi kalıcı, bookmark toggle normal devam eder */
     }
 
     if (block.hasAttribute('data-bookmark')) {
