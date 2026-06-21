@@ -8215,6 +8215,7 @@ function editNote(id) {
     const _rems = n.reminders || (n.reminder && n.reminder.at ? [{ at: n.reminder.at, fired: n.reminder.fired || false, title: n.reminder.reminderTitle || '' }] : []);
     updateReminderBtn(_rems, n.reminderNote || (n.reminder && n.reminder.reminderNote) || '');
     tocOpen = false; buildTocPanel(n.id);
+    renderBacklinksInto($editorBacklinksList, $editorBacklinks, n.id);
     if ($reminderBtn) $reminderBtn.classList.remove('hidden');
     if ($exportMdBtn) $exportMdBtn.removeAttribute('disabled');
     const _expHtmlBtn = $('export-html-btn'); if (_expHtmlBtn) _expHtmlBtn.removeAttribute('disabled');
@@ -8242,6 +8243,8 @@ function resetEditor() {
     if ($editorToc) $editorToc.style.display='none';
     if ($editorTocList) $editorTocList.innerHTML='';
     if ($tocToggleBtn) { $tocToggleBtn.classList.add('hidden'); $tocToggleBtn.classList.remove('active'); }
+    if ($editorBacklinks) $editorBacklinks.style.display='none';
+    if ($editorBacklinksList) $editorBacklinksList.innerHTML='';
     if ($reminderBtn) $reminderBtn.classList.add('hidden');
     if ($exportMdBtn) $exportMdBtn.setAttribute('disabled', '');
     const _expHtmlBtn2 = $('export-html-btn'); if (_expHtmlBtn2) _expHtmlBtn2.setAttribute('disabled', '');
