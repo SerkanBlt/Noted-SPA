@@ -1886,8 +1886,8 @@ input[type="file"] { display:none; }
         .ai-bubble pre{background:rgba(0,0,0,.07);padding:9px 12px;border-radius:8px;overflow-x:auto;font-size:.81em;margin:5px 0;}
         [data-theme="dark"] .ai-bubble pre{background:rgba(255,255,255,.06);}
         .ai-bubble strong{font-weight:600;}
-        .ai-bubble ul,.ai-bubble ol{margin:3px 0 7px 16px;}
-        .ai-bubble li{margin:2px 0;}
+        .ai-bubble ul,.ai-bubble ol{margin:2px 0 5px 16px;}
+        .ai-bubble li{margin:0;line-height:1.4;}
         .ai-bubble h3,.ai-bubble h4{font-size:.86rem;font-weight:600;margin:6px 0 3px;}
         .ai-bubble .ai-wikilink{color:var(--accent);text-decoration:none;border-bottom:1px dashed color-mix(in srgb,var(--accent) 60%,transparent);font-size:.9em;cursor:pointer;}
         .ai-bubble .ai-wikilink:hover{opacity:.8;}
@@ -3262,7 +3262,7 @@ input[type="file"] { display:none; }
 
         /* ── v1.3.1: Wiki-bağlantı önizleme paneli (hover) ── */
         .wl-preview {
-            position:fixed; z-index:9300; display:none;
+            position:fixed; z-index:9700; display:none;
             width:340px; max-width:min(340px, calc(100vw - 24px));
             max-height:280px; overflow:hidden;
             background:var(--surface); border:1px solid var(--border);
