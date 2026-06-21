@@ -9898,7 +9898,13 @@ const _SHAPES = [
                 
                 const panel = _createHoverPanel();
                 panel.querySelector('.preview-title-bar span').textContent = note.title;
-                panel.querySelector('#hover-preview-content').innerHTML = note.html || '';
+                /* note.content HTML içeriğini kullan (note.html diye bir alan yok) */
+                const tmp = document.createElement('div');
+                tmp.innerHTML = note.content || '';
+                /* ng-toolbar, resize handle gibi uygulama bileşenlerini gizle */
+                tmp.querySelectorAll('.ng-toolbar, .ng-resize, [contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+                tmp.querySelectorAll('.ng-toolbar').forEach(el => el.remove());
+                panel.querySelector('#hover-preview-content').innerHTML = tmp.innerHTML || '<em style="opacity:.5">İçerik yok</em>';
                 
                 const rect = a.getBoundingClientRect();
                 
