@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.14 — not listesi görünüm modları (Standart/Geniş/Kompakt/Cascade/Pil), Bağlantı Haritası 3D küre + sürükleme/zoom, temiz başlangıç, hamburger menü sağda, sağ tık menü engeli, v1.15 yayını -->
+<!-- Noted v1.15.15 — multi-editor instance altyapısı: per-instance undo/redo, float panel bağımsız geçmiş, _undoSwitchTarget; not listesi görünüm modları (Standart/Geniş/Kompakt/Cascade/Pil), Bağlantı Haritası 3D küre + sürükleme/zoom, temiz başlangıç, hamburger menü sağda, sağ tık menü engeli, v1.15 yayını -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.14</title>
+    <title>Noted v1.15.15</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4272,7 +4272,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.14</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.15</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -5113,7 +5113,7 @@ notes = notes.map(n => ({
 /* ══ DOM CACHE ══ */
 const $ = id => document.getElementById(id);
 const $title       = $('title');
-const $content     = $('content');
+let $content       = $('content');
 const $editId      = $('edit-id');
 const $editor      = $('editor');
 const $cancelBtn   = $('cancel-btn');
@@ -5148,6 +5148,31 @@ const $editorBacklinksList = $('editor-backlinks-list');
 /* daily-note-btn kaldırıldı — Şablonlar > Günlük Not ile aynı işlev */
 const $searchOpBtn    = $('search-op-btn');
 const $searchOpHint   = $('search-op-hint');
+
+/* ══ MULTI-EDITOR INSTANCE MANAGER ══ */
+let activeInstance = null;
+
+function createInstance(contentEl, noteId) {
+    const inst = { $el: contentEl, noteId: String(noteId || ''), _stack: [], _idx: -1, dirty: false };
+    contentEl.addEventListener('focus', () => activateInstance(inst), true);
+    return inst;
+}
+
+function activateInstance(inst) {
+    if (!inst || inst === activeInstance) return;
+    if (activeInstance) saveContext(activeInstance);
+    activeInstance = inst;
+    $content = inst.$el;
+    if (typeof window._undoSwitchTarget === 'function') window._undoSwitchTarget(inst.$el);
+}
+
+function saveContext(inst) {
+    inst.dirty = _contentDirty;
+}
+
+/* Ana editör instance'ı — _undoSwitchTarget henüz tanımlı değil, doğrudan set */
+window._mainEditorInstance = createInstance($content, '');
+activeInstance = window._mainEditorInstance;
 
 /* ══ HELPERS ══ */
 function esc(s) {
@@ -13985,7 +14010,8 @@ document.addEventListener('keydown', function ngArrowNav(e) {
 /* ══ UNDO / REDO YÖNETİCİSİ ══ */
 (function () {
     const MAX = 100;
-    let _stack = [], _idx = -1, _locked = false, _setup = false, _debTimer = null;
+    let _locked = false, _setup = false, _debTimer = null;
+    let _observedEl = null, _obs = null;
 
     function _saveCursor() {
         const sel = window.getSelection();
@@ -14020,13 +14046,14 @@ document.addEventListener('keydown', function ngArrowNav(e) {
     }
 
     function _pushState(html, cursor) {
-        if (_locked || _setup) return;
+        if (_locked || _setup || !activeInstance) return;
         /* Duplicate check ÖNCE yapılıyor — yoksa slice redo branch'ini keser */
-        const trimmed = _stack.slice(0, _idx + 1);
+        const inst = activeInstance;
+        const trimmed = inst._stack.slice(0, inst._idx + 1);
         if (trimmed.length && trimmed[trimmed.length - 1].html === html) return;
-        _stack = trimmed;
-        if (_stack.length >= MAX) _stack.shift(); else _idx++;
-        _stack.push({ html, cursor: cursor ?? _saveCursor() });
+        inst._stack = trimmed;
+        if (inst._stack.length >= MAX) inst._stack.shift(); else inst._idx++;
+        inst._stack.push({ html, cursor: cursor ?? _saveCursor() });
     }
 
     function _flushDebounce() {
@@ -14042,7 +14069,7 @@ document.addEventListener('keydown', function ngArrowNav(e) {
     }
 
     window.clearUndoHistory = function () {
-        _stack = []; _idx = -1;
+        if (activeInstance) { activeInstance._stack = []; activeInstance._idx = -1; }
         if (_debTimer) { clearTimeout(_debTimer); _debTimer = null; }
     };
 
@@ -14058,9 +14085,9 @@ document.addEventListener('keydown', function ngArrowNav(e) {
 
     window.editorUndo = function () {
         _flushDebounce();
-        if (_idx <= 0) return;
-        _idx--;
-        const state = _stack[_idx];
+        const inst = activeInstance; if (!inst || inst._idx <= 0) return;
+        inst._idx--;
+        const state = inst._stack[inst._idx];
         _locked = true;
         $content.innerHTML = state.html;
         if (typeof _restoreGrids === 'function') _restoreGrids();
@@ -14073,16 +14100,15 @@ document.addEventListener('keydown', function ngArrowNav(e) {
             _restoreCursor(state.cursor);
             if (typeof _markDirty === 'function') _markDirty();
             if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
-            if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
             if (typeof window._todoUpdateBadge === 'function') window._todoUpdateBadge();
         });
     };
 
     window.editorRedo = function () {
         if (_debTimer) { clearTimeout(_debTimer); _debTimer = null; }
-        if (_idx >= _stack.length - 1) return;
-        _idx++;
-        const state = _stack[_idx];
+        const inst = activeInstance; if (!inst || inst._idx >= inst._stack.length - 1) return;
+        inst._idx++;
+        const state = inst._stack[inst._idx];
         _locked = true;
         $content.innerHTML = state.html;
         if (typeof _restoreGrids === 'function') _restoreGrids();
@@ -14092,7 +14118,6 @@ document.addEventListener('keydown', function ngArrowNav(e) {
             $content.focus();
             _restoreCursor(state.cursor);
             if (typeof _markDirty === 'function') _markDirty();
-            if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
             if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
             if (typeof window._todoUpdateBadge === 'function') window._todoUpdateBadge();
         });
@@ -14105,63 +14130,73 @@ document.addEventListener('keydown', function ngArrowNav(e) {
         requestAnimationFrame(() => { if (!_setup) _locked = false; });
     };
 
-    if ($content) {
-        const obs = new MutationObserver(mutations => {
-            if (_locked || _setup || !$content) return;
-            const hasChildList = mutations.some(m => m.type === 'childList');
-            if (hasChildList) {
-                _flushDebounce();
-            } else {
-                _debouncePush();
-            }
-        });
-        obs.observe($content, {
+    /* ── Gözlemci ve olay dinleyicileri — hedef elemente bağla/kopar ── */
+    function _pasteHandler1(e) {
+        const txt = (e.clipboardData || window.clipboardData)?.getData('text/plain') || '';
+        if (!txt || typeof window._mdToHtml !== 'function') return;
+        if (!/^[ \t]*\|?[ \t]*:?-{2,}[-: |]*[ \t]*\r?$/m.test(txt)) return;
+        if (txt.split('\n').filter(l => /\|/.test(l)).length < 2) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const html = window._mdToHtml(txt, true);
+        document.execCommand('insertHTML', false, html);
+        if (typeof _restoreGrids === 'function') _restoreGrids();
+        if (!_locked && !_setup) _flushDebounce();
+        if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
+    }
+    function _pasteHandler2() {
+        if (!_locked && !_setup) _flushDebounce();
+    }
+    function _keydownHandler(e) {
+        const ctrl = e.ctrlKey || e.metaKey;
+        if (ctrl && !e.shiftKey && e.key.toLowerCase() === 'z') {
+            e.preventDefault(); e.stopImmediatePropagation();
+            window.editorUndo();
+        } else if (ctrl && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+            e.preventDefault(); e.stopImmediatePropagation();
+            window.editorRedo();
+        }
+    }
+
+    function _attach(el) {
+        if (!el) return;
+        if (!_obs) {
+            _obs = new MutationObserver(mutations => {
+                if (_locked || _setup || !$content) return;
+                const hasChildList = mutations.some(m => m.type === 'childList');
+                if (hasChildList) _flushDebounce(); else _debouncePush();
+            });
+        }
+        _obs.observe(el, {
             childList: true, subtree: true, characterData: true,
             attributes: true,
             /* contenteditable lock/unlock gibi UI attr'larını hariç tut */
             attributeFilter: ['style', 'data-checked', 'data-col', 'data-cols', 'data-grid-type', 'data-bookmark',
                               'data-sx', 'data-sy', 'data-sw', 'data-sh', 'data-stroke', 'data-fill-mode', 'data-rotate', 'data-shape']
         });
+        el.addEventListener('paste', _pasteHandler1, true);
+        el.addEventListener('paste', _pasteHandler2, true);
+        el.addEventListener('keydown', _keydownHandler, true);
+        _observedEl = el;
     }
 
-    if ($content) {
-        /* Markdown tablo yapıştırma: | formatındaki tabloları ng-wrap'a çevir */
-        $content.addEventListener('paste', function(e) {
-            const txt = (e.clipboardData || window.clipboardData)?.getData('text/plain') || '';
-            if (!txt || typeof window._mdToHtml !== 'function') return;
-            /* Separator satırı yoksa normal paste devam etsin */
-            if (!/^[ \t]*\|?[ \t]*:?-{2,}[-: |]*[ \t]*\r?$/m.test(txt)) return;
-            /* En az iki | içeren satır gerekli (başlık + veri) */
-            if (txt.split('\n').filter(l => /\|/.test(l)).length < 2) return;
-
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            const html = window._mdToHtml(txt, true);
-            document.execCommand('insertHTML', false, html);
-            if (typeof _restoreGrids === 'function') _restoreGrids();
-            if (!_locked && !_setup) _flushDebounce();
-            if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
-        }, true);
+    function _detach(el) {
+        if (!el) return;
+        if (_obs) _obs.disconnect();
+        el.removeEventListener('paste', _pasteHandler1, true);
+        el.removeEventListener('paste', _pasteHandler2, true);
+        el.removeEventListener('keydown', _keydownHandler, true);
     }
 
-    if ($content) {
-        $content.addEventListener('paste', () => {
-            if (!_locked && !_setup) _flushDebounce();
-        }, true);
-    }
+    /* Aktif editör değiştiğinde observer + dinleyicileri yeni elemente taşı */
+    window._undoSwitchTarget = function (newEl) {
+        if (!newEl || _observedEl === newEl) return;
+        _detach(_observedEl);
+        _observedEl = null;
+        _attach(newEl);
+    };
 
-    if ($content) {
-        $content.addEventListener('keydown', e => {
-            const ctrl = e.ctrlKey || e.metaKey;
-            if (ctrl && !e.shiftKey && e.key.toLowerCase() === 'z') {
-                e.preventDefault(); e.stopImmediatePropagation();
-                window.editorUndo();
-            } else if (ctrl && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
-                e.preventDefault(); e.stopImmediatePropagation();
-                window.editorRedo();
-            }
-        }, true);
-    }
+    if ($content) _attach($content);
 })();
 
 /* side-toolbar: editor-top altına konumlandır (dinamik height) */
@@ -14223,7 +14258,7 @@ function _showSnack(msg, type, dur) {
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.14</span>
+      <span class="hm-ver">v1.15.15</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14253,7 +14288,7 @@ function _showSnack(msg, type, dur) {
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.14</h2>
+          <h2>Noted v1.15.15</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">15</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -14735,6 +14770,10 @@ function _showSnack(msg, type, dur) {
     const floatBtn       = document.getElementById('float-btn');
     if (!FP || !fpContent) return;
 
+    /* Float panel instance — her nota ait bağımsız undo/redo geçmişi */
+    const _fpInst = typeof createInstance === 'function' ? createInstance(fpContent, '') : null;
+    window._fpEditorInstance = _fpInst;
+
     let _fpNoteId     = null;
     let _isOpen       = false;
     let _isDocked     = false;
@@ -14773,6 +14812,7 @@ function _showSnack(msg, type, dur) {
         document.body.classList.remove('cf-ready');
         fpTitle.value = n.title || 'Not';
         fpContent.innerHTML = n.content || '';
+        if (_fpInst) { _fpInst._stack = [{ html: n.content || '', cursor: null }]; _fpInst._idx = 0; _fpInst.noteId = String(id); }
         if (_fpResetZoom) _fpResetZoom();
         setTimeout(() => { if (typeof _fpSyncFooter === 'function') _fpSyncFooter(); if (typeof window._fpSyncLock === 'function') window._fpSyncLock(_fpNoteId); }, 0);
         return true;
