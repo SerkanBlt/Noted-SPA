@@ -9849,12 +9849,15 @@ const _SHAPES = [
         );
     }
 
-    /* Wikilink tıklama — event delegation */
-    msgs.addEventListener('click', e => {
+    /* Wikilink tıklama — tüm sayfada event delegation (hover preview paneli de dahil) */
+    document.body.addEventListener('click', e => {
         const a = e.target.closest('.ai-wikilink[data-note-id]');
         if (!a) return;
         e.preventDefault();
-        close();
+        e.stopPropagation();
+        /* Hover preview paneli açıksa kapat */
+        if (_hoverPanel) _hoverPanel.classList.remove('show');
+        if (typeof close === 'function') close();
         editNote(a.dataset.noteId);
     });
 
