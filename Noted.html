@@ -452,50 +452,6 @@
             position:relative; max-width:100%;
             overflow:visible; /* trigger ve toolbar için */
         }
-        
-        /* ── Hover Preview Panel ── */
-        #hover-preview-panel {
-            position: fixed; z-index: 99999;
-            width: 360px; height: 260px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            box-shadow: 0 10px 40px var(--shadow), 0 2px 10px rgba(0,0,0,0.2);
-            overflow: hidden;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateY(10px) scale(0.95);
-            /* Backdrop filter for a premium look */
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-        }
-        #hover-preview-panel.show {
-            opacity: 1; transform: translateY(0) scale(1);
-        }
-        #hover-preview-panel .preview-title-bar {
-            padding: 8px 12px;
-            background: rgba(0,0,0,0.1);
-            border-bottom: 1px solid var(--border);
-            font-size: 13px; font-weight: 600; color: var(--text);
-            display: flex; align-items: center; gap: 6px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        #hover-preview-panel .preview-title-bar i { color: var(--text-muted); }
-        #hover-preview-content-wrap {
-            position: absolute;
-            top: 35px; left: 0; right: 0; bottom: 0;
-            overflow: hidden;
-        }
-        /* 50% Zoom-out trick: content is 200% size, scaled down to 50% */
-        #hover-preview-content {
-            width: 200%; height: 200%;
-            transform: scale(0.5); transform-origin: top left;
-            padding: 24px;
-            color: var(--text);
-            box-sizing: border-box;
-            pointer-events: none; /* No interaction inside preview */
-        }
-
 
         .editor-card.editing-active {
             border-color:var(--edit-glow);
@@ -9849,96 +9805,26 @@ const _SHAPES = [
         );
     }
 
-    /* Wikilink tıklama — tüm sayfada event delegation (hover preview paneli de dahil) */
+    /* ── .ai-wikilink tıklama + hover — mevcut wl-preview sistemi kullan ── */
     document.body.addEventListener('click', e => {
         const a = e.target.closest('.ai-wikilink[data-note-id]');
         if (!a) return;
         e.preventDefault();
         e.stopPropagation();
-        /* Hover preview paneli açıksa kapat */
-        if (_hoverPanel) _hoverPanel.classList.remove('show');
+        if (typeof hideWlPreview === 'function') hideWlPreview();
         if (typeof close === 'function') close();
         editNote(a.dataset.noteId);
     });
 
-    /* ── Hover Preview Logic for .ai-wikilink ── */
-    let _hoverTimer = null;
-    let _hideTimer = null;
-    let _hoverPanel = null;
-
-    function _createHoverPanel() {
-        if (_hoverPanel) return _hoverPanel;
-        _hoverPanel = document.createElement('div');
-        _hoverPanel.id = 'hover-preview-panel';
-        _hoverPanel.innerHTML = `
-            <div class="preview-title-bar"><i class="fas fa-file-alt"></i><span></span></div>
-            <div id="hover-preview-content-wrap">
-                <div id="hover-preview-content"></div>
-            </div>
-        `;
-        document.body.appendChild(_hoverPanel);
-        
-        _hoverPanel.addEventListener('mouseenter', () => {
-            if (_hideTimer) clearTimeout(_hideTimer);
-        });
-        _hoverPanel.addEventListener('mouseleave', () => {
-            _hoverPanel.classList.remove('show');
-        });
-        
-        return _hoverPanel;
-    }
-
     document.body.addEventListener('mouseover', e => {
         const a = e.target.closest('.ai-wikilink[data-note-id]');
-        if (a) {
-            if (_hideTimer) clearTimeout(_hideTimer);
-            if (_hoverTimer) clearTimeout(_hoverTimer);
-            
-            _hoverTimer = setTimeout(() => {
-                const noteId = a.dataset.noteId;
-                const note = typeof notes !== 'undefined' ? notes.find(n => String(n.id) === String(noteId)) : null;
-                if (!note) return;
-                
-                const panel = _createHoverPanel();
-                panel.querySelector('.preview-title-bar span').textContent = note.title;
-                /* note.content HTML içeriğini kullan (note.html diye bir alan yok) */
-                const tmp = document.createElement('div');
-                tmp.innerHTML = note.content || '';
-                /* ng-toolbar, resize handle gibi uygulama bileşenlerini gizle */
-                tmp.querySelectorAll('.ng-toolbar, .ng-resize, [contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-                tmp.querySelectorAll('.ng-toolbar').forEach(el => el.remove());
-                panel.querySelector('#hover-preview-content').innerHTML = tmp.innerHTML || '<em style="opacity:.5">İçerik yok</em>';
-                
-                const rect = a.getBoundingClientRect();
-                
-                /* Position calculation */
-                const pWidth = 360;
-                const pHeight = 260;
-                let top = rect.bottom + 8;
-                let left = rect.left;
-                
-                if (left + pWidth > window.innerWidth) {
-                    left = window.innerWidth - pWidth - 16;
-                }
-                if (top + pHeight > window.innerHeight) {
-                    top = rect.top - pHeight - 8;
-                }
-                
-                panel.style.left = Math.max(8, left) + 'px';
-                panel.style.top = Math.max(8, top) + 'px';
-                
-                requestAnimationFrame(() => panel.classList.add('show'));
-            }, 400); /* 400ms delay for hover preview */
-        }
+        if (a && typeof scheduleWlPreview === 'function') scheduleWlPreview(a);
     });
 
     document.body.addEventListener('mouseout', e => {
         const a = e.target.closest('.ai-wikilink[data-note-id]');
-        if (a) {
-            if (_hoverTimer) clearTimeout(_hoverTimer);
-            _hideTimer = setTimeout(() => {
-                if (_hoverPanel) _hoverPanel.classList.remove('show');
-            }, 200);
+        if (a && !a.contains(e.relatedTarget) && typeof scheduleHideWlPreview === 'function') {
+            scheduleHideWlPreview();
         }
     });
 
