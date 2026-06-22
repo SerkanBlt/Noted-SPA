@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Takvim</title>
+    <title>Modern Takvim Widget</title>
     <style>
         :root {
             --bg-color: #f4f4f5;
@@ -12,247 +12,60 @@
             --text-muted: #71717a;
             --accent: #4f46e5;
             --border: #e4e4e7;
-            --today-bg: #f4f4f5;
-            --holiday-bg: #ef4444;
-            --holiday-text: #ffffff;
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #121214;
-                --widget-bg: #1a1a1e;
-                --text-main: #ffffff;
-                --text-muted: #a0a0aa;
-                --accent: #6366f1;
-                --border: #27272a;
-                --today-bg: #27272a;
-                --holiday-bg: #dc2626;
-            }
-        }
+        /* Widget genel ayarları */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        
+        body { background-color: var(--bg-color); height: 100vh; overflow: hidden; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-
-        html, body {
+        .widget-container {
             width: 100%;
             height: 100%;
+            background-color: var(--widget-bg);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
         }
 
-        body {
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        /* Tam ekran ve dinamik genişlik ayarları */
-        .widget-container {
-            width: 100%;
-            height: 100vh;
-            background-color: var(--widget-bg);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            overflow-x: hidden;
-            min-width: 100px;
-        }
-
-        .nav-controls {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-shrink: 0;
-        }
-
+        .nav-controls { display: flex; justify-content: space-between; margin-bottom: 8px; }
         .nav-controls button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            transition: opacity 0.2s;
-        }
-
-        .nav-controls button:hover {
-            opacity: 0.9;
+            background: var(--accent); color: white; border: none;
+            padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;
         }
 
         .months-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            flex: 1;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        @media (max-width: 500px) {
-            .months-list {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-controls button {
-                padding: 8px 12px;
-                font-size: 0.8rem;
-            }
-        }
-
-        @media (max-width: 300px) {
-            .widget-container {
-                padding: 10px;
-            }
-            
-            .nav-controls {
-                margin-bottom: 10px;
-                flex-direction: column;
-            }
-            
-            .nav-controls button {
-                padding: 6px 10px;
-                font-size: 0.7rem;
-            }
-        }
-
-        .month-section {
-            border: 1px solid var(--border);
-            padding: 15px;
-            border-radius: 8px;
-            min-width: 0;
-        }
-
-        .month-title { 
-            font-weight: bold; 
-            margin-bottom: 10px; 
-            color: var(--text-main);
-            font-size: 1rem;
-        }
+        .month-section { border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .month-title { font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; color: var(--text-main); }
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: 20px repeat(7, 1fr);
-            gap: 4px;
-            font-size: 0.9rem;
+            grid-template-columns: 15px repeat(7, 1fr);
+            gap: 2px;
+            font-size: 0.7rem;
         }
 
-        @media (max-width: 300px) {
-            .calendar-grid {
-                grid-template-columns: 16px repeat(7, 1fr);
-                gap: 2px;
-                font-size: 0.75rem;
-            }
-        }
-
-        .grid-header { 
-            color: var(--text-muted); 
-            font-size: 0.8rem; 
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .week-num { 
-            color: var(--accent); 
-            font-weight: bold; 
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .day-cell { 
-            text-align: center; 
-            padding: 5px; 
-            color: var(--text-main);
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 24px;
-        }
-
-        .day-cell:hover:not(.empty):not(.holiday) {
-            background-color: var(--today-bg);
-        }
-
-        .day-cell.today { 
-            background-color: var(--accent); 
-            color: white; 
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .day-cell.holiday {
-            background-color: var(--holiday-bg);
-            color: var(--holiday-text);
-            font-weight: bold;
-            cursor: help;
-        }
-
-        .day-cell.holiday:hover {
-            filter: brightness(1.1);
-        }
-
-        .empty { 
-            opacity: 0; 
-            cursor: default;
-        }
-
-        .empty:hover {
-            background-color: transparent !important;
-        }
-
-        /* Tooltip Stili */
-        .tooltip {
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            z-index: 1000;
-            pointer-events: none;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-bottom: 5px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .day-cell.holiday:hover .tooltip {
-            opacity: 1;
-        }
-
-        .tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: rgba(0, 0, 0, 0.9);
-        }
-
-        @media (max-width: 500px) {
-            .tooltip {
-                font-size: 0.75rem;
-                padding: 6px 10px;
-            }
-        }
+        .grid-header { color: var(--text-muted); text-align: center; font-size: 0.6rem; }
+        .week-num { color: var(--accent); font-weight: bold; text-align: center; }
+        .day-cell { text-align: center; padding: 2px 0; color: var(--text-main); }
+        .day-cell.today { background-color: var(--accent); color: white; border-radius: 3px; font-weight: bold; }
+        .empty { opacity: 0; }
     </style>
 </head>
 <body>
 
     <div class="widget-container">
         <div class="nav-controls">
-            <button id="prevBtn">← Önceki 3 Ay</button>
-            <button id="nextBtn">Sonraki 3 Ay →</button>
+            <button id="prevBtn">← Önceki</button>
+            <button id="nextBtn">Sonraki →</button>
         </div>
         <div class="months-list" id="monthsContainer"></div>
     </div>
@@ -263,36 +76,11 @@
         const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
         const dayNames = ["Pz", "Sa", "Ça", "Pe", "Cu", "Ct", "Pa"];
 
-        // Türkiye'nin 2024-2027 Resmi Tatilleri
-        const holidays = {
-            '1-1': 'Yılbaşı',
-            '4-23': 'Ulusal Egemenlik Günü',
-            '5-1': 'İşçi Bayramı',
-            '7-15': 'Demokrasi ve Milli Birlik Günü',
-            '8-30': 'Zafer Bayramı',
-            '10-29': 'Cumhuriyet Bayramı',
-            '12-31': 'Yılın Son Günü',
-            
-            // Dini Tatiller (Ramazan Bayramı ve Kurban Bayramı - tarihler yaklaşıktır)
-            '4-10': 'Ramazan Bayramı*',
-            '4-11': 'Ramazan Bayramı*',
-            '4-12': 'Ramazan Bayramı*',
-            '6-16': 'Kurban Bayramı*',
-            '6-17': 'Kurban Bayramı*',
-            '6-18': 'Kurban Bayramı*',
-            '6-19': 'Kurban Bayramı*',
-        };
-
         function getWeekNumber(d) {
-            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        }
-
-        function getHolidayInfo(year, month, day) {
-            const key = `${month + 1}-${day}`;
-            return holidays[key] || null;
+            let date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
         }
 
         function renderCalendar() {
@@ -308,7 +96,7 @@
                 
                 const grid = document.createElement('div');
                 grid.className = 'calendar-grid';
-                grid.innerHTML = '<div class="grid-header">H</div>' + dayNames.map(d => `<div class="grid-header">${d}</div>`).join('');
+                grid.innerHTML = '<div class="grid-header">#</div>' + dayNames.map(d => `<div class="grid-header">${d}</div>`).join('');
 
                 let firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
                 let totalDays = new Date(year, month + 1, 0).getDate();
@@ -322,16 +110,7 @@
                             grid.innerHTML += '<div class="day-cell empty"></div>';
                         } else {
                             const isToday = (new Date().toDateString() === new Date(year, month, day).toDateString());
-                            const holidayInfo = getHolidayInfo(year, month, day);
-                            const isHoliday = holidayInfo !== null;
-                            
-                            const classes = ['day-cell'];
-                            if (isToday) classes.push('today');
-                            if (isHoliday) classes.push('holiday');
-                            
-                            const tooltipHTML = isHoliday ? `<div class="tooltip">${holidayInfo}</div>` : '';
-                            grid.innerHTML += `<div class="${classes.join(' ')}">${day}${tooltipHTML}</div>`;
-                            day++;
+                            grid.innerHTML += `<div class="day-cell ${isToday ? 'today' : ''}">${day++}</div>`;
                         }
                     }
                 }
@@ -340,15 +119,8 @@
             }
         }
 
-        document.getElementById('prevBtn').addEventListener('click', () => { 
-            currentBaseDate.setMonth(currentBaseDate.getMonth() - 3); 
-            renderCalendar(); 
-        });
-        document.getElementById('nextBtn').addEventListener('click', () => { 
-            currentBaseDate.setMonth(currentBaseDate.getMonth() + 3); 
-            renderCalendar(); 
-        });
-        
+        document.getElementById('prevBtn').addEventListener('click', () => { currentBaseDate.setMonth(currentBaseDate.getMonth() - 3); renderCalendar(); });
+        document.getElementById('nextBtn').addEventListener('click', () => { currentBaseDate.setMonth(currentBaseDate.getMonth() + 3); renderCalendar(); });
         renderCalendar();
     </script>
 </body>
