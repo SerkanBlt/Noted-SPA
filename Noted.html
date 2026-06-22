@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.38 — Editör parity: hamburger sol'a taşındı, ana editöre Sağa Yerleştir + Kapat düğmesi, fp bookmark CSS, fp search pill+genişlik, fp badge renklendirme, float buildSnippet güncellendi -->
+<!-- Noted v1.15.39 — Ana editör grup seçici anlık kaydet, hamburger gap daralt, fp toolbar mousedown (bookmark seçim kaybı düzeltildi), fp-sm/xs bookmark sol padding -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -269,7 +269,7 @@
         .esp-dots { color:var(--text-muted); }
         .esp-empty { color:var(--text-muted); font-size:.83rem; text-align:center; padding:14px 0; }
         /* ── Editör hamburger menüsü ── */
-        #editor-menu-wrap { position:relative; flex-shrink:0; }
+        #editor-menu-wrap { position:relative; flex-shrink:0; margin-right:-5px; }
         #editor-menu-btn {
             display:flex; align-items:center; justify-content:center;
             width:24px; height:24px; border-radius:50%; padding:0;
@@ -324,7 +324,7 @@
         #editor-menu-dropdown #export-html-btn:disabled,
         #editor-menu-dropdown #export-md-btn:disabled { opacity:.35; pointer-events:none; }
         /* ── Float editör menü ── */
-        #fp-menu-wrap { position:relative; flex-shrink:0; }
+        #fp-menu-wrap { position:relative; flex-shrink:0; margin-right:-5px; }
         #fp-menu-btn {
             display:flex; align-items:center; justify-content:center;
             width:24px; height:24px; border-radius:50%; padding:0;
@@ -2684,9 +2684,9 @@ input[type="file"] { display:none; }
         .main-panel.fp-split-mode .editor-card:not(:focus-within) { border-color: var(--border) !important; }
         .main-panel.fp-split-mode #float-panel:not(:focus-within) { border-color: var(--border) !important; }
         /* Responsive breakpoints via ResizeObserver */
-        #float-panel.fp-sm .fp-editor-content { padding:6px 10px 12px; font-size:.88rem; }
+        #float-panel.fp-sm .fp-editor-content { padding:6px 10px 12px 22px; font-size:.88rem; }
         #float-panel.fp-sm .fp-head { padding:5px 8px; gap:4px; }
-        #float-panel.fp-xs .fp-editor-content { padding:4px 8px 8px; font-size:.84rem; }
+        #float-panel.fp-xs .fp-editor-content { padding:4px 8px 8px 22px; font-size:.84rem; }
         #float-panel.fp-xs .fp-head { padding:4px 6px; gap:3px; }
         #float-panel.fp-xs .fp-title { font-size:.7rem; }
         #float-panel.fp-xs .fp-drag-icon { display:none; }
@@ -7403,7 +7403,15 @@ function applyGroup(gName) {
             if (_fpBadgeEl) { const c = getColor(gName); _fpBadgeEl.style.color = c.main; _fpBadgeEl.style.backgroundColor = c.bg; }
         }
         activePickerId=null;
-    } else { editorGroup=gName; }
+    } else {
+        editorGroup=gName;
+        /* Not açıksa grubu hemen kaydet (float editördeki gibi anlık) */
+        const _editId = $editId.value;
+        if (_editId) {
+            const _n = notes.find(x => String(x.id) === String(_editId));
+            if (_n) { _n.group = gName; saveNotes(); }
+        }
+    }
     /* Ana editör badge'ini güncelle */
     $badgeText.textContent = editorGroup;
     render();
@@ -16062,8 +16070,9 @@ window._fpOpenPicker = openPicker;
         new ResizeObserver(syncFpHeadHeight).observe(editorTop);
     }
 
-    /* Düğme tıklamaları */
-    tb.addEventListener('click', e => {
+    /* Düğme tıklamaları — mousedown kullan (click gibi değil) böylece
+       fp-content seçimi kaybolmaz (tıklama sırasında focus çalınmaz) */
+    tb.addEventListener('mousedown', e => {
         const btn = e.target.closest('.stb');
         if (!btn) return;
         const type = btn.dataset.stb;
