@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.40 — /komut<SPACE> satır-başı inline kısayollar (ul,ol,todo,h2-4,code,q,hr,t,p2/p3,l2/l3,ci/cw/ct/cs); slash menü hint'leri güncellendi -->
+<!-- Noted v1.15.41 — Float panel Esc kapatmıyor; backlink ekleme autosave tetikliyor; splitter çift tıkla notlar yer değiştiriyor -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -5498,7 +5498,9 @@ function insertWikilink(title) {
     const _focusEl = range.startContainer && range.startContainer.nodeType === 3
         ? range.startContainer.parentElement && range.startContainer.parentElement.closest('[contenteditable]')
         : null;
-    (_focusEl || document.getElementById('content')).focus();
+    const _focusTarget = _focusEl || document.getElementById('content');
+    _focusTarget.focus();
+    _focusTarget.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 /* [[ yazıldığında otomatik tamamlamayı tetikle */
@@ -14912,7 +14914,7 @@ window._fpOpenPicker = openPicker;
         <button id="fp-undo-btn" title="Geri Al (Ctrl+Z)"><i class="fas fa-rotate-left"></i></button>
         <button id="fp-redo-btn" title="Yinele (Ctrl+Y)"><i class="fas fa-rotate-right"></i></button>
         <button class="fp-btn fp-btn-dockright" id="fp-dock-right" title="Sağa Yerleştir"><i class="fas fa-columns"></i></button>
-        <button class="fp-btn fp-btn-dock" id="fp-dock" title="Kapat (Esc)"><i class="fas fa-times"></i></button>
+        <button class="fp-btn fp-btn-dock" id="fp-dock" title="Kapat"><i class="fas fa-times"></i></button>
         <div id="fp-stb-trigger" title="Araçları Aç"></div>
     </div>
     <div id="fp-side-toolbar">
@@ -15261,13 +15263,25 @@ window._fpOpenPicker = openPicker;
                 const mainId = (document.getElementById('edit-id') || {}).value;
                 const fpId   = _fpNoteId;
                 if (!mainId || !fpId || String(mainId) === String(fpId)) return;
+                // Float editor'ı kaydet
                 if (typeof window._fpUpdateNote === 'function') {
                     const n = getNote(fpId);
                     window._fpUpdateNote(fpId, n ? n.title : (fpTitle.value || ''), fpContent.innerHTML, true);
                 }
+                // Ana editörü dialog göstermeden kaydet
+                const _mainN = (typeof notes !== 'undefined') ? notes.find(x => String(x.id) === String(mainId)) : null;
+                if (_mainN) {
+                    const $c = document.getElementById('content');
+                    const $t = document.getElementById('title');
+                    if ($c) _mainN.content = $c.innerHTML;
+                    if ($t) _mainN.title = $t.value;
+                    _mainN.modified = Date.now();
+                    if (typeof saveNotes === 'function') saveNotes();
+                }
                 vs.classList.add('dragging');
                 setTimeout(() => vs.classList.remove('dragging'), 350);
-                if (typeof handleEditNoteRequest === 'function') handleEditNoteRequest(fpId);
+                // Dialog göstermeden direkt yer değiştir
+                if (typeof editNote === 'function') editNote(fpId);
                 loadNote(mainId);
             });
 
@@ -15644,12 +15658,7 @@ window._fpOpenPicker = openPicker;
         }
     });
 
-    /* Esc → kapat */
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && _isOpen
-            && !document.querySelector('.overlay.open, #graph-overlay.open, #help-overlay.open'))
-            doClose();
-    });
+    /* Esc → float panel'i KAPATMAZ (kullanıcı isteği) */
 
     /* ── Sürükle (yüzer mod) ── */
     let _drag = null;
