@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.58 — Wikilink tıklama davranışı eski haline döndürüldü (v1.15.56 revert) -->
+<!-- Noted v1.15.59 — Dış bağlantılara hover önizleme: favicon + domain + URL, wl-preview paneli reuse edildi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.58</title>
+    <title>Noted v1.15.59</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -3447,6 +3447,12 @@ input[type="file"] { display:none; }
             font-size:.78rem; color:var(--text-muted); font-style:italic;
             display:flex; align-items:center; gap:6px;
         }
+        .wl-preview-ext-header { display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+        .wl-preview-ext-favicon { width:16px; height:16px; border-radius:3px; flex-shrink:0; }
+        .wl-preview-ext-domain { font-size:.78rem; font-weight:600; color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .wl-preview-ext-badge { font-size:.63rem; color:var(--text-muted); flex-shrink:0; }
+        .wl-preview-ext-text { font-size:.82rem; font-weight:600; color:var(--text); margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .wl-preview-ext-url { font-size:.71rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace; }
         @media (max-width:600px) { .wl-preview { display:none !important; } }
 
         /* ── Günlük Not Butonu ── */
@@ -4403,7 +4409,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.58</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.59</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -6079,14 +6085,63 @@ function scheduleHideWlPreview() {
     _wlPreviewHideT = setTimeout(hideWlPreview, 350);
 }
 
+/* ── Dış bağlantı hover önizleme ── */
+function buildExtLinkPreview(url, text) {
+    let domain = '';
+    let faviconUrl = '';
+    try {
+        const u = new URL(url);
+        domain = u.hostname;
+        faviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=32';
+    } catch(e) { domain = url; }
+    const displayText = text && text.trim() && text.trim() !== url ? esc(text.trim()) : '';
+    return '<div class="wl-preview-ext-header">' +
+        (faviconUrl ? '<img class="wl-preview-ext-favicon" src="' + esc(faviconUrl) + '" onerror="this.style.display=\'none\'">' : '') +
+        '<span class="wl-preview-ext-domain">' + esc(domain) + '</span>' +
+        '<span class="wl-preview-ext-badge"><i class="fas fa-arrow-up-right-from-square"></i></span>' +
+        '</div>' +
+        (displayText ? '<div class="wl-preview-ext-text">' + displayText + '</div>' : '') +
+        '<div class="wl-preview-ext-url">' + esc(url) + '</div>';
+}
+
+function showExtLinkPreview(link) {
+    if (!link || !link.isConnected) return;
+    const url = link.getAttribute('href') || '';
+    if (!url || url.startsWith('#') || url.startsWith('javascript')) return;
+    _wlPreviewLink = link;
+    $wlPreview.innerHTML = buildExtLinkPreview(url, link.textContent);
+    $wlPreview.classList.add('open');
+    const r = link.getBoundingClientRect();
+    const pw = $wlPreview.offsetWidth  || 300;
+    const ph = $wlPreview.offsetHeight || 80;
+    let left = r.left;
+    let top  = r.bottom + 4;
+    if (left + pw > window.innerWidth  - 12) left = Math.max(12, window.innerWidth  - pw - 12);
+    if (top  + ph > window.innerHeight - 12) top  = Math.max(12, r.top - ph - 4);
+    $wlPreview.style.left     = left + 'px';
+    $wlPreview.style.top      = top  + 'px';
+    $wlPreview.style.maxWidth  = '';
+    $wlPreview.style.maxHeight = '';
+    $wlPreview.style.removeProperty('--wl-preview-max-h');
+}
+
+function scheduleExtLinkPreview(link) {
+    clearTimeout(_wlPreviewHideT);
+    if (_wlPreviewLink === link && $wlPreview.classList.contains('open')) return;
+    clearTimeout(_wlPreviewShowT);
+    _wlPreviewShowT = setTimeout(() => showExtLinkPreview(link), 260);
+}
+
 /* mouseover/mouseout ile delegasyon — dinamik olarak eklenen .wikilink öğeleri de yakalanır */
 $mainList.addEventListener('mouseover', e => {
     const wl = e.target.closest('a.wikilink');
-    if (wl && wl.dataset.noteId) scheduleWlPreview(wl);
+    if (wl && wl.dataset.noteId) { scheduleWlPreview(wl); return; }
+    const a = e.target.closest('a[href]:not(.wikilink)');
+    if (a) scheduleExtLinkPreview(a);
 });
 $mainList.addEventListener('mouseout', e => {
-    const wl = e.target.closest('a.wikilink');
-    if (wl && !wl.contains(e.relatedTarget)) scheduleHideWlPreview();
+    const link = e.target.closest('a.wikilink, a[href]:not(.wikilink)');
+    if (link && !link.contains(e.relatedTarget)) scheduleHideWlPreview();
 });
 /* Liste kaydırılırsa veya not daraltılırsa paneli kapat */
 $mainList.addEventListener('scroll', () => { if ($wlPreview.classList.contains('open')) hideWlPreview(); }, { passive:true });
@@ -6099,11 +6154,13 @@ $wlPreview.addEventListener('mouseleave', () => { scheduleHideWlPreview(); });
    içeriğindeki [[bağlantılar]] için aynı davranışı burada sağlıyoruz.         */
 $content.addEventListener('mouseover', e => {
     const wl = e.target.closest('a.wikilink');
-    if (wl && wl.dataset.noteId) scheduleWlPreview(wl);
+    if (wl && wl.dataset.noteId) { scheduleWlPreview(wl); return; }
+    const a = e.target.closest('a[href]:not(.wikilink)');
+    if (a) scheduleExtLinkPreview(a);
 });
 $content.addEventListener('mouseout', e => {
-    const wl = e.target.closest('a.wikilink');
-    if (wl && !wl.contains(e.relatedTarget)) scheduleHideWlPreview();
+    const link = e.target.closest('a.wikilink, a[href]:not(.wikilink)');
+    if (link && !link.contains(e.relatedTarget)) scheduleHideWlPreview();
 });
 /* Contenteditable içinde <a> tıklaması imleci konumlandırır ama gezinmez;
    biz mousedown'da yakalayıp ilgili nota atlıyoruz.                          */
@@ -14767,7 +14824,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.58</span>
+      <span class="hm-ver">v1.15.59</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14799,7 +14856,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.58</h2>
+          <h2>Noted v1.15.59</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -15450,11 +15507,13 @@ window._fpOpenPicker = openPicker;
     /* ── Wikilink hover önizleme ── */
     fpContent.addEventListener('mouseover', e => {
         const wl = e.target.closest('a.wikilink');
-        if (wl && wl.dataset.noteId && typeof scheduleWlPreview === 'function') scheduleWlPreview(wl);
+        if (wl && wl.dataset.noteId && typeof scheduleWlPreview === 'function') { scheduleWlPreview(wl); return; }
+        const a = e.target.closest('a[href]:not(.wikilink)');
+        if (a && typeof scheduleExtLinkPreview === 'function') scheduleExtLinkPreview(a);
     });
     fpContent.addEventListener('mouseout', e => {
-        const wl = e.target.closest('a.wikilink');
-        if (wl && !wl.contains(e.relatedTarget) && typeof scheduleHideWlPreview === 'function') scheduleHideWlPreview();
+        const link = e.target.closest('a.wikilink, a[href]:not(.wikilink)');
+        if (link && !link.contains(e.relatedTarget) && typeof scheduleHideWlPreview === 'function') scheduleHideWlPreview();
     });
 
     /* ── Wikilink tıklama → ana editörde aç ── */
