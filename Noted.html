@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.46 — AI fallback: auth/ağ hatası dışında tüm hatalarda (429,413,400,503…) sonraki modele geç -->
+<!-- Noted v1.15.47 — AI fallback: auth/ağ hatası dışında tüm hatalarda (429,413,400,503…) sonraki modele geç -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.46</title>
+    <title>Noted v1.15.47</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4398,7 +4398,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.46</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.47</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -5055,7 +5055,19 @@ input[type="file"] { display:none; }
                 <div class="stab-empty"><i class="fas fa-palette stab-icon"></i>Görünüm ayarları yakında eklenecek</div>
             </div>
             <div class="stab-panel" id="stab-tab3">
-                <div class="stab-empty"><i class="fas fa-code stab-icon"></i>Gelişmiş ayarlar yakında eklenecek</div>
+                <section class="ai-set-section">
+                    <h4>Veri &amp; Yedekleme</h4>
+                    <div class="ai-set-field">
+                        <div class="ai-toggle-field">
+                            <span class="ai-toggle-label">AI ayarlarını dışa aktar</span>
+                            <label class="toggle-sw" title="Dışa aktarma dosyasına provider anahtarları ve model havuzunu ekle">
+                                <input type="checkbox" id="cfg-export-ai">
+                                <span class="toggle-sw-slider"></span>
+                            </label>
+                        </div>
+                        <p class="ai-set-hint">Etkin: "Dışa Aktar" dosyasına API anahtarları ve model havuzu eklenir. Dosyayı güvenli saklayın.</p>
+                    </div>
+                </section>
             </div>
 
             <!-- AI Ayarlar Sekmesi -->
@@ -8130,10 +8142,12 @@ $('upload-input').addEventListener('change',e=>{
     const r=new FileReader();
     r.onload=ev=>{
         try {
-            const imported=JSON.parse(ev.target.result);
-            if(!Array.isArray(imported)) throw new Error('Kök eleman bir dizi olmalı.');
-            if(notes.length>0&&!confirm(`Mevcut ${notes.length} not silinecek ve içe aktarılan ${imported.length} not yüklenecek.\nDevam edilsin mi?`)) return;
-            notes=imported.map((n,i)=>({
+            const raw=JSON.parse(ev.target.result);
+            /* Sarmalı format: { _notes: [...], _ai: {...} } */
+            const importedNotes = Array.isArray(raw) ? raw : (Array.isArray(raw._notes) ? raw._notes : null);
+            if(!importedNotes) throw new Error('Kök eleman bir dizi olmalı.');
+            if(notes.length>0&&!confirm(`Mevcut ${notes.length} not silinecek ve içe aktarılan ${importedNotes.length} not yüklenecek.\nDevam edilsin mi?`)) return;
+            notes=importedNotes.map((n,i)=>({
                 id:n.id??genId(), title:typeof n.title==='string'?n.title:`İçe aktarılan not ${i+1}`,
                 content:sanitize(typeof n.content==='string'?n.content:''), group:typeof n.group==='string'?n.group:'Genel',
                 pinned: n.pinned||false, colorLabel: n.colorLabel||null, tags: n.tags||[],
@@ -8141,13 +8155,31 @@ $('upload-input').addEventListener('change',e=>{
                 updatedAt:typeof n.updatedAt==='number'?n.updatedAt:Date.now(),
             }));
             resetEditor(); saveNotes(); render();
+            /* AI ayarlarını geri yükle — yalnızca dosyada varsa, yoksa mevcut ayarlara dokunma */
+            if(raw._ai && typeof raw._ai === 'object') {
+                ['noted_ai_providers_v1','noted_ai_pool_v1','noted_ai_cfg_v1','noted_ai_sys_v1','noted_ai_key_v1'].forEach(k => {
+                    if(raw._ai[k]) { try { localStorage.setItem(k, raw._ai[k]); } catch(_) {} }
+                });
+            }
         } catch(err){ alert('Geçersiz JSON: '+err.message); }
     };
     r.readAsText(file); e.target.value='';
 });
 function exportNotes() {
     const a = document.createElement('a');
-    a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(notes, null, 2));
+    const exportAi = localStorage.getItem('noted-export-ai') === 'true';
+    let payload;
+    if (exportAi) {
+        const aiBlock = {};
+        ['noted_ai_providers_v1','noted_ai_pool_v1','noted_ai_cfg_v1','noted_ai_sys_v1','noted_ai_key_v1'].forEach(k => {
+            const v = localStorage.getItem(k);
+            if (v) aiBlock[k] = v;
+        });
+        payload = { _notes: notes, _ai: aiBlock };
+    } else {
+        payload = notes;
+    }
+    a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
     a.download = 'notlar.json';
     a.click();
 }
@@ -11724,6 +11756,19 @@ $content.addEventListener('input', () => {
     });
 })();
 
+/* ── Gelişmiş Ayarlar sekmesi ── */
+(function initAdvancedSettings() {
+    const tab    = document.querySelector('.stab[data-stab="tab3"]');
+    const toggle = document.getElementById('cfg-export-ai');
+    if (!tab || !toggle) return;
+    tab.addEventListener('click', () => {
+        toggle.checked = localStorage.getItem('noted-export-ai') === 'true';
+    });
+    toggle.addEventListener('change', () => {
+        localStorage.setItem('noted-export-ai', toggle.checked ? 'true' : 'false');
+    });
+})();
+
 /* ══ OTOMATİK KAYIT ══ */
 (function() {
     var _timer = null;
@@ -14650,7 +14695,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.46</span>
+      <span class="hm-ver">v1.15.47</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14680,7 +14725,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.46</h2>
+          <h2>Noted v1.15.47</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">15</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
