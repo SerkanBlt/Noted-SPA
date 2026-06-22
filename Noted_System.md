@@ -70,7 +70,7 @@ Her sorguda:
 2. En alakalı notlar AI'ya bağlam olarak gönderilir
 3. Not içerikleri Markdown formatında iletilir
 4. Çöp Kutusu'ndaki notlar bağlama dahil edilmez
-5. Madde listeleri verilirse madde liste satırları arasını 1.0 olarak ver.
+5. Madde listeleri arasına boş satır koyma ve satır aralığını daralt, 1.0 olarak ver.
 
 ---
 

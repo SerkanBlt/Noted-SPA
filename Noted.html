@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.37 — Float editör menü paritesi: dinamik şablon dropdown (özel şablonlar + Bu Notu Şablon Kaydet), Daktilo Modu, Tam Ekran, Paneli Kapat menü öğeleri eklendi -->
+<!-- Noted v1.15.38 — Editör parity: hamburger sol'a taşındı, ana editöre Sağa Yerleştir + Kapat düğmesi, fp bookmark CSS, fp search pill+genişlik, fp badge renklendirme, float buildSnippet güncellendi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.37</title>
+    <title>Noted v1.15.38</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -196,7 +196,8 @@
         .header-menu-dropdown.open { display:flex; }
         /* ── Editör undo/redo icon butonları ── */
         #editor-undo-btn, #editor-redo-btn,
-        #fp-undo-btn, #fp-redo-btn {
+        #fp-undo-btn, #fp-redo-btn,
+        #editor-to-fp-btn, #editor-close-btn {
             display:flex; align-items:center; justify-content:center;
             width:24px; height:24px; border-radius:50%; padding:0;
             border:none; background:transparent;
@@ -204,7 +205,11 @@
             transition:color .15s;
         }
         #editor-undo-btn:hover, #editor-redo-btn:hover,
-        #fp-undo-btn:hover, #fp-redo-btn:hover { color:var(--accent); }
+        #fp-undo-btn:hover, #fp-redo-btn:hover,
+        #editor-to-fp-btn:hover, #editor-close-btn:hover { color:var(--accent); }
+        /* Extra gap before close buttons */
+        #editor-close-btn { margin-left:6px; }
+        #fp-dock { margin-left:6px; }
         /* ── Editör içi arama — app-header .search-expand stiline uygun ── */
         #editor-search-wrap {
             display:flex; align-items:center;
@@ -276,7 +281,7 @@
         #editor-menu-btn.open { color:var(--accent); }
         #editor-menu-dropdown {
             display:none; position:absolute;
-            top:calc(100% + 6px); right:0;
+            top:calc(100% + 6px); left:0;
             background:var(--surface); border:1px solid var(--border);
             border-radius:12px; box-shadow:0 8px 28px var(--shadow);
             z-index:9300; min-width:210px;
@@ -329,7 +334,7 @@
         #fp-menu-btn:hover, #fp-menu-btn.open { color:var(--accent); }
         #fp-menu-dropdown {
             display:none; position:absolute;
-            top:calc(100% + 6px); right:0;
+            top:calc(100% + 6px); left:0;
             background:var(--surface); border:1px solid var(--border);
             border-radius:12px; box-shadow:0 8px 28px var(--shadow);
             z-index:9300; min-width:210px;
@@ -519,7 +524,7 @@
         }
         .editor-top {
             display:flex; align-items:center; gap:10px;
-            padding:7px 16px 6px; border-bottom:1px solid var(--border);
+            padding:7px 16px 6px 6px; border-bottom:1px solid var(--border);
             position:relative; overflow:visible;
         }
         .editor-body-wrap {
@@ -2434,6 +2439,15 @@ input[type="file"] { display:none; }
             color:var(--accent); font-size:.72rem;
             pointer-events:none; user-select:none; opacity:.85;
         }
+        /* Float panel bookmark — aynı davranış */
+        .fp-editor-content > [data-bookmark] { position:relative; }
+        .fp-editor-content > [data-bookmark]::before {
+            content:'\f02e';
+            font-family:'Font Awesome 6 Free'; font-weight:900;
+            position:absolute; left:-20px; top:50%; transform:translateY(-50%);
+            color:var(--accent); font-size:.72rem;
+            pointer-events:none; user-select:none; opacity:.85;
+        }
         /* Tablo satırı bookmark */
         tr[data-bookmark] { background:color-mix(in srgb, var(--accent) 8%, transparent) !important; }
         tr[data-bookmark] > td:first-child { position:relative; }
@@ -2515,7 +2529,7 @@ input[type="file"] { display:none; }
         #float-panel.fp-minimized { min-height:0; }
         .fp-head {
             display:flex; align-items:center; gap:10px;
-            padding:7px 16px 6px;
+            padding:7px 16px 6px 6px;
             border-bottom:1px solid var(--border);
             cursor:move; flex-shrink:0; user-select:none;
             position:relative; overflow:visible;
@@ -2574,7 +2588,7 @@ input[type="file"] { display:none; }
         #fp-search-wrap {
             display:flex; align-items:center;
             flex-shrink:0; overflow:hidden;
-            border:1px solid transparent; border-radius:6px;
+            border:1px solid transparent; border-radius:20px;
             transition:border-color .2s, background .2s;
         }
         #fp-search-wrap.open { background:var(--surface-2); border-color:var(--accent); }
@@ -2594,7 +2608,7 @@ input[type="file"] { display:none; }
             transition:width .22s, padding .22s; pointer-events:none;
         }
         #fp-search-input::placeholder { color:var(--text-muted); }
-        #fp-search-wrap.open #fp-search-input { width:120px; padding:0 4px 0 2px; pointer-events:auto; }
+        #fp-search-wrap.open #fp-search-input { width:140px; padding:0 4px 0 2px; pointer-events:auto; }
         #fp-search-close {
             display:none; width:18px; height:18px; flex-shrink:0;
             background:transparent; border:none; color:var(--text-muted);
@@ -2613,7 +2627,7 @@ input[type="file"] { display:none; }
         /* Float panel's own editor content area */
         .fp-editor-content {
             flex:1; overflow-y:auto; outline:none; position:relative;
-            padding:6px 16px 12px; font-family:var(--font-body);
+            padding:6px 16px 12px 28px; font-family:var(--font-body);
             font-size:.97rem; line-height:1.2; color:var(--text);
             min-height:80px; scrollbar-width:thin; scrollbar-color:var(--border) transparent;
         }
@@ -3778,6 +3792,8 @@ input[type="file"] { display:none; }
         body.editor-pristine #editor-undo-btn,
         body.editor-pristine #editor-redo-btn,
         body.editor-pristine #editor-menu-wrap,
+        body.editor-pristine #editor-to-fp-btn,
+        body.editor-pristine #editor-close-btn,
         body.editor-pristine #stb-trigger,
         body.editor-pristine #save-btn { display:none !important; }
         /* cf-trigger: yalnızca giriş yapıldığında göster (tüm modlar) */
@@ -4323,7 +4339,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.37</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.38</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -4485,21 +4501,6 @@ input[type="file"] { display:none; }
     <div class="main-panel">
     <div id="editor" class="editor-card editing-active">
         <div class="editor-top">
-            <input id="title" type="text" placeholder="Not başlığı…" autocomplete="off">
-            <input id="edit-id" type="hidden" value="">
-            <div id="editor-search-wrap">
-                <button id="editor-search-btn" title="Notta Ara (Ctrl+F)"><i class="fas fa-search"></i></button>
-                <input id="editor-search-input" type="text" placeholder="Notta ara…" autocomplete="off">
-                <button id="editor-search-close" title="Kapat"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="editor-badge-wrap">
-                <div id="editor-badge" class="group-badge">
-                    <i class="fas fa-folder-open"></i>
-                    <span id="badge-text">Genel</span>
-                </div>
-            </div>
-            <button id="editor-undo-btn" title="Geri Al (Ctrl+Z)" onclick="window.editorUndo && window.editorUndo()"><i class="fas fa-rotate-left"></i></button>
-            <button id="editor-redo-btn" title="Yinele (Ctrl+Y)" onclick="window.editorRedo && window.editorRedo()"><i class="fas fa-rotate-right"></i></button>
             <div id="editor-menu-wrap">
                 <button id="editor-menu-btn" title="Editör Menüsü"><i class="fas fa-ellipsis-v"></i></button>
                 <div id="editor-menu-dropdown">
@@ -4517,6 +4518,23 @@ input[type="file"] { display:none; }
                     <button id="cancel-btn-hm" class="hm-item" title="Notu Kapat"><i class="fas fa-times"></i><span>Notu Kapat</span></button>
                 </div>
             </div>
+            <input id="title" type="text" placeholder="Not başlığı…" autocomplete="off">
+            <input id="edit-id" type="hidden" value="">
+            <div id="editor-search-wrap">
+                <button id="editor-search-btn" title="Notta Ara (Ctrl+F)"><i class="fas fa-search"></i></button>
+                <input id="editor-search-input" type="text" placeholder="Notta ara…" autocomplete="off">
+                <button id="editor-search-close" title="Kapat"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="editor-badge-wrap">
+                <div id="editor-badge" class="group-badge">
+                    <i class="fas fa-folder-open"></i>
+                    <span id="badge-text">Genel</span>
+                </div>
+            </div>
+            <button id="editor-undo-btn" title="Geri Al (Ctrl+Z)" onclick="window.editorUndo && window.editorUndo()"><i class="fas fa-rotate-left"></i></button>
+            <button id="editor-redo-btn" title="Yinele (Ctrl+Y)" onclick="window.editorRedo && window.editorRedo()"><i class="fas fa-rotate-right"></i></button>
+            <button id="editor-to-fp-btn" title="Sağa Yerleştir (Float Panelde Aç)"><i class="fas fa-columns"></i></button>
+            <button id="editor-close-btn" title="Notu Kapat"><i class="fas fa-times"></i></button>
             <div id="stb-trigger" title="Araçları Aç (hover ile aç)"></div>
         </div>
         <!-- Editör içi arama sonuçları paneli -->
@@ -7381,6 +7399,8 @@ function applyGroup(gName) {
         if (_fpBadge && typeof window._fpGetCurrentNoteId === 'function' &&
             String(window._fpGetCurrentNoteId()) === String(activePickerId)) {
             _fpBadge.textContent = gName;
+            const _fpBadgeEl = document.getElementById('fp-editor-badge');
+            if (_fpBadgeEl) { const c = getColor(gName); _fpBadgeEl.style.color = c.main; _fpBadgeEl.style.backgroundColor = c.bg; }
         }
         activePickerId=null;
     } else { editorGroup=gName; }
@@ -7501,6 +7521,16 @@ $('save-btn').addEventListener('click', () => {
 });
 $cancelBtn.addEventListener('click', () => { resetEditor(); render(); });
 $('cancel-btn-hm') && $('cancel-btn-hm').addEventListener('click', () => { resetEditor(); render(); });
+/* Editor close button in header */
+$('editor-close-btn') && $('editor-close-btn').addEventListener('click', () => { resetEditor(); render(); });
+/* Sağa Yerleştir — saves current note, resets main editor, opens note in float panel */
+$('editor-to-fp-btn') && $('editor-to-fp-btn').addEventListener('click', () => {
+    const noteId = $editId.value;
+    if (!noteId) return;
+    if ($title.value.trim()) saveNote(); /* saveNote calls resetEditor+render internally */
+    else { resetEditor(); render(); }
+    if (typeof window._fpLoadNoteFromMain === 'function') window._fpLoadNoteFromMain(noteId);
+});
 $('edit-del-btn').addEventListener('click', () => { const eId=$editId.value; if(!eId) return; delNote(eId); });
 
 function delNote(id) {
@@ -14360,7 +14390,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.37</span>
+      <span class="hm-ver">v1.15.38</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14390,7 +14420,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.37</h2>
+          <h2>Noted v1.15.38</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">15</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -14793,20 +14823,6 @@ window._fpOpenPicker = openPicker;
     <div class="fp-rs" data-dir="w"></div>
     <div class="fp-rs" data-dir="nw"></div>
     <div class="fp-head" id="fp-head">
-        <input class="fp-title" id="fp-title" type="text" value="Not" placeholder="Başlık…">
-        <div id="fp-search-wrap">
-            <button id="fp-search-btn" title="Notta Ara"><i class="fas fa-search"></i></button>
-            <input id="fp-search-input" type="text" placeholder="Notta ara…" autocomplete="off">
-            <button id="fp-search-close" title="Kapat"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="fp-badge-wrap">
-            <div id="fp-editor-badge" class="group-badge">
-                <i class="fas fa-folder-open"></i>
-                <span id="fp-badge-text">Genel</span>
-            </div>
-        </div>
-        <button id="fp-undo-btn" title="Geri Al (Ctrl+Z)"><i class="fas fa-rotate-left"></i></button>
-        <button id="fp-redo-btn" title="Yinele (Ctrl+Y)"><i class="fas fa-rotate-right"></i></button>
         <div id="fp-menu-wrap">
             <button id="fp-menu-btn" title="Editör Menüsü"><i class="fas fa-ellipsis-v"></i></button>
             <div id="fp-menu-dropdown">
@@ -14824,6 +14840,20 @@ window._fpOpenPicker = openPicker;
                 <button id="fp-close-menu-btn" class="hm-item" title="Paneli Kapat"><i class="fas fa-times"></i><span>Paneli Kapat</span></button>
             </div>
         </div>
+        <input class="fp-title" id="fp-title" type="text" value="Not" placeholder="Başlık…">
+        <div id="fp-search-wrap">
+            <button id="fp-search-btn" title="Notta Ara"><i class="fas fa-search"></i></button>
+            <input id="fp-search-input" type="text" placeholder="Notta ara…" autocomplete="off">
+            <button id="fp-search-close" title="Kapat"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="fp-badge-wrap">
+            <div id="fp-editor-badge" class="group-badge">
+                <i class="fas fa-folder-open"></i>
+                <span id="fp-badge-text">Genel</span>
+            </div>
+        </div>
+        <button id="fp-undo-btn" title="Geri Al (Ctrl+Z)"><i class="fas fa-rotate-left"></i></button>
+        <button id="fp-redo-btn" title="Yinele (Ctrl+Y)"><i class="fas fa-rotate-right"></i></button>
         <button class="fp-btn fp-btn-dockright" id="fp-dock-right" title="Sağa Yerleştir"><i class="fas fa-columns"></i></button>
         <button class="fp-btn fp-btn-dock" id="fp-dock" title="Kapat (Esc)"><i class="fas fa-times"></i></button>
         <div id="fp-stb-trigger" title="Araçları Aç"></div>
@@ -14952,9 +14982,16 @@ window._fpOpenPicker = openPicker;
         if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
         if (_fpInst) { _fpInst._stack = [{ html: n.content || '', cursor: null }]; _fpInst._idx = 0; _fpInst.noteId = String(id); }
         if (_fpResetZoom) _fpResetZoom();
-        /* Grup badge güncelle */
+        /* Grup badge güncelle — metin + renk */
         const _fpBadgeText = document.getElementById('fp-badge-text');
-        if (_fpBadgeText) _fpBadgeText.textContent = n.group || 'Genel';
+        const _fpBadgeEl   = document.getElementById('fp-editor-badge');
+        const _fpGroup     = n.group || 'Genel';
+        if (_fpBadgeText) _fpBadgeText.textContent = _fpGroup;
+        if (_fpBadgeEl && typeof getColor === 'function') {
+            const c = getColor(_fpGroup);
+            _fpBadgeEl.style.color = c.main;
+            _fpBadgeEl.style.backgroundColor = c.bg;
+        }
         /* Export butonlarını etkinleştir */
         const _fpExpH = document.getElementById('fp-export-html-btn');
         const _fpExpM = document.getElementById('fp-export-md-btn');
@@ -15629,6 +15666,11 @@ window._fpOpenPicker = openPicker;
             _isOpen = true;
         }
     };
+    /* Ana editörden aktarılan notlar: _floatGeom sıfırla → undock'ta defaultGeom kullanılır */
+    window._fpLoadNoteFromMain = function(id) {
+        _floatGeom = null;
+        window._fpLoadNote(id);
+    };
 
     /* ── İçindekiler (fp-footer) ── */
     const fpTocBtn = document.getElementById('fp-toc-btn');
@@ -15910,31 +15952,38 @@ window._fpOpenPicker = openPicker;
         let pos = lower.indexOf(kLower);
         if (pos === -1) return null;
         const words = text.split(/(\s+)/);
+        const tokens = [];
         let charIdx = 0, kwToken = -1;
         for (let i = 0; i < words.length; i++) {
             const w = words[i];
             if (charIdx <= pos && pos < charIdx + w.length && !/^\s+$/.test(w)) kwToken = i;
+            tokens.push(w);
             charIdx += w.length;
         }
         if (kwToken === -1) return null;
-        const wordIdxs = words.map((w, i) => /^\s+$/.test(w) ? -1 : i).filter(i => i !== -1);
+        const wordIdxs = tokens.map((w, i) => /^\s+$/.test(w) ? -1 : i).filter(i => i !== -1);
         const wPos = wordIdxs.indexOf(kwToken);
         const before3 = wordIdxs.slice(Math.max(0, wPos - 3), wPos);
         const after3  = wordIdxs.slice(wPos + 1, wPos + 4);
+        const hasBefore = before3.length > 0 && wPos > 0;
+        const hasAfter  = after3.length > 0 && wPos < wordIdxs.length - 1;
+        const moreBefore = wPos > 3;
+        const moreAfter  = wPos + 4 < wordIdxs.length;
         function slice(idxList) {
             if (!idxList.length) return '';
-            return words.slice(idxList[0], idxList[idxList.length - 1] + 1).join('');
+            const from = idxList[0], to = idxList[idxList.length - 1];
+            return tokens.slice(from, to + 1).join('');
         }
         let html = '';
-        if (wPos > 3) html += '<span class="esp-dots">…</span> ';
-        if (before3.length) html += esc(slice(before3)) + ' ';
-        const kwRaw = words[kwToken];
+        if (moreBefore)  html += '<span class="esp-dots">…</span> ';
+        if (hasBefore)   html += esc(slice(before3)) + ' ';
+        const kwRaw = tokens[kwToken];
         const kIdx  = kwRaw.toLowerCase().indexOf(kLower);
         html += esc(kwRaw.slice(0, kIdx)) +
                 '<span class="esp-kw">' + esc(kwRaw.slice(kIdx, kIdx + keyword.length)) + '</span>' +
                 esc(kwRaw.slice(kIdx + keyword.length));
-        if (after3.length) html += ' ' + esc(slice(after3));
-        if (wPos + 4 < wordIdxs.length) html += ' <span class="esp-dots">…</span>';
+        if (hasAfter)   html += ' ' + esc(slice(after3));
+        if (moreAfter)  html += ' <span class="esp-dots">…</span>';
         return html;
     }
 
