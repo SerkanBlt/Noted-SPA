@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.47 — AI fallback: auth/ağ hatası dışında tüm hatalarda (429,413,400,503…) sonraki modele geç -->
+<!-- Noted v1.15.48 — Yardım menüsü güncellendi: AI Asistan, Yüzen Editör bölümleri eklendi; Dışa Aktarma ve Veri Kalıcılığı bölümleri güncellendi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.47</title>
+    <title>Noted v1.15.48</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4398,7 +4398,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.47</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.48</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -14695,7 +14695,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.47</span>
+      <span class="hm-ver">v1.15.48</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14706,18 +14706,20 @@ window._fpOpenPicker = openPicker;
         <div class="hm-nl active" data-target="hms-notes" onclick="hmNavTo('hms-notes')">📝 Not Yönetimi<span class="hm-nc">8</span></div>
         <div class="hm-nl" data-target="hms-search" onclick="hmNavTo('hms-search')">🔍 Arama &amp; Filtre<span class="hm-nc">6</span></div>
         <div class="hm-nl" data-target="hms-editor" onclick="hmNavTo('hms-editor')">✏️ Zengin Editör<span class="hm-nc">13</span></div>
+        <div class="hm-nl" data-target="hms-float" onclick="hmNavTo('hms-float')">🪟 Yüzen Editör<span class="hm-nc">5</span></div>
         <div class="hm-nl" data-target="hms-wiki" onclick="hmNavTo('hms-wiki')">🔗 Wiki Bağlantıları<span class="hm-nc">4</span></div>
         <div class="hm-nl" data-target="hms-layout" onclick="hmNavTo('hms-layout')">⬛ Düzen Araçları<span class="hm-nc">6</span></div>
         <div class="hm-nl" data-target="hms-view" onclick="hmNavTo('hms-view')">👁️ Görünüm Modları<span class="hm-nc">9</span></div>
         <div class="hm-nl" data-target="hms-voice" onclick="hmNavTo('hms-voice')">🎙️ Ses Girişi<span class="hm-nc">2</span></div>
+        <div class="hm-nl" data-target="hms-ai" onclick="hmNavTo('hms-ai')">🤖 AI Asistan<span class="hm-nc">8</span></div>
         <div class="hm-nl" data-target="hms-remind" onclick="hmNavTo('hms-remind')">🔔 Hatırlatıcılar<span class="hm-nc">5</span></div>
-        <div class="hm-nl" data-target="hms-export" onclick="hmNavTo('hms-export')">📤 Dışa/İçe Aktarma<span class="hm-nc">5</span></div>
+        <div class="hm-nl" data-target="hms-export" onclick="hmNavTo('hms-export')">📤 Dışa/İçe Aktarma<span class="hm-nc">6</span></div>
         <div class="hm-nl" data-target="hms-graph" onclick="hmNavTo('hms-graph')">🕸️ Bilgi Grafiği<span class="hm-nc">6</span></div>
         <div class="hm-nl" data-target="hms-tpl" onclick="hmNavTo('hms-tpl')">📋 Şablonlar<span class="hm-nc">4</span></div>
         <div class="hm-nl" data-target="hms-toc" onclick="hmNavTo('hms-toc')">📑 İçindekiler (TOC)<span class="hm-nc">3</span></div>
         <div class="hm-nl" data-target="hms-keys" onclick="hmNavTo('hms-keys')">⌨️ Klavye Kısayolları<span class="hm-nc">18</span></div>
         <div class="hm-nl" data-target="hms-theme" onclick="hmNavTo('hms-theme')">🎨 Tema &amp; Görünüm<span class="hm-nc">3</span></div>
-        <div class="hm-nl" data-target="hms-data" onclick="hmNavTo('hms-data')">💾 Veri Kalıcılığı<span class="hm-nc">4</span></div>
+        <div class="hm-nl" data-target="hms-data" onclick="hmNavTo('hms-data')">💾 Veri Kalıcılığı<span class="hm-nc">5</span></div>
       </nav>
 
       <!-- Sağ içerik -->
@@ -14725,10 +14727,10 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.47</h2>
+          <h2>Noted v1.15.48</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
-            <div class="hm-hero-stat"><div class="hm-hero-stat-n">15</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
+            <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">60+</div><div class="hm-hero-stat-l">Renk Seçeneği</div></div>
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">18</div><div class="hm-hero-stat-l">Klavye Kısayolu</div></div>
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">4</div><div class="hm-hero-stat-l">Dışa Aktarma Formatı</div></div>
@@ -14809,7 +14811,24 @@ window._fpOpenPicker = openPicker;
           </div>
         </div>
 
-        <!-- 4. WİKİ -->
+        <!-- 4. YÜZEN EDİTÖR -->
+        <div class="hm-sec" id="hms-float">
+          <div class="hm-sec-hd">
+            <div class="hm-sec-icon" style="background:#f0f9ff;">🪟</div>
+            <div><div class="hm-sec-t">Yüzen Editör</div><div class="hm-sec-d">Eş zamanlı iki not düzenlemek için bölünmüş görünüm</div></div>
+          </div>
+          <div class="hm-sec-body">
+            <div class="hm-fg">
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Açma</strong></div><div class="hm-fs">Not listesinde bir nota sağ tıklayarak veya not menüsünden "Yan panelde aç" seçeneğiyle ilgili not yüzen editörde açılır; ana editör aynı anda çalışmaya devam eder.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Bölünmüş Görünüm</strong></div><div class="hm-fs">Ekran dikey olarak ikiye ayrılır; sol tarafta ana editör, sağ tarafta yüzen editör görünür. Her iki not bağımsız biçimde düzenlenebilir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Boyut Ayarı</strong></div><div class="hm-fs">Ortadaki ayırıcı (splitter) sürüklenerek editörlerin genişlik oranı serbestçe ayarlanabilir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Notları Yer Değiştirme</strong></div><div class="hm-fs">Splitter'a çift tıklanınca iki editördeki notlar birbirleriyle yer değiştirir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Bağımsız Otomatik Kayıt</strong></div><div class="hm-fs">Her iki editör kendi notunu bağımsız olarak otomatik kaydeder; değişiklikler birbirini etkilemez.</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. WİKİ -->
         <div class="hm-sec" id="hms-wiki">
           <div class="hm-sec-hd">
             <div class="hm-sec-icon" style="background:#f3e8ff;">🔗</div>
@@ -14890,7 +14909,27 @@ window._fpOpenPicker = openPicker;
           </div>
         </div>
 
-        <!-- 8. HATIRLATICIL AR -->
+        <!-- 9. AI ASİSTAN -->
+        <div class="hm-sec" id="hms-ai">
+          <div class="hm-sec-hd">
+            <div class="hm-sec-icon" style="background:#faf5ff;">🤖</div>
+            <div><div class="hm-sec-t">AI Asistan</div><div class="hm-sec-d">Çoklu provider desteği, model havuzu ve not içi AI işlemleri</div></div>
+          </div>
+          <div class="hm-sec-body">
+            <div class="hm-fg">
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>AI Sohbet Paneli</strong></div><div class="hm-fs">Sağ üstteki yıldız (✦) butonuyla açılan sohbet paneli; seçili notun içeriğini bağlam olarak kullanarak sorulara yanıt verir. En ilgili notlar otomatik bağlama eklenir (RAG).</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Çoklu Provider Desteği</strong></div><div class="hm-fs">Groq, OpenRouter, Together AI, Fireworks AI, Mistral ve Özel Provider (Custom) desteklenir. AI Ayarları panelinden provider seçilir, API anahtarı girilir ve modeller otomatik listelenir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Model Havuzu</strong></div><div class="hm-fs">Birden fazla provider'dan model seçilerek sıralı bir havuza eklenir. Havuz sırası deneme önceliğini belirler. Modeller ↑ ↓ butonlarıyla yeniden sıralanabilir, 🗑 ile kaldırılabilir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Otomatik Fallback</strong></div><div class="hm-fs">Bir model cevap veremediğinde (429, 503, timeout vb.) havuzun sıradaki modeline otomatik geçilir. Kimlik doğrulama ve ağ hatası dışındaki tüm hatalar fallback'i tetikler.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Not İçi AI (Inline)</strong></div><div class="hm-fs">Editörde metin seçildiğinde araç çubuğundan AI işlemleri uygulanabilir: <em>Genişlet</em>, <em>Özetle</em>, <em>Düzelt</em> (yazım/dilbilgisi), <em>Devam Et</em>.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Ton &amp; Davranış Ayarları</strong></div><div class="hm-fs">Bilgilendirici, Profesyonel, Samimi veya Yaratıcı ton seçilebilir. Sıcaklık (temperature) ve bağlam penceresi değerleri özelleştirilebilir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Sistem Mesajı</strong></div><div class="hm-fs">AI'ın genel davranışını belirleyecek özel bir sistem mesajı yazılabilir. Ayarlar panelinin "Sistem Mesajı" sekmesinden düzenlenir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>Otomatik Geçiş (Legacy)</strong></div><div class="hm-fs">Eski Groq API anahtarı (<code>noted_ai_key_v1</code>) ilk açılışta otomatik olarak yeni çoklu provider yapısına aktarılır; mevcut ayarlar korunur.</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10. HATIRLATICIL AR -->
         <div class="hm-sec" id="hms-remind">
           <div class="hm-sec-hd">
             <div class="hm-sec-icon" style="background:#fef2f2;">🔔</div>
@@ -14920,6 +14959,9 @@ window._fpOpenPicker = openPicker;
               <div class="hm-ec"><div class="hm-eci">📝</div><div class="hm-ecn">Markdown</div><div class="hm-ecd">Standart Markdown sözdiziminde .md dosyası oluşturulur.</div></div>
               <div class="hm-ec"><div class="hm-eci">🗄️</div><div class="hm-ecn">JSON Yedek</div><div class="hm-ecd">Tüm notlar tek bir JSON dosyasına yedeklenir ve geri yüklenebilir.</div></div>
             </div>
+            <div class="hm-fg" style="margin-top:12px;">
+              <div class="hm-fi"><div class="hm-fb"></div><div><div class="hm-ft"><strong>AI Ayarları ile Dışa Aktarma</strong></div><div class="hm-fs">Uygulama Ayarları → Gelişmiş sekmesinde "AI ayarlarını dışa aktar" seçeneği etkinleştirilirse JSON yedeği; API anahtarları, model havuzu ve yapılandırma bilgilerini de içerir. Dosyayı güvenli saklayın. İçe aktarma sırasında AI bloğu yoksa mevcut AI ayarlarına dokunulmaz.</div></div></div>
+            </div>
             <div class="hm-callout" style="margin-top:12px;">
               <span class="hm-ci">⚠️</span>
               <span class="hm-ct">Dışa aktarma seçenekleri yalnızca kaydedilmiş notlar için aktifleşir. JSON içe aktarma ile önceki yedekler geri yüklenebilir; bozuk veri tespiti ve otomatik yedek mekanizması mevcuttur.</span>
@@ -14927,7 +14969,7 @@ window._fpOpenPicker = openPicker;
           </div>
         </div>
 
-        <!-- 10. GRAFİK -->
+        <!-- 12. GRAFİK -->
         <div class="hm-sec" id="hms-graph">
           <div class="hm-sec-hd">
             <div class="hm-sec-icon" style="background:#f0f9ff;">🕸️</div>
@@ -15040,6 +15082,7 @@ window._fpOpenPicker = openPicker;
               <li><strong>Otomatik Kayıt:</strong> Her not değişikliğinde otomatik kayıt gerçekleşir; editör altındaki "Kaydediliyor…" / "Kaydedildi" animasyonu durumu gösterir.</li>
               <li><strong>Bozuk Veri Tespiti:</strong> Uygulama açılışında veri bütünlüğü kontrol edilir; bozuk veri tespit edilirse otomatik yedek oluşturulur.</li>
               <li><strong>Grup Durum Takibi:</strong> Hangi grupların açık/kapalı olduğu <code>noted_groups_v1</code> anahtarıyla ayrıca saklanır.</li>
+              <li><strong>AI Ayarları Deposu:</strong> Provider API anahtarları <code>noted_ai_providers_v1</code>, model havuzu <code>noted_ai_pool_v1</code>, sohbet ayarları <code>noted_ai_cfg_v1</code>, sistem mesajı <code>noted_ai_sys_v1</code> anahtarlarıyla ayrı ayrı saklanır. Bu veriler isteğe bağlı olarak JSON yedeğine dahil edilebilir (Gelişmiş Ayarlar).</li>
             </ul>
             <div class="hm-callout">
               <span class="hm-ci">🔒</span>
