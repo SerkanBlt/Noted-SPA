@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.29 — Float editörde wikilink davranışları + grup rozeti düzeltildi: [[ autocomplete, hover önizleme, tıklama navigasyonu fp-content'te çalışıyor; fp-editor-badge tıklanınca grup seçici açılıyor; applyGroup fp-badge-text'i de güncelliyor -->
+<!-- Noted v1.15.30 — Float editör wikilink+badge köklü düzeltme: dinleyiciler fp-content DOM'da var olduğunda (float panel IIFE içinde) ekleniyor; editor-badge-wrap→fp-badge-wrap ile pristine CSS çakışması giderildi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.29</title>
+    <title>Noted v1.15.30</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4317,7 +4317,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.29</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.30</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -6005,68 +6005,9 @@ $content.addEventListener('mousedown', e => {
     handleEditNoteRequest(wl.dataset.noteId);
 });
 
-/* ══ Float editör ($fp-content) içindeki wikilink'ler için hover + tıklama + [[ tetikleyici ══ */
-(function() {
-    const fpC = document.getElementById('fp-content');
-    if (!fpC) return;
-
-    /* Hover önizleme */
-    fpC.addEventListener('mouseover', e => {
-        const wl = e.target.closest('a.wikilink');
-        if (wl && wl.dataset.noteId) scheduleWlPreview(wl);
-    });
-    fpC.addEventListener('mouseout', e => {
-        const wl = e.target.closest('a.wikilink');
-        if (wl && !wl.contains(e.relatedTarget)) scheduleHideWlPreview();
-    });
-
-    /* Tıklama ile nota git */
-    fpC.addEventListener('mousedown', e => {
-        const wl = e.target.closest('a.wikilink');
-        if (!wl || !wl.dataset.noteId) return;
-        e.preventDefault();
-        hideWlPreview();
-        handleEditNoteRequest(wl.dataset.noteId);
-    });
-
-    /* [[ otomatik tamamlama tetikleyici */
-    fpC.addEventListener('input', function wlDetectFp(e) {
-        const _el = e.currentTarget;
-        const sel = window.getSelection();
-        if (!sel || !sel.isCollapsed || !sel.rangeCount || !_el.contains(sel.anchorNode)) { closeWlAutocomplete(); return; }
-        const node = sel.anchorNode;
-        if (node.nodeType !== 3) { closeWlAutocomplete(); return; }
-        const text = node.nodeValue.slice(0, sel.anchorOffset);
-        const m = text.match(/\[\[([^\[\]]{0,40})$/);
-        if (!m) { closeWlAutocomplete(); return; }
-        const query = m[1];
-        const startOffset = sel.anchorOffset - m[0].length;
-        const r = document.createRange();
-        r.setStart(node, startOffset); r.setEnd(node, sel.anchorOffset);
-        wlAcRange = r;
-        const rect = r.getBoundingClientRect();
-        if (!rect.width && !rect.height) { closeWlAutocomplete(); return; }
-        openWlAutocomplete(query, rect);
-    });
-
-    /* Ok tuşları + Enter + Escape ile autocomplete gezinme */
-    fpC.addEventListener('keydown', e => {
-        if (!wlAcActive || !$wlAutocomplete.classList.contains('open')) return;
-        const items = [...$wlAcList.querySelectorAll('.wl-ac-item')];
-        if (e.key === 'Escape') { e.preventDefault(); closeWlAutocomplete(); return; }
-        if (e.key === 'ArrowDown' && items.length) {
-            e.preventDefault(); wlAcSelIndex = (wlAcSelIndex + 1) % items.length;
-            items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
-            items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
-        } else if (e.key === 'ArrowUp' && items.length) {
-            e.preventDefault(); wlAcSelIndex = (wlAcSelIndex - 1 + items.length) % items.length;
-            items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
-            items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
-        } else if (e.key === 'Enter' && items.length) {
-            e.preventDefault(); insertWikilink(items[wlAcSelIndex].dataset.title);
-        }
-    }, true);
-})();
+/* ══ Float editör wikilink dinleyicileri fp-content elementine bağlanıyor —
+   Bu element main script çalışırken henüz DOM'da yok (line 14810'da tanımlı),
+   bu yüzden dinleyiciler float panel IIFE içinde (14893+) ekleniyor. ══ */
 
 /* ══ v1.1: PIN ══ */
 function togglePin(id) {
@@ -14368,7 +14309,7 @@ function _showSnack(msg, type, dur) {
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.29</span>
+      <span class="hm-ver">v1.15.30</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14398,7 +14339,7 @@ function _showSnack(msg, type, dur) {
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.29</h2>
+          <h2>Noted v1.15.30</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">15</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -14807,7 +14748,7 @@ function _showSnack(msg, type, dur) {
             <input id="fp-search-input" type="text" placeholder="Notta ara…" autocomplete="off">
             <button id="fp-search-close" title="Kapat"><i class="fas fa-times"></i></button>
         </div>
-        <div class="editor-badge-wrap">
+        <div class="fp-badge-wrap">
             <div id="fp-editor-badge" class="group-badge">
                 <i class="fas fa-folder-open"></i>
                 <span id="fp-badge-text">Genel</span>
@@ -14996,6 +14937,67 @@ function _showSnack(msg, type, dur) {
             }, 300);
         }, 1200);
     });
+
+    /* ── Wikilink hover önizleme ── */
+    fpContent.addEventListener('mouseover', e => {
+        const wl = e.target.closest('a.wikilink');
+        if (wl && wl.dataset.noteId && typeof scheduleWlPreview === 'function') scheduleWlPreview(wl);
+    });
+    fpContent.addEventListener('mouseout', e => {
+        const wl = e.target.closest('a.wikilink');
+        if (wl && !wl.contains(e.relatedTarget) && typeof scheduleHideWlPreview === 'function') scheduleHideWlPreview();
+    });
+
+    /* ── Wikilink tıklama → ana editörde aç ── */
+    fpContent.addEventListener('mousedown', e => {
+        const wl = e.target.closest('a.wikilink');
+        if (!wl || !wl.dataset.noteId) return;
+        e.preventDefault();
+        if (typeof hideWlPreview === 'function') hideWlPreview();
+        if (typeof handleEditNoteRequest === 'function') handleEditNoteRequest(wl.dataset.noteId);
+    });
+
+    /* ── [[ otomatik tamamlama tetikleyici ── */
+    fpContent.addEventListener('input', function wlDetectFp(e) {
+        const _el = e.currentTarget;
+        const sel = window.getSelection();
+        if (!sel || !sel.isCollapsed || !sel.rangeCount || !_el.contains(sel.anchorNode)) {
+            if (typeof closeWlAutocomplete === 'function') closeWlAutocomplete(); return;
+        }
+        const node = sel.anchorNode;
+        if (node.nodeType !== 3) { if (typeof closeWlAutocomplete === 'function') closeWlAutocomplete(); return; }
+        const text = node.nodeValue.slice(0, sel.anchorOffset);
+        const m = text.match(/\[\[([^\[\]]{0,40})$/);
+        if (!m) { if (typeof closeWlAutocomplete === 'function') closeWlAutocomplete(); return; }
+        const query = m[1];
+        const startOffset = sel.anchorOffset - m[0].length;
+        const r = document.createRange();
+        r.setStart(node, startOffset); r.setEnd(node, sel.anchorOffset);
+        wlAcRange = r;
+        const rect = r.getBoundingClientRect();
+        if (!rect.width && !rect.height) { if (typeof closeWlAutocomplete === 'function') closeWlAutocomplete(); return; }
+        if (typeof openWlAutocomplete === 'function') openWlAutocomplete(query, rect);
+    });
+
+    /* ── [[ autocomplete klavye gezinme ── */
+    fpContent.addEventListener('keydown', e => {
+        if (!wlAcActive) return;
+        const $wlAc = document.getElementById('wl-autocomplete');
+        if (!$wlAc || !$wlAc.classList.contains('open')) return;
+        const items = [...$wlAc.querySelectorAll('.wl-ac-item')];
+        if (e.key === 'Escape') { e.preventDefault(); if (typeof closeWlAutocomplete === 'function') closeWlAutocomplete(); return; }
+        if (e.key === 'ArrowDown' && items.length) {
+            e.preventDefault(); wlAcSelIndex = (wlAcSelIndex + 1) % items.length;
+            items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
+            items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
+        } else if (e.key === 'ArrowUp' && items.length) {
+            e.preventDefault(); wlAcSelIndex = (wlAcSelIndex - 1 + items.length) % items.length;
+            items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
+            items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
+        } else if (e.key === 'Enter' && items.length) {
+            e.preventDefault(); if (typeof insertWikilink === 'function') insertWikilink(items[wlAcSelIndex].dataset.title);
+        }
+    }, true);
 
     /* ── Undock yardımcısı ── */
     function _undock() {
