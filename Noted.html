@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.54 — Yardım menüsü güncellendi: AI Asistan, Yüzen Editör bölümleri eklendi; Dışa Aktarma ve Veri Kalıcılığı bölümleri güncellendi -->
+<!-- Noted v1.15.55 — Yardım menüsü güncellendi: AI Asistan, Yüzen Editör bölümleri eklendi; Dışa Aktarma ve Veri Kalıcılığı bölümleri güncellendi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.54</title>
+    <title>Noted v1.15.55</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4403,7 +4403,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.54</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.55</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -5873,6 +5873,7 @@ function buildNoteItem(n) {
     const _remOverdue = _rems.some(r => r && r.at && !r.fired && r.at <= Date.now());
     acts.innerHTML = `
         <button class="nab fp-open" title="İkinci Editörde Aç"><i class="fas fa-columns"></i></button>
+        <button class="nab share-link" title="Bağlantıyı Kopyala"><i class="fas fa-link"></i></button>
         <button class="nab pin ${n.pinned ? 'pinned' : ''}" title="${n.pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle'}"><i class="fas fa-thumbtack"></i></button>
         <button class="nab reminder${_hasRem ? (_remOverdue ? ' overdue' : ' has-reminder') : ''}" title="Hatırlatıcı"><i class="fas fa-bell"></i></button>
         <button class="nab del" title="Sil"><i class="fas fa-trash"></i></button>`;
@@ -5960,6 +5961,19 @@ $mainList.addEventListener('click', e => {
     const id = item.dataset.id;
 
     if (e.target.closest('.nab.fp-open')) { e.stopPropagation(); if (typeof window._fpLoadNote === 'function') window._fpLoadNote(id); return; }
+    if (e.target.closest('.nab.share-link')) {
+        e.stopPropagation();
+        const url = location.href.split('?')[0] + '?note=' + encodeURIComponent(id);
+        if (navigator.share) {
+            const n = notes.find(n => String(n.id) === String(id));
+            navigator.share({ title: n?.title || 'Not', url }).catch(() => {});
+        } else {
+            navigator.clipboard?.writeText(url).then(() => {
+                if (typeof _showSnack === 'function') _showSnack('Bağlantı kopyalandı', 'ok', 2000);
+            }).catch(() => { prompt('Bağlantıyı kopyalayın:', url); });
+        }
+        return;
+    }
     /* v1.1: Pin toggle */
     if (e.target.closest('.nab.pin')) { togglePin(id); return; }
     if (e.target.closest('.nab.reminder')) {
@@ -14753,7 +14767,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.54</span>
+      <span class="hm-ver">v1.15.55</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14785,7 +14799,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.54</h2>
+          <h2>Noted v1.15.55</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -16256,6 +16270,7 @@ window._fpOpenPicker = openPicker;
                 const n = typeof getNote === 'function' ? getNote(noteId) : null;
                 _fpSetLocked(!!(n && n.locked));
             };
+            window._fpSetLockedExternal = _fpSetLocked;
         }
 
         if (fpCancelBtn) {
@@ -16869,6 +16884,23 @@ if (window._setupScrollJump) {
     document.addEventListener('keydown',   e => { if (e.key === 'Escape') close(); });
     window.addEventListener('scroll',       close, { passive:true });
     $content.addEventListener('scroll',     close, { passive:true });
+})();
+
+/* ══ PAYLAŞILAN BAĞLANTI: ?note=<id> ile açılınca float panelde önizleme ══ */
+(function() {
+    const sharedId = new URLSearchParams(location.search).get('note');
+    if (!sharedId) return;
+    history.replaceState(null, '', location.pathname);
+    setTimeout(function() {
+        if (typeof window._fpLoadNote !== 'function') return;
+        window._fpLoadNote(decodeURIComponent(sharedId));
+        setTimeout(function() {
+            const fpBody = document.getElementById('fp-body');
+            if (fpBody && !fpBody.classList.contains('fp-locked') && typeof window._fpSetLockedExternal === 'function') {
+                window._fpSetLockedExternal(true);
+            }
+        }, 80);
+    }, 0);
 })();
 </script>
 
