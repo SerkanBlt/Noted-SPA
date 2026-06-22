@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.39 — Ana editör grup seçici anlık kaydet, hamburger gap daralt, fp toolbar mousedown (bookmark seçim kaybı düzeltildi), fp-sm/xs bookmark sol padding -->
+<!-- Noted v1.15.40 — /komut<SPACE> satır-başı inline kısayollar (ul,ol,todo,h2-4,code,q,hr,t,p2/p3,l2/l3,ci/cw/ct/cs); slash menü hint'leri güncellendi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8835,32 +8835,32 @@ const SLASH_COMMAND_GROUPS = [
     {
         label: 'Başlık',
         items: [
-            { type:'h2',      icon:'fa-heading',     label:'Başlık 1',      hint:'H1' },
-            { type:'h3',      icon:'fa-heading',     label:'Başlık 2',      hint:'H2' },
-            { type:'h4',      icon:'fa-heading',     label:'Başlık 3',      hint:'H3' },
+            { type:'h2',      icon:'fa-heading',     label:'Başlık 1',      hint:'/h2' },
+            { type:'h3',      icon:'fa-heading',     label:'Başlık 2',      hint:'/h3' },
+            { type:'h4',      icon:'fa-heading',     label:'Başlık 3',      hint:'/h4' },
         ]
     },
     {
         label: 'Liste',
         items: [
-            { type:'ul',      icon:'fa-list-ul',     label:'Madde Listesi', hint:'-'  },
-            { type:'ol',      icon:'fa-list-ol',     label:'Sıralı Liste',  hint:'1.' },
-            { type:'todo',    icon:'fa-check-square',label:'Görev Listesi', hint:'[]' },
+            { type:'ul',      icon:'fa-list-ul',     label:'Madde Listesi', hint:'/ul'   },
+            { type:'ol',      icon:'fa-list-ol',     label:'Sıralı Liste',  hint:'/ol'   },
+            { type:'todo',    icon:'fa-check-square',label:'Görev Listesi', hint:'/todo' },
         ]
     },
     {
         label: 'Kod',
         items: [
-            { type:'cblock',  icon:'fa-terminal',    label:'Kod Bloğu',     hint:'```' },
-            { type:'icode',   icon:'fa-code',        label:'Satır içi Kod', hint:'`'  },
+            { type:'cblock',  icon:'fa-terminal',    label:'Kod Bloğu',     hint:'/code' },
+            { type:'icode',   icon:'fa-code',        label:'Satır içi Kod', hint:'/icode'},
         ]
     },
     {
         label: 'Blok',
         items: [
-            { type:'blockquote',icon:'fa-quote-right',  label:'Alıntı',          hint:'"'   },
-            { type:'hr',        icon:'fa-minus',         label:'Yatay Çizgi',     hint:'---' },
-            { type:'badge',     icon:'fa-tag',           label:'Rozet',           hint:'bg'  },
+            { type:'blockquote',icon:'fa-quote-right',  label:'Alıntı',          hint:'/q'    },
+            { type:'hr',        icon:'fa-minus',         label:'Yatay Çizgi',     hint:'/hr'   },
+            { type:'badge',     icon:'fa-tag',           label:'Rozet',           hint:'/badge'},
             { type:'table',     icon:'fa-table',         label:'Tablo (3×3)',      hint:'/t'  },
             { type:'panel2',    icon:'fa-table-cells-large', label:'Panel 2 Kolon', hint:'/p2'},
             { type:'panel3',    icon:'fa-table-cells-large', label:'Panel 3 Kolon', hint:'/p3'},
@@ -8880,6 +8880,19 @@ const SLASH_COMMAND_GROUPS = [
 ];
 /* Düz liste (klavye navigasyonu için) */
 const SLASH_COMMANDS = SLASH_COMMAND_GROUPS.flatMap(g => g.items);
+
+/* Satır-başı /komut<SPACE> inline kısayol haritası */
+const SLASH_INLINE_MAP = {
+    'ul':'ul', 'ol':'ol', 'todo':'todo',
+    'h1':'h2', 'h2':'h2', 'h3':'h3', 'h4':'h4',
+    'code':'cblock', 'cblock':'cblock', 'icode':'icode',
+    'blockquote':'blockquote', 'q':'blockquote', 'quote':'blockquote',
+    'hr':'hr', 'badge':'badge',
+    't':'table', 'table':'table',
+    'p2':'panel2', 'p3':'panel3', 'panel2':'panel2', 'panel3':'panel3',
+    'l2':'layout2', 'l3':'layout3', 'layout2':'layout2', 'layout3':'layout3',
+    'ci':'callout-info', 'cw':'callout-warning', 'ct':'callout-tip', 'cs':'callout-success',
+};
 
 const $slashMenu = $('slash-menu');
 let slashMenuOpen = false, slashTextNode = null, slashOffset = 0, slashSelIndex = 0;
@@ -9337,6 +9350,42 @@ document.addEventListener('keydown', function slashKeydown(e) {
     if (!['Shift','Control','Alt','Meta','CapsLock','/'].includes(e.key) && !e.key.startsWith('Arrow')) {
         closeSlashMenu();
     }
+}, true);
+
+/* ── /komut<SPACE> satır-başı inline kısayollar ── */
+document.addEventListener('keydown', function inlineSlashShortcut(e) {
+    if (e.key !== ' ') return;
+    if (slashMenuOpen) return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    const sel = window.getSelection();
+    if (!sel || !sel.isCollapsed || !sel.rangeCount) return;
+    const node = sel.anchorNode;
+    if (!node || node.nodeType !== 3) return;
+    if (!_isInEditorArea(node)) return;
+    const parentEl = node.parentElement;
+    if (parentEl && parentEl.closest('code, pre, .wikilink')) return;
+    const text = node.nodeValue || '';
+    const offset = sel.anchorOffset;
+    const before = text.slice(0, offset);
+    /* Sadece satır başında: başında yalnızca boşluk var */
+    const m = before.match(/^[\s ]*\/([a-z0-9-]+)$/i);
+    if (!m) return;
+    const cmdType = SLASH_INLINE_MAP[m[1].toLowerCase()];
+    if (!cmdType) return;
+    e.preventDefault();
+    /* "keyword" kısmını sil, "/" bırak — applySlashCommand "/" yi silecek */
+    const slashPos = before.lastIndexOf('/');
+    if (slashPos + 1 < offset) {
+        const r = document.createRange();
+        r.setStart(node, slashPos + 1);
+        r.setEnd(node, offset);
+        sel.removeAllRanges(); sel.addRange(r);
+        (_activeEditTarget || $content).focus();
+        document.execCommand('delete', false, null);
+    }
+    slashTextNode = node;
+    slashOffset = slashPos + 1;
+    applySlashCommand(cmdType);
 }, true);
 
 /* ── Şekil tanımları (STB IIFE'den önce olmalı) ── */
