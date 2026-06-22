@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Takvim Widget</title>
+    
+    <meta name="theme-color" content="#1a1a1e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="manifest" id="pwa-manifest">
+
+    <style>
+        :root {
+            --bg-color: #f4f4f5;
+            --widget-bg: #ffffff;
+            --text-main: #18181b;
+            --text-muted: #71717a;
+            --accent: #4f46e5;
+            --border: #e4e4e7;
+            --today-bg: #f4f4f5;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121214;
+                --widget-bg: #1a1a1e;
+                --text-main: #ffffff;
+                --text-muted: #a0a0aa;
+                --accent: #6366f1;
+                --border: #27272a;
+                --today-bg: #27272a;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Daha Dar ve Kısa Widget Konteyneri */
+        .widget-container {
+            width: 100%;
+            max-width: 270px; /* Genişlik 360px'ten 270px'e düşürüldü */
+            background-color: var(--widget-bg);
+            border-radius: 12px;
+            padding: 12px 14px; /* İç boşluklar daraltıldı */
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .widget-container {
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        /* Navigasyon Alanı Küçültüldü */
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .nav-controls button {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 4px 10px; /* Butonlar küçültüldü */
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .nav-controls button:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
+        /* Ay Listesi Boşlukları Azaltıldı */
+        .months-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Aylar arasındaki boşluk yarıya indirildi */
+        }
+
+        .month-section {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .month-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* Ay Başlığı Küçültüldü */
+        .month-title {
+            color: var(--text-main);
+            font-size: 0.85rem; /* Yazı boyutu küçültüldü */
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: capitalize;
+            transition: color 0.3s ease;
+        }
+
+        /* Grid Sistemi Sıkıştırıldı */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 22px repeat(7, 1fr); /* Hafta sütunu daraltıldı */
+            gap: 2px; /* Hücre araları sıkıştırıldı */
+            text-align: center;
+            font-size: 0.72rem; /* Gün sayıları küçültüldü */
+        }
+
+        .grid-header {
+            color: var(--text-muted);
+            font-weight: 600;
+            padding-bottom: 4px;
+            font-size: 0.65rem;
+        }
+
+        /* Hafta Numarası Sütunu */
+        .week-num {
+            color: var(--accent);
+            font-weight: bold;
+            opacity: 0.8;
+            border-right: 1px solid var(--border);
+            padding-right: 2px;
+            font-size: 0.68rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Gün Hücreleri Kısa Tutuldu */
+        .day-cell {
+            color: var(--text-main);
+            padding: 3px 0; /* Dikey yükseklik azaltıldı */
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .day-cell.empty {
+            opacity: 0;
+        }
+
+        /* Bugün Vurgusu */
+        .day-cell.today {
+            background-color: var(--today-bg);
+            border: 1px solid var(--accent);
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        <div class="nav-controls">
+            <button id="prevBtn">← Geri</button>
+            <button id="nextBtn">İleri →</button>
+        </div>
+        <div class="months-list" id="monthsContainer"></div>
+    </div>
+
+    <script>
+        const manifestObj = {
+            "name": "Modern Takvim Widget",
+            "short_name": "Takvim",
+            "start_url": window.location.href,
+            "display": "standalone",
+            "background_color": "#1a1a1e",
+            "theme-color": "#1a1a1e",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f46e5'/><text x='50' y='65' font-family='sans-serif' font-size='45' font-weight='bold' fill='white' text-anchor='middle'>3</text></svg>",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml",
+                    "purpose": "any"
+                }
+            ]
+        };
+        const manifestStr = JSON.stringify(manifestObj);
+        document.getElementById('pwa-manifest').setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(manifestStr));
+
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl).catch(err => console.log("SW Error: ", err));
+        }
+
+        const monthsContainer = document.getElementById('monthsContainer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        let currentBaseDate = new Date();
+
+        const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+        const dayNames = ["Pz", "Sa", "Ça", "Pe", "Cu", "Ct", "Pa"];
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function renderCalendar() {
+            monthsContainer.innerHTML = '';
+
+            for (let i = 0; i < 3; i++) {
+                const targetDate = new Date(currentBaseDate.getFullYear(), currentBaseDate.getMonth() + i, 1);
+                const year = targetDate.getFullYear();
+                const month = targetDate.getMonth();
+
+                const monthSection = document.createElement('div');
+                monthSection.className = 'month-section';
+
+                const title = document.createElement('div');
+                title.className = 'month-title';
+                title.innerText = `${monthNames[month]} ${year}`;
+                monthSection.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'calendar-grid';
+
+                const wnHeader = document.createElement('div');
+                wnHeader.className = 'grid-header';
+                wnHeader.innerText = 'H';
+                grid.appendChild(wnHeader);
+
+                dayNames.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'grid-header';
+                    dayHeader.innerText = day;
+                    grid.appendChild(dayHeader);
+                });
+
+                let firstDayIndex = new Date(year, month, 1).getDay();
+                firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+                const totalDays = new Date(year, month + 1, 0).getDate();
+                const today = new Date();
+
+                let currentDay = 1;
+                
+                for (let week = 0; week < 6; week++) {
+                    if (currentDay > totalDays) break;
+
+                    const weekNumCell = document.createElement('div');
+                    weekNumCell.className = 'week-num';
+                    
+                    const sampleDate = new Date(year, month, currentDay);
+                    weekNumCell.innerText = getWeekNumber(sampleDate);
+                    grid.appendChild(weekNumCell);
+
+                    for (let d = 0; d < 7; d++) {
+                        const dayCell = document.createElement('div');
+
+                        if (week === 0 && d < firstDayIndex) {
+                            dayCell.className = 'day-cell empty';
+                        } else if (currentDay <= totalDays) {
+                            dayCell.className = 'day-cell';
+                            dayCell.innerText = currentDay;
+
+                            if (year === today.getFullYear() && month === today.getMonth() && currentDay === today.getDate()) {
+                                dayCell.classList.add('today');
+}currentDay++;} else {dayCell.className = 'day-cell empty';}grid.appendChild(dayCell);}}monthSection.appendChild(grid);monthsContainer.appendChild(monthSection);}}prevBtn.addEventListener('click', () => {currentBaseDate.setMonth(currentBaseDate.getMonth() - 3);renderCalendar();});nextBtn.addEventListener('click', () => {currentBaseDate.setMonth(currentBaseDate.getMonth() + 3);renderCalendar();});renderCalendar();
+    </script>
+</body>
+</html>
