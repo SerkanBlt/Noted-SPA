@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.60 — YouTube linklere hover önizlemede embedded video oynatıcı eklendi -->
+<!-- Noted v1.15.61 — Link önizleme paneli: kapat/büyüt-küçült butonu, sticky overlay davranışı -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.60</title>
+    <title>Noted v1.15.61</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -3454,6 +3454,17 @@ input[type="file"] { display:none; }
         .wl-preview-ext-text { font-size:.82rem; font-weight:600; color:var(--text); margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .wl-preview-ext-url { font-size:.71rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace; }
         .wl-preview-yt iframe { width:100%; aspect-ratio:16/9; border:none; border-radius:6px; display:block; }
+        /* ext-mode: sticky overlay, toolbar görünür, max-height kısıtlaması yok */
+        .wl-preview.ext-mode { max-height:none; overflow:visible; }
+        .wl-preview.ext-mode.expanded { width:560px; max-width:min(560px,calc(100vw - 24px)); }
+        .wl-preview-toolbar { display:none; justify-content:flex-end; gap:3px; margin-bottom:8px; }
+        .wl-preview.ext-mode .wl-preview-toolbar { display:flex; }
+        .wl-preview-close-btn, .wl-preview-resize-btn {
+            background:none; border:none; color:var(--text-muted); cursor:pointer;
+            padding:2px 6px; border-radius:4px; font-size:.78rem; line-height:1.4;
+            transition:background .12s, color .12s;
+        }
+        .wl-preview-close-btn:hover, .wl-preview-resize-btn:hover { background:var(--surface-2); color:var(--text); }
         @media (max-width:600px) { .wl-preview { display:none !important; } }
 
         /* ── Günlük Not Butonu ── */
@@ -4410,7 +4421,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.60</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.61</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -4784,7 +4795,13 @@ input[type="file"] { display:none; }
     <div id="wl-ac-list"></div>
 </div>
 <!-- v1.3.1: Wiki-bağlantı üzerine gelince çıkan zoom-out önizleme paneli -->
-<div id="wl-preview" class="wl-preview"></div>
+<div id="wl-preview" class="wl-preview">
+    <div class="wl-preview-toolbar">
+        <button class="wl-preview-resize-btn" title="Büyüt"><i class="fas fa-expand-alt"></i></button>
+        <button class="wl-preview-close-btn" title="Kapat"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="wl-preview-inner"></div>
+</div>
 <div id="slash-menu" class="slash-menu"></div>
 <!-- v1.1: Renk Etiketi popup -->
 <div id="color-label-popup" class="color-label-popup">
@@ -6007,6 +6024,31 @@ $mainList.addEventListener('click', e => {
    Bağlı nota tıklamadan, üzerine gelindiğinde içeriğinin küçültülmüş
    ("zoom-out") bir önizlemesini yüzen bir panelde gösterir. */
 let _wlPreviewShowT = null, _wlPreviewHideT = null, _wlPreviewLink = null;
+const $wlPreviewInner = document.getElementById('wl-preview-inner');
+
+/* ── Kapat / Büyüt-Küçült butonları — tek seferlik bağlama ── */
+(function() {
+    const closeBtn  = $wlPreview.querySelector('.wl-preview-close-btn');
+    const resizeBtn = $wlPreview.querySelector('.wl-preview-resize-btn');
+    if (closeBtn)  closeBtn.addEventListener('click',  (e) => { e.stopPropagation(); hideWlPreview(); });
+    if (resizeBtn) resizeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        $wlPreview.classList.toggle('expanded');
+        const icon = resizeBtn.querySelector('i');
+        icon.className = $wlPreview.classList.contains('expanded') ? 'fas fa-compress-alt' : 'fas fa-expand-alt';
+        resizeBtn.title = $wlPreview.classList.contains('expanded') ? 'Küçült' : 'Büyüt';
+        requestAnimationFrame(() => {
+            if (!_wlPreviewLink || !_wlPreviewLink.isConnected) return;
+            const r = _wlPreviewLink.getBoundingClientRect();
+            const pw = $wlPreview.offsetWidth, ph = $wlPreview.offsetHeight;
+            let left = r.left, top = r.bottom + 4;
+            if (left + pw > window.innerWidth  - 12) left = Math.max(12, window.innerWidth  - pw - 12);
+            if (top  + ph > window.innerHeight - 12) top  = Math.max(12, r.top - ph - 4);
+            $wlPreview.style.left = left + 'px';
+            $wlPreview.style.top  = top  + 'px';
+        });
+    });
+})();
 
 function buildWlPreviewContent(noteId) {
     const n = notes.find(x => String(x.id) === String(noteId));
@@ -6024,7 +6066,8 @@ function buildWlPreviewContent(noteId) {
 function showWlPreview(link) {
     if (!link || !link.isConnected) return;
     _wlPreviewLink = link;
-    $wlPreview.innerHTML = buildWlPreviewContent(link.dataset.noteId);
+    $wlPreview.classList.remove('ext-mode', 'expanded');
+    $wlPreviewInner.innerHTML = buildWlPreviewContent(link.dataset.noteId);
     $wlPreview.classList.add('open');
 
     const r   = link.getBoundingClientRect();
@@ -6068,9 +6111,13 @@ function showWlPreview(link) {
 }
 
 function hideWlPreview() {
-    $wlPreview.classList.remove('open');
-    $wlPreview.innerHTML = '';
+    $wlPreview.classList.remove('open', 'ext-mode', 'expanded');
+    $wlPreviewInner.innerHTML = '';
     _wlPreviewLink = null;
+    const icon = $wlPreview.querySelector('.wl-preview-resize-btn i');
+    if (icon) { icon.className = 'fas fa-expand-alt'; }
+    const resizeBtn = $wlPreview.querySelector('.wl-preview-resize-btn');
+    if (resizeBtn) resizeBtn.title = 'Büyüt';
 }
 
 function scheduleWlPreview(link) {
@@ -6081,6 +6128,7 @@ function scheduleWlPreview(link) {
 }
 
 function scheduleHideWlPreview() {
+    if ($wlPreview.classList.contains('ext-mode')) return; /* sticky — sadece kapat butonu kapatır */
     clearTimeout(_wlPreviewShowT);
     clearTimeout(_wlPreviewHideT);
     _wlPreviewHideT = setTimeout(hideWlPreview, 350);
@@ -6126,8 +6174,14 @@ function showExtLinkPreview(link) {
     const url = link.getAttribute('href') || '';
     if (!url || url.startsWith('#') || url.startsWith('javascript')) return;
     _wlPreviewLink = link;
-    $wlPreview.innerHTML = buildExtLinkPreview(url, link.textContent);
-    $wlPreview.classList.add('open');
+    $wlPreview.classList.remove('expanded');
+    const icon = $wlPreview.querySelector('.wl-preview-resize-btn i');
+    if (icon) icon.className = 'fas fa-expand-alt';
+    $wlPreviewInner.innerHTML = buildExtLinkPreview(url, link.textContent);
+    $wlPreview.classList.add('open', 'ext-mode');
+    $wlPreview.style.maxWidth  = '';
+    $wlPreview.style.maxHeight = '';
+    $wlPreview.style.removeProperty('--wl-preview-max-h');
     const r = link.getBoundingClientRect();
     const pw = $wlPreview.offsetWidth  || 300;
     const ph = $wlPreview.offsetHeight || 80;
@@ -6135,11 +6189,8 @@ function showExtLinkPreview(link) {
     let top  = r.bottom + 4;
     if (left + pw > window.innerWidth  - 12) left = Math.max(12, window.innerWidth  - pw - 12);
     if (top  + ph > window.innerHeight - 12) top  = Math.max(12, r.top - ph - 4);
-    $wlPreview.style.left     = left + 'px';
-    $wlPreview.style.top      = top  + 'px';
-    $wlPreview.style.maxWidth  = '';
-    $wlPreview.style.maxHeight = '';
-    $wlPreview.style.removeProperty('--wl-preview-max-h');
+    $wlPreview.style.left = left + 'px';
+    $wlPreview.style.top  = top  + 'px';
 }
 
 function scheduleExtLinkPreview(link) {
@@ -6164,16 +6215,7 @@ $mainList.addEventListener('mouseout', e => {
 $mainList.addEventListener('scroll', () => { if ($wlPreview.classList.contains('open')) hideWlPreview(); }, { passive:true });
 /* Önizleme panelinin kendisine girilince timer iptal, çıkınca gizle */
 $wlPreview.addEventListener('mouseenter', () => { clearTimeout(_wlPreviewHideT); clearTimeout(_wlPreviewShowT); });
-$wlPreview.addEventListener('mouseleave', (e) => {
-    /* relatedTarget === null → cursor iframe'e girdi; 2 sn. bekle */
-    if (e.relatedTarget === null) {
-        clearTimeout(_wlPreviewShowT);
-        clearTimeout(_wlPreviewHideT);
-        _wlPreviewHideT = setTimeout(hideWlPreview, 2000);
-        return;
-    }
-    scheduleHideWlPreview();
-});
+$wlPreview.addEventListener('mouseleave', () => { scheduleHideWlPreview(); }); /* ext-mode'da no-op */
 
 /* ══ v1.3.2: EDITOR ($content) içindeki wikilink'ler için hover önizleme + tıklama ══
    $mainList yalnızca sol panel listesini kapsar; sağ panelde açık notun
@@ -14850,7 +14892,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.60</span>
+      <span class="hm-ver">v1.15.61</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14882,7 +14924,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.60</h2>
+          <h2>Noted v1.15.61</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
