@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.27 — Float editör tam pariteye kavuştu: grup badge, undo/redo butonları, editör menüsü (şablon/PDF/HTML/MD dışa aktarma), sil butonu (float notunu da siler+kapatır), backlink paneli, placeholder düzeltmesi; slash komutları fp-content'te çalışıyor; _isInEditorArea fp-content'i kapsıyor -->
+<!-- Noted v1.15.28 — Float editör tam pariteye kavuştu: grup badge, undo/redo butonları, editör menüsü (şablon/PDF/HTML/MD dışa aktarma), sil butonu (float notunu da siler+kapatır), backlink paneli, placeholder düzeltmesi; slash komutları fp-content'te çalışıyor; _isInEditorArea fp-content'i kapsıyor -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.27</title>
+    <title>Noted v1.15.28</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -3371,29 +3371,6 @@ input[type="file"] { display:none; }
         }
         @media (max-width:600px) { .wl-preview { display:none !important; } }
 
-        /* ── Bağlantılar (Backlinks) Paneli ── */
-        .backlinks-panel {
-            margin-top:10px; padding-top:9px;
-            border-top:1px dashed var(--border);
-        }
-        .backlinks-hdr {
-            font-size:.64rem; font-weight:700; letter-spacing:1.8px;
-            text-transform:uppercase; color:var(--text-muted);
-            display:flex; align-items:center; gap:6px; margin-bottom:6px;
-        }
-        .backlinks-hdr i { color:#8b5cf6; }
-        .backlinks-list { display:flex; flex-wrap:wrap; gap:6px; }
-        .backlink-chip {
-            display:inline-flex; align-items:center; gap:5px;
-            font-size:.74rem; padding:4px 10px; border-radius:20px;
-            background:rgba(139,92,246,.1); color:#8b5cf6;
-            border:1px solid rgba(139,92,246,.28);
-            cursor:pointer; user-select:none; transition:background .12s;
-            max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-        }
-        .backlink-chip:hover { background:rgba(139,92,246,.22); }
-        .backlink-chip i { font-size:.68rem; flex-shrink:0; }
-
         /* ── Günlük Not Butonu ── */
 
         /* ── Gelişmiş Arama İpucu ── */
@@ -4340,7 +4317,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.27</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.28</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -4582,11 +4559,6 @@ input[type="file"] { display:none; }
                 <div id="content" contenteditable="true" data-placeholder="Notunuzu buraya yazın… (#etiket ekleyebilirsiniz)" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Not içeriği"></div>
                 <!-- col-block'lar #content içine JS ile eklenir -->
                 <div id="voice-interim" class="voice-interim"></div>
-                <!-- v1.3: Bağlantılar (Backlinks) paneli -->
-                <div id="editor-backlinks" class="backlinks-panel" style="display:none">
-                    <div class="backlinks-hdr"><i class="fas fa-link"></i> Bu Nota Bağlanan Notlar</div>
-                    <div id="editor-backlinks-list" class="backlinks-list"></div>
-                </div>
                 <!-- v1.6: İçindekiler paneli -->
                 <div id="editor-toc" class="toc-panel" style="display:none">
                     <div class="toc-hdr"><i class="fas fa-list-ul"></i> İçindekiler</div>
@@ -5213,8 +5185,7 @@ const $reminderToastOverlay = $('reminder-toast-overlay');
 const $wlAutocomplete = $('wl-autocomplete');
 const $wlAcList       = $('wl-ac-list');
 const $wlPreview      = $('wl-preview'); /* v1.3.1: hover önizleme paneli */
-const $editorBacklinks     = $('editor-backlinks');
-const $editorBacklinksList = $('editor-backlinks-list');
+
 /* daily-note-btn kaldırıldı — Şablonlar > Günlük Not ile aynı işlev */
 const $searchOpBtn    = $('search-op-btn');
 const $searchOpHint   = $('search-op-hint');
@@ -5446,51 +5417,6 @@ function convertWikiSyntax(html) {
 }
 
 /* Belirli bir nota bağlantı veren diğer notları bulur (geri bağlantılar) */
-function getBacklinks(noteId) {
-    if (noteId == null) return [];
-    const idStr = String(noteId);
-    const out = [];
-    notes.forEach(n => {
-        if (String(n.id) === idStr) return;
-        const wrap = document.createElement('div');
-        wrap.innerHTML = n.content || '';
-        const hit = [...wrap.querySelectorAll('a.wikilink[data-note-id]')]
-            .some(a => a.dataset.noteId === idStr);
-        if (hit) out.push(n);
-    });
-    return out;
-}
-
-function renderBacklinksInto(listEl, panelEl, noteId) {
-    if (!listEl || !panelEl) return;
-    const links = getBacklinks(noteId);
-    if (!noteId || links.length === 0) { panelEl.style.display = 'none'; listEl.innerHTML = ''; return; }
-    panelEl.style.display = '';
-    listEl.innerHTML = '';
-    links.forEach(n => {
-        const chip = document.createElement('span');
-        chip.className = 'backlink-chip';
-        chip.dataset.id = String(n.id);
-        chip.dataset.noteId = String(n.id);
-        chip.innerHTML = `<i class="fas fa-file-alt"></i>${esc(n.title)}`;
-        listEl.appendChild(chip);
-    });
-}
-
-$editorBacklinksList.addEventListener('click', e => {
-    const chip = e.target.closest('.backlink-chip');
-    if (!chip) return;
-    handleEditNoteRequest(chip.dataset.id);
-});
-$editorBacklinksList.addEventListener('mouseover', e => {
-    const chip = e.target.closest('.backlink-chip');
-    if (chip && chip.dataset.noteId) scheduleWlPreview(chip);
-});
-$editorBacklinksList.addEventListener('mouseout', e => {
-    const chip = e.target.closest('.backlink-chip');
-    if (chip && !chip.contains(e.relatedTarget)) scheduleHideWlPreview();
-});
-
 /* ── Wiki-bağlantı otomatik tamamlama ── */
 let wlAcActive = false, wlAcRange = null, wlAcStartOffset = -1, wlAcStartNode = null, wlAcSelIndex = 0;
 
@@ -8228,7 +8154,6 @@ function editNote(id) {
     const _rems = n.reminders || (n.reminder && n.reminder.at ? [{ at: n.reminder.at, fired: n.reminder.fired || false, title: n.reminder.reminderTitle || '' }] : []);
     updateReminderBtn(_rems, n.reminderNote || (n.reminder && n.reminder.reminderNote) || '');
     tocOpen = false; buildTocPanel(n.id);
-    renderBacklinksInto($editorBacklinksList, $editorBacklinks, n.id);
     if ($reminderBtn) $reminderBtn.classList.remove('hidden');
     if ($exportMdBtn) $exportMdBtn.removeAttribute('disabled');
     const _expHtmlBtn = $('export-html-btn'); if (_expHtmlBtn) _expHtmlBtn.removeAttribute('disabled');
@@ -8256,8 +8181,6 @@ function resetEditor() {
     if ($editorToc) $editorToc.style.display='none';
     if ($editorTocList) $editorTocList.innerHTML='';
     if ($tocToggleBtn) { $tocToggleBtn.classList.add('hidden'); $tocToggleBtn.classList.remove('active'); }
-    if ($editorBacklinks) $editorBacklinks.style.display='none';
-    if ($editorBacklinksList) $editorBacklinksList.innerHTML='';
     if ($reminderBtn) $reminderBtn.classList.add('hidden');
     if ($exportMdBtn) $exportMdBtn.setAttribute('disabled', '');
     const _expHtmlBtn2 = $('export-html-btn'); if (_expHtmlBtn2) _expHtmlBtn2.setAttribute('disabled', '');
@@ -14376,7 +14299,7 @@ function _showSnack(msg, type, dur) {
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.27</span>
+      <span class="hm-ver">v1.15.28</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14406,7 +14329,7 @@ function _showSnack(msg, type, dur) {
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.27</h2>
+          <h2>Noted v1.15.28</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">15</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
