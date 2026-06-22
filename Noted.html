@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.67 — Dis baglanti paneli header tiklayinca sayfayi yeni sekmede acar -->
+<!-- Noted v1.15.68 — Dis baglanti paneli sayfayi iframe ile panel icerisinde acar -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.67</title>
+    <title>Noted v1.15.68</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4434,7 +4434,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.67</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.68</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -6044,30 +6044,21 @@ function createExtLinkPanel(link) {
     if (!url || url.startsWith('#') || url.startsWith('javascript')) return;
 
     const isYT = !!extractYouTubeId(url);
+    const initW = isYT ? 340 : 480;
+    const initH = isYT ? Math.round(340 * 9 / 16) : 340;
     const panel = document.createElement('div');
-    panel.className = 'wl-preview ext-mode open' + (isYT ? ' yt-mode' : '');
+    panel.className = 'wl-preview ext-mode yt-mode open';
     panel.style.zIndex = ++_extPanelZ;
-
-    if (isYT) {
-        const initW = 340, initH = Math.round(initW * 9 / 16);
-        panel.style.width = initW + 'px'; panel.style.height = initH + 'px';
-        panel.innerHTML =
-            '<div class="yt-drag-bar"></div>' +
-            '<button class="wl-preview-close-btn" title="Kapat"><i class="fas fa-times"></i></button>' +
-            '<div class="wl-preview-inner">' + buildExtLinkPreview(url, link.textContent) + '</div>' +
-            '<div class="ext-resize-handle"></div>';
-    } else {
-        panel.innerHTML =
-            '<div class="wl-preview-toolbar">' +
-                '<button class="wl-preview-close-btn" title="Kapat"><i class="fas fa-times"></i></button>' +
-            '</div>' +
-            '<div class="wl-preview-inner">' + buildExtLinkPreview(url, link.textContent) + '</div>' +
-            '<div class="ext-resize-handle"></div>';
-    }
+    panel.style.width = initW + 'px'; panel.style.height = initH + 'px';
+    panel.innerHTML =
+        '<div class="yt-drag-bar"></div>' +
+        '<button class="wl-preview-close-btn" title="Kapat"><i class="fas fa-times"></i></button>' +
+        '<div class="wl-preview-inner">' + buildExtLinkPreview(url, link.textContent) + '</div>' +
+        '<div class="ext-resize-handle"></div>';
 
     /* Tahmini konum — DOM'a eklenmeden önce, görünür pozisyonda başlasın */
     const _lr = link.getBoundingClientRect();
-    const _estW = 340;
+    const _estW = initW;
     let _initLeft = _lr.left, _initTop = _lr.bottom + 4;
     if (_initLeft + _estW > window.innerWidth - 12) _initLeft = Math.max(12, window.innerWidth - _estW - 12);
     if (_initTop > window.innerHeight - 80) _initTop = Math.max(12, _lr.top - 120);
@@ -6088,8 +6079,8 @@ function createExtLinkPanel(link) {
         e.stopPropagation(); panel.remove(); _extPanelMap.delete(link);
     });
 
-    /* Taşı — YT: yt-drag-bar, diğer: toolbar */
-    const dragEl = isYT ? panel.querySelector('.yt-drag-bar') : panel.querySelector('.wl-preview-toolbar');
+    /* Taşı */
+    const dragEl = panel.querySelector('.yt-drag-bar');
     let _ox = 0, _oy = 0;
     function onMove(e) { panel.style.left = (e.clientX - _ox) + 'px'; panel.style.top = (e.clientY - _oy) + 'px'; }
     function onUp()   { panel.style.transition = ''; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
@@ -6240,21 +6231,7 @@ function buildExtLinkPreview(url, text) {
             'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
             'allowfullscreen></iframe></div>';
     }
-    let domain = '';
-    let faviconUrl = '';
-    try {
-        const u = new URL(url);
-        domain = u.hostname;
-        faviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=32';
-    } catch(e) { domain = url; }
-    const displayText = text && text.trim() && text.trim() !== url ? esc(text.trim()) : '';
-    return '<a class="wl-preview-ext-header" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' +
-        (faviconUrl ? '<img class="wl-preview-ext-favicon" src="' + esc(faviconUrl) + '" onerror="this.style.display=\'none\'">' : '') +
-        '<span class="wl-preview-ext-domain">' + esc(domain) + '</span>' +
-        '<span class="wl-preview-ext-badge"><i class="fas fa-arrow-up-right-from-square"></i></span>' +
-        '</a>' +
-        (displayText ? '<div class="wl-preview-ext-text">' + displayText + '</div>' : '') +
-        '<div class="wl-preview-ext-url">' + esc(url) + '</div>';
+    return '<div class="wl-preview-yt"><iframe src="' + esc(url) + '" frameborder="0"></iframe></div>';
 }
 
 
@@ -14954,7 +14931,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.67</span>
+      <span class="hm-ver">v1.15.68</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14986,7 +14963,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.67</h2>
+          <h2>Noted v1.15.68</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
