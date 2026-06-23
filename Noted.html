@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.78 — AI panel mesaj tasma duzeltildi: ai-msg min-width:0, ai-bubble pre max-width:100% -->
+<!-- Noted v1.15.79 — Ayarlar Gorunum sekmesi: tema/grid renk ozellestirici eklendi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.78</title>
+    <title>Noted v1.15.79</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -37,6 +37,12 @@
             --pre-border: #CBD5E1;
             --pre-label:  #64748B;
             --text-soft:  #6C757D;
+            /* Grid blok özelleştirme */
+            --tbl-header-bg: var(--surface-2);
+            --tbl-border:    var(--border);
+            --pnl-header-bg: var(--surface-2);
+            --pnl-border:    var(--border);
+            --col-sep:       var(--border);
         }
         /* ── DARK ── */
         [data-theme="dark"] {
@@ -477,6 +483,55 @@
             color:var(--text-muted); font-size:.85rem;
             text-align:center; padding:40px 0;
         }
+        /* ── Tema Özelleştirici ── */
+        .thc-wrap { padding:2px 0 8px; }
+        .thc-badge {
+            display:inline-block; font-size:.68rem; font-weight:700;
+            padding:2px 10px; border-radius:12px; margin-bottom:10px;
+            background:var(--accent-dim); color:var(--accent);
+        }
+        .thc-info {
+            font-size:.77rem; color:var(--text-muted); line-height:1.5;
+            background:var(--surface-2); border-radius:8px;
+            padding:8px 12px; margin-bottom:16px;
+        }
+        .thc-section { margin-bottom:18px; }
+        .thc-section-title {
+            font-size:.62rem; font-weight:700; letter-spacing:1.8px;
+            text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+        }
+        .thc-row {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:7px 0; border-bottom:1px solid var(--border); gap:12px;
+        }
+        .thc-row:last-child { border-bottom:none; }
+        .thc-label { font-size:.82rem; color:var(--text); }
+        .thc-right { display:flex; align-items:center; gap:6px; }
+        .thc-picker {
+            width:30px; height:30px; padding:2px 3px;
+            border:1px solid var(--border); border-radius:7px;
+            cursor:pointer; background:var(--surface);
+            -webkit-appearance:none; appearance:none;
+        }
+        .thc-picker::-webkit-color-swatch-wrapper { padding:0; }
+        .thc-picker::-webkit-color-swatch { border-radius:4px; border:none; }
+        .thc-var-reset {
+            width:24px; height:24px; border:1px solid var(--border);
+            border-radius:6px; background:transparent; cursor:pointer;
+            color:var(--text-muted); font-size:.72rem;
+            display:flex; align-items:center; justify-content:center;
+            transition:color .13s, border-color .13s;
+        }
+        .thc-var-reset:hover { color:var(--accent); border-color:var(--accent); }
+        .thc-foot { margin-top:16px; display:flex; justify-content:flex-end; }
+        .thc-reset-all-btn {
+            font-size:.78rem; padding:6px 14px;
+            border:1px solid var(--border); border-radius:8px;
+            background:transparent; cursor:pointer; color:var(--text-muted);
+            font-family:var(--font-ui); display:flex; align-items:center; gap:6px;
+            transition:color .13s, border-color .13s;
+        }
+        .thc-reset-all-btn:hover { color:var(--danger); border-color:var(--danger); }
         /* Toggle switch — AI ayarlar sekmesi */
         .toggle-sw { position:relative; display:inline-block; width:34px; height:20px; flex-shrink:0; }
         .toggle-sw input { opacity:0; width:0; height:0; position:absolute; }
@@ -4117,7 +4172,7 @@ input[type="file"] { display:none; }
 
         /* ── Panel (başlık satırı + border) ── */
         .noted-grid.grid-panel {
-            border: 1px solid var(--border);
+            border: 1px solid var(--pnl-border);
             border-radius: 8px; overflow: hidden;
             background: var(--surface);
             box-shadow: 0 1px 4px var(--shadow);
@@ -4128,8 +4183,8 @@ input[type="file"] { display:none; }
         }
         /* Panel başlık satırı — thead tr */
         .noted-grid.grid-panel thead tr th {
-            background: var(--surface-2);
-            border-bottom: 1px solid var(--border);
+            background: var(--pnl-header-bg);
+            border-bottom: 1px solid var(--pnl-border);
             padding: 3px 10px 3px 8px;
             font-size: .82rem; font-weight: 700;
             color: var(--text); text-align: left;
@@ -4152,7 +4207,7 @@ input[type="file"] { display:none; }
         /* ── Tablo (standart tablo) ── */
         /* Tablo: panel gibi border + radius — noted-grid üzerinde */
         .noted-grid.grid-table {
-            border: 1px solid var(--border);
+            border: 1px solid var(--tbl-border);
             border-radius: 8px; overflow: hidden;
             background: var(--surface);
             box-shadow: 0 1px 4px var(--shadow);
@@ -4162,8 +4217,8 @@ input[type="file"] { display:none; }
             box-shadow: 0 0 0 2px var(--accent-dim);
         }
         .noted-grid.grid-table thead tr th {
-            background: var(--surface-2);
-            border-bottom: 1px solid var(--border);
+            background: var(--tbl-header-bg);
+            border-bottom: 1px solid var(--tbl-border);
             padding: 5px 10px;
             font-size: .85rem; font-weight: 700;
             text-align: left;
@@ -4173,7 +4228,7 @@ input[type="file"] { display:none; }
             border-left: none; /* ng-resize::after border görevi üstleniyor */
         }
         .noted-grid.grid-table tbody tr + tr td {
-            border-top: 1px solid var(--border);
+            border-top: 1px solid var(--tbl-border);
         }
         .noted-grid.grid-table tbody td {
             padding: 5px 10px 1px;
@@ -4202,7 +4257,7 @@ input[type="file"] { display:none; }
         }
         .noted-grid.grid-column tbody td + td {
             padding-left: 8px;
-            border-left: 1px solid var(--border); /* görsel ayraç */
+            border-left: 1px solid var(--col-sep);
         }
         .noted-grid.grid-column:focus-within tbody td + td { border-left-color: var(--accent); opacity: .5; }
 
@@ -4451,7 +4506,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.78</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.79</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -5105,7 +5160,37 @@ input[type="file"] { display:none; }
                 </div>
             </div>
             <div class="stab-panel" id="stab-tab2">
-                <div class="stab-empty"><i class="fas fa-palette stab-icon"></i>Görünüm ayarları yakında eklenecek</div>
+                <div class="thc-wrap">
+                    <span class="thc-badge" id="thc-badge">Açık Tema</span>
+                    <p class="thc-info">Varsayılan temalar değişmez. Her tema (açık/koyu) için değişiklikler ayrı kaydedilir.</p>
+                    <div class="thc-section">
+                        <div class="thc-section-title">Genel</div>
+                        <div class="thc-row"><span class="thc-label">Vurgu rengi</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--accent"><button class="thc-var-reset" data-var="--accent" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">Arka plan</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--bg"><button class="thc-var-reset" data-var="--bg" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">Yüzey</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--surface"><button class="thc-var-reset" data-var="--surface" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">İkincil yüzey</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--surface-2"><button class="thc-var-reset" data-var="--surface-2" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">Kenarlık</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--border"><button class="thc-var-reset" data-var="--border" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">Metin</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--text"><button class="thc-var-reset" data-var="--text" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">İkincil metin</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--text-muted"><button class="thc-var-reset" data-var="--text-muted" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                    </div>
+                    <div class="thc-section">
+                        <div class="thc-section-title">Tablo</div>
+                        <div class="thc-row"><span class="thc-label">Başlık arka planı</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--tbl-header-bg"><button class="thc-var-reset" data-var="--tbl-header-bg" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">Kenarlık</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--tbl-border"><button class="thc-var-reset" data-var="--tbl-border" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                    </div>
+                    <div class="thc-section">
+                        <div class="thc-section-title">Panel</div>
+                        <div class="thc-row"><span class="thc-label">Başlık arka planı</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--pnl-header-bg"><button class="thc-var-reset" data-var="--pnl-header-bg" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                        <div class="thc-row"><span class="thc-label">Kenarlık</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--pnl-border"><button class="thc-var-reset" data-var="--pnl-border" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                    </div>
+                    <div class="thc-section">
+                        <div class="thc-section-title">Kolon</div>
+                        <div class="thc-row"><span class="thc-label">Sütun ayırıcı</span><div class="thc-right"><input type="color" class="thc-picker" data-var="--col-sep"><button class="thc-var-reset" data-var="--col-sep" title="Sıfırla"><i class="fas fa-rotate-left"></i></button></div></div>
+                    </div>
+                    <div class="thc-foot">
+                        <button id="thc-reset-all" class="thc-reset-all-btn"><i class="fas fa-rotate-left"></i> Tümünü Sıfırla</button>
+                    </div>
+                </div>
             </div>
             <div class="stab-panel" id="stab-tab3">
                 <section class="ai-set-section">
@@ -5720,7 +5805,38 @@ function applyTheme() {
     }
     document.querySelectorAll('.hm-theme-option').forEach(el =>
         el.classList.toggle('hm-theme-active', el.dataset.theme === themeMode));
+    _applyThemeCustom();
 }
+
+/* ── Tema Özelleştirici ── */
+const _THC_ALL_VARS = ['--accent','--bg','--surface','--surface-2','--border','--text','--text-muted','--tbl-header-bg','--tbl-border','--pnl-header-bg','--pnl-border','--col-sep'];
+const _THC_LINKED  = ['--accent-dim','--edit-glow'];
+const _THC_DEFS = {
+    light: { '--accent':'#3b82f6','--bg':'#f8f9fa','--surface':'#ffffff','--surface-2':'#f1f3f5','--border':'#e5e7eb','--text':'#212529','--text-muted':'#6c757d','--tbl-header-bg':'#f1f3f5','--tbl-border':'#e5e7eb','--pnl-header-bg':'#f1f3f5','--pnl-border':'#e5e7eb','--col-sep':'#e5e7eb' },
+    dark:  { '--accent':'#5b9df9','--bg':'#16181d','--surface':'#1e2127','--surface-2':'#262a31','--border':'#383d46','--text':'#e6e8eb','--text-muted':'#9aa3ad','--tbl-header-bg':'#262a31','--tbl-border':'#383d46','--pnl-header-bg':'#262a31','--pnl-border':'#383d46','--col-sep':'#383d46' },
+};
+function _thcStorageKey() { return isDark ? 'noted_custom_dark' : 'noted_custom_light'; }
+function _thcGetCustom()  { try { return JSON.parse(localStorage.getItem(_thcStorageKey()) || '{}'); } catch(_) { return {}; } }
+function _thcHexToRgba(hex, a) {
+    const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+}
+function _applyThemeCustom() {
+    /* Önceki özel değerleri temizle */
+    [..._THC_ALL_VARS, ..._THC_LINKED].forEach(v => document.documentElement.style.removeProperty(v));
+    /* Kayıtlı özel değerleri uygula */
+    const custom = _thcGetCustom();
+    for (const [v, val] of Object.entries(custom)) {
+        document.documentElement.style.setProperty(v, val);
+        if (v === '--accent') {
+            document.documentElement.style.setProperty('--accent-dim', _thcHexToRgba(val, isDark ? 0.16 : 0.12));
+            document.documentElement.style.setProperty('--edit-glow', val);
+        }
+    }
+    /* Picker'ları güncelle (ayarlar paneli açıksa) */
+    if (typeof _thcRefreshUI === 'function') _thcRefreshUI();
+}
+let _thcRefreshUI = null;
 /* Sistem teması değişince güncelle */
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (themeMode === 'system') applyTheme();
@@ -11937,9 +12053,81 @@ $content.addEventListener('input', () => {
                 const panelId = tabMap[tab.dataset.stab];
                 const panel = panelId ? $(panelId) : null;
                 if (panel) panel.classList.add('active');
+                if (tab.dataset.stab === 'tab2') _thcInitUI();
             });
         });
     }
+})();
+
+/* ── Görünüm Sekmesi: Tema Özelleştirici ── */
+(function() {
+    function _thcInit() {
+        const panel = document.getElementById('stab-tab2');
+        if (!panel) return;
+
+        function refresh() {
+            const badge = document.getElementById('thc-badge');
+            if (badge) badge.textContent = isDark ? 'Koyu Tema' : 'Açık Tema';
+            const custom = _thcGetCustom();
+            const defs   = isDark ? _THC_DEFS.dark : _THC_DEFS.light;
+            panel.querySelectorAll('.thc-picker').forEach(inp => {
+                const v = inp.dataset.var;
+                const val = custom[v] || defs[v] || '#000000';
+                if (/^#[0-9a-fA-F]{6}$/.test(val)) inp.value = val;
+            });
+        }
+
+        function applyVar(v, hex) {
+            document.documentElement.style.setProperty(v, hex);
+            if (v === '--accent') {
+                document.documentElement.style.setProperty('--accent-dim', _thcHexToRgba(hex, isDark ? 0.16 : 0.12));
+                document.documentElement.style.setProperty('--edit-glow', hex);
+            }
+            const custom = _thcGetCustom();
+            custom[v] = hex;
+            localStorage.setItem(_thcStorageKey(), JSON.stringify(custom));
+        }
+
+        function resetVar(v) {
+            document.documentElement.style.removeProperty(v);
+            if (v === '--accent') {
+                document.documentElement.style.removeProperty('--accent-dim');
+                document.documentElement.style.removeProperty('--edit-glow');
+            }
+            const custom = _thcGetCustom();
+            delete custom[v];
+            localStorage.setItem(_thcStorageKey(), JSON.stringify(custom));
+            refresh();
+        }
+
+        function resetAll() {
+            [..._THC_ALL_VARS, ..._THC_LINKED].forEach(v => document.documentElement.style.removeProperty(v));
+            localStorage.removeItem(_thcStorageKey());
+            refresh();
+        }
+
+        _thcRefreshUI = refresh;
+
+        panel.addEventListener('input', e => {
+            if (!e.target.matches('.thc-picker')) return;
+            applyVar(e.target.dataset.var, e.target.value);
+        });
+        panel.addEventListener('click', e => {
+            const rb = e.target.closest('.thc-var-reset');
+            if (rb) { resetVar(rb.dataset.var); return; }
+            if (e.target.closest('#thc-reset-all')) resetAll();
+        });
+
+        refresh();
+        panel.dataset.thcReady = '1';
+    }
+
+    window._thcInitUI = function() {
+        const panel = document.getElementById('stab-tab2');
+        if (!panel) return;
+        if (!panel.dataset.thcReady) _thcInit();
+        else if (typeof _thcRefreshUI === 'function') _thcRefreshUI();
+    };
 })();
 
 /* ── Ayarlar modalı AI sekmesi ── */
@@ -14948,7 +15136,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.78</span>
+      <span class="hm-ver">v1.15.79</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -14980,7 +15168,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.78</h2>
+          <h2>Noted v1.15.79</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
