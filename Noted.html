@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.81 — mdToHtml: separator'suz AI tablolari otomatik duzeltiliyor -->
+<!-- Noted v1.15.82 — CCB: Customized Code Blocks — iframe tabanli HTML/CSS/JS bloklar eklendi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.81</title>
+    <title>Noted v1.15.82</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -532,6 +532,68 @@
             transition:color .13s, border-color .13s;
         }
         .thc-reset-all-btn:hover { color:var(--danger); border-color:var(--danger); }
+
+        /* ── CCB — note içi blok ── */
+        .ccb-block { display:block; margin:8px 0; border-radius:10px; overflow:hidden; }
+        .ccb-block iframe { display:block; width:100%; border:1px solid var(--border); border-radius:10px; background:var(--surface); }
+        .ccb-not-found { display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px dashed var(--border); border-radius:10px; color:var(--text-muted); font-size:.8rem; background:var(--surface-2); }
+        .ccb-not-found code { font-family:var(--font-mono); font-size:.75rem; color:var(--danger); }
+
+        /* ── CCB Geliştirici sekmesi ── */
+        .dev-subtabs { display:flex; gap:4px; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:0; }
+        .dev-stab { font-size:.75rem; font-family:var(--font-ui); font-weight:600; padding:5px 14px; border:none; background:none; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; border-radius:0; transition:color .15s; }
+        .dev-stab.active { color:var(--accent); border-bottom-color:var(--accent); }
+        .dev-stab-panel { display:none; }
+        .dev-stab-panel.active { display:block; }
+
+        /* Controls — CCB listesi */
+        .ccb-ctrl-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .ccb-ctrl-title { font-size:.72rem; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:var(--accent); }
+        .ccb-add-btn { font-size:.76rem; padding:5px 12px; border:1px solid var(--accent); border-radius:8px; background:var(--accent-dim); color:var(--accent); cursor:pointer; font-family:var(--font-ui); font-weight:600; display:flex; align-items:center; gap:5px; transition:background .13s; }
+        .ccb-add-btn:hover { background:var(--accent); color:#fff; }
+        .ccb-empty { font-size:.8rem; color:var(--text-muted); text-align:center; padding:28px 0; }
+
+        /* Accordion */
+        .ccb-list { display:flex; flex-direction:column; gap:6px; }
+        .ccb-item { border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+        .ccb-item-head { display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; user-select:none; background:var(--surface-2); transition:background .13s; }
+        .ccb-item-head:hover { background:var(--accent-dim); }
+        .ccb-item-grp { font-size:.66rem; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--accent-dim); color:var(--accent); flex-shrink:0; }
+        .ccb-item-name { font-size:.83rem; font-weight:600; color:var(--text); flex:1; }
+        .ccb-item-h { font-size:.7rem; color:var(--text-muted); flex-shrink:0; }
+        .ccb-item-arrow { font-size:.65rem; color:var(--text-muted); flex-shrink:0; transition:transform .17s; }
+        .ccb-item.open .ccb-item-arrow { transform:rotate(90deg); }
+        .ccb-item-body { display:none; padding:10px 12px 12px; border-top:1px solid var(--border); background:var(--surface); }
+        .ccb-item.open .ccb-item-body { display:block; }
+        .ccb-item-actions { display:flex; gap:6px; margin-bottom:8px; }
+        .ccb-act-btn { font-size:.72rem; padding:3px 10px; border:1px solid var(--border); border-radius:6px; background:transparent; cursor:pointer; color:var(--text-muted); font-family:var(--font-ui); transition:color .13s, border-color .13s; }
+        .ccb-act-btn:hover { color:var(--accent); border-color:var(--accent); }
+        .ccb-act-btn.danger:hover { color:var(--danger); border-color:var(--danger); }
+
+        /* CCB Kod görüntüleyici */
+        .ccb-code-view { background:var(--pre-bg); border:1px solid var(--pre-border); border-radius:8px; padding:10px 12px; overflow-x:auto; font-family:var(--font-mono); font-size:.72rem; line-height:1.6; white-space:pre; color:var(--pre-text); max-height:220px; overflow-y:auto; }
+        .cch-tag  { color:#e06c75; }
+        .cch-attr { color:#d19a66; }
+        .cch-str  { color:#98c379; }
+        .cch-val  { color:#56b6c2; }
+        .cch-comment { color:#5c6370; font-style:italic; }
+        .cch-kw   { color:#c678dd; }
+        .cch-css-prop { color:#56b6c2; }
+        .cch-css-val  { color:#d19a66; }
+
+        /* CCB Form (add/edit) */
+        .ccb-form { margin-top:4px; }
+        .ccb-form-row { margin-bottom:10px; }
+        .ccb-form-row label { display:block; font-size:.72rem; font-weight:600; color:var(--text-muted); margin-bottom:4px; }
+        .ccb-form-row input, .ccb-form-row textarea { width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; padding:6px 9px; font-size:.8rem; font-family:var(--font-ui); color:var(--text); outline:none; resize:vertical; transition:border-color .13s; }
+        .ccb-form-row input:focus, .ccb-form-row textarea:focus { border-color:var(--accent); }
+        .ccb-form-row textarea { font-family:var(--font-mono); font-size:.75rem; min-height:120px; line-height:1.55; }
+        .ccb-form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .ccb-form-foot { display:flex; justify-content:flex-end; gap:6px; margin-top:10px; }
+        .ccb-form-save { font-size:.78rem; padding:6px 16px; border:none; border-radius:8px; background:var(--accent); color:#fff; cursor:pointer; font-family:var(--font-ui); font-weight:600; transition:opacity .13s; }
+        .ccb-form-save:hover { opacity:.85; }
+        .ccb-form-cancel { font-size:.78rem; padding:6px 14px; border:1px solid var(--border); border-radius:8px; background:transparent; cursor:pointer; color:var(--text-muted); font-family:var(--font-ui); }
+
         /* Toggle switch — AI ayarlar sekmesi */
         .toggle-sw { position:relative; display:inline-block; width:34px; height:20px; flex-shrink:0; }
         .toggle-sw input { opacity:0; width:0; height:0; position:absolute; }
@@ -4506,7 +4568,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.81</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.82</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -5117,6 +5179,7 @@ input[type="file"] { display:none; }
             <button class="stab" data-stab="tab2">Görünüm</button>
             <button class="stab" data-stab="tab3">Gelişmiş</button>
             <button class="stab" data-stab="ai"><i class="fas fa-wand-magic-sparkles" style="margin-right:5px;font-size:.75rem"></i>AI</button>
+            <button class="stab" data-stab="dev"><i class="fas fa-code" style="margin-right:5px;font-size:.75rem"></i>Geliştirici</button>
         </div>
         <div id="settings-body">
             <div class="stab-panel active" id="stab-shortcuts">
@@ -5280,6 +5343,20 @@ input[type="file"] { display:none; }
                 <div class="ai-set-foot" style="position:sticky;bottom:0;background:var(--surface);margin:0 -20px;padding:12px 20px">
                     <button id="cfg-ai-save"><i class="fas fa-check"></i> Kaydet</button>
                     <span id="cfg-ai-status"></span>
+                </div>
+            </div>
+
+            <!-- Geliştirici Sekmesi -->
+            <div class="stab-panel" id="stab-dev">
+                <div class="dev-subtabs">
+                    <button class="dev-stab active" data-dev-stab="controls">Controls</button>
+                </div>
+                <div class="dev-stab-panel active" id="dev-controls-panel">
+                    <div class="ccb-ctrl-head">
+                        <span class="ccb-ctrl-title">Özel Kod Blokları (CCB)</span>
+                        <button id="ccb-add-btn" class="ccb-add-btn"><i class="fas fa-plus"></i> Yeni CCB</button>
+                    </div>
+                    <div id="ccb-list" class="ccb-list"></div>
                 </div>
             </div>
 
@@ -5458,7 +5535,7 @@ function getColor(str) {
 }
 function sanitize(html) {
     return typeof DOMPurify !== 'undefined'
-        ? DOMPurify.sanitize(html, { ADD_ATTR: ['data-note-id', 'data-wikilink', 'target', 'data-grid-type', 'data-gridtype', 'data-cols', 'data-ph', 'data-col', 'data-placeholder', 'data-stab', 'data-type', 'data-tpl', 'contenteditable', 'spellcheck', 'data-bookmark', 'data-shape', 'data-sx', 'data-sy', 'data-sw', 'data-sh', 'data-stroke', 'data-fill-mode', 'data-rotate', 'preserveAspectRatio', 'data-valign', 'data-halign'] })
+        ? DOMPurify.sanitize(html, { ADD_ATTR: ['data-note-id', 'data-wikilink', 'target', 'data-grid-type', 'data-gridtype', 'data-cols', 'data-ph', 'data-col', 'data-placeholder', 'data-stab', 'data-type', 'data-tpl', 'contenteditable', 'spellcheck', 'data-bookmark', 'data-shape', 'data-sx', 'data-sy', 'data-sw', 'data-sh', 'data-stroke', 'data-fill-mode', 'data-rotate', 'preserveAspectRatio', 'data-valign', 'data-halign', 'data-ccb-id'] })
         : html;
 }
 function saveNotes() {
@@ -8459,7 +8536,7 @@ $('upload-input').addEventListener('change',e=>{
     r.onload=ev=>{
         try {
             const raw=JSON.parse(ev.target.result);
-            /* Sarmalı format: { _notes: [...], _ai: {...} } */
+            /* Sarmalı format: { _notes: [...], _ai: {...}, _ccbs: [...] } */
             const importedNotes = Array.isArray(raw) ? raw : (Array.isArray(raw._notes) ? raw._notes : null);
             if(!importedNotes) throw new Error('Kök eleman bir dizi olmalı.');
             if(notes.length>0&&!confirm(`Mevcut ${notes.length} not silinecek ve içe aktarılan ${importedNotes.length} not yüklenecek.\nDevam edilsin mi?`)) return;
@@ -8477,6 +8554,11 @@ $('upload-input').addEventListener('change',e=>{
                     if(raw._ai[k]) { try { localStorage.setItem(k, raw._ai[k]); } catch(_) {} }
                 });
             }
+            /* CCB'leri geri yükle */
+            if(Array.isArray(raw._ccbs) && raw._ccbs.length > 0 && typeof window._ccbSave === 'function') {
+                window._ccbSave(raw._ccbs);
+                if(typeof window._ccbInjectSlash === 'function') window._ccbInjectSlash();
+            }
         } catch(err){ alert('Geçersiz JSON: '+err.message); }
     };
     r.readAsText(file); e.target.value='';
@@ -8485,6 +8567,7 @@ function exportNotes() {
     const a = document.createElement('a');
     const exportAi = localStorage.getItem('noted-export-ai') === 'true';
     let payload;
+    const ccbData = typeof window._ccbGetAll === 'function' ? window._ccbGetAll() : [];
     if (exportAi) {
         const aiBlock = {};
         ['noted_ai_providers_v1','noted_ai_pool_v1','noted_ai_cfg_v1','noted_ai_sys_v1','noted_ai_key_v1'].forEach(k => {
@@ -8493,8 +8576,9 @@ function exportNotes() {
         });
         payload = { _notes: notes, _ai: aiBlock };
     } else {
-        payload = notes;
+        payload = { _notes: notes };
     }
+    if (ccbData.length > 0) payload._ccbs = ccbData;
     a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
     a.download = 'notlar.json';
     a.click();
@@ -8573,6 +8657,7 @@ function editNote(id) {
     $content.innerHTML=sanitize(n.content);
     if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
     _upgradeGridWraps($content);
+    if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks($content);
     if (typeof window._resetEditorZoom === 'function') window._resetEditorZoom();
     initShapeOverlays();
 
@@ -9489,6 +9574,10 @@ function applySlashCommand(type) {
         }
     }
     closeSlashMenu();
+    if (type.startsWith('ccb:')) {
+        if (typeof window._insertCcb === 'function') window._insertCcb(type.slice(4));
+        return;
+    }
     if (type === 'hr') {
         const sel = window.getSelection();
         if (sel && sel.rangeCount) {
@@ -12051,7 +12140,7 @@ $content.addEventListener('input', () => {
     }, true);
 
     /* Sekme geçişi */
-    const tabMap = { shortcuts:'stab-shortcuts', tab1:'stab-tab1', tab2:'stab-tab2', tab3:'stab-tab3', ai:'stab-ai' };
+    const tabMap = { shortcuts:'stab-shortcuts', tab1:'stab-tab1', tab2:'stab-tab2', tab3:'stab-tab3', ai:'stab-ai', dev:'stab-dev' };
     if (modal) {
         modal.querySelectorAll('.stab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -12136,6 +12225,260 @@ $content.addEventListener('input', () => {
         if (!panel.dataset.thcReady) _thcInit();
         else if (typeof _thcRefreshUI === 'function') _thcRefreshUI();
     };
+})();
+
+/* ══ CCB — Customized Code Blocks ══ */
+(function() {
+    const CCB_KEY = 'noted_ccbs';
+
+    /* ── Veri katmanı ── */
+    function ccbGetAll() { try { return JSON.parse(localStorage.getItem(CCB_KEY) || '[]'); } catch(_) { return []; } }
+    function ccbSave(arr) { try { localStorage.setItem(CCB_KEY, JSON.stringify(arr)); } catch(_) {} }
+    function ccbById(id) { return ccbGetAll().find(c => c.id === id) || null; }
+    function ccbGenId() { return 'ccb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+
+    function ccbAdd(item)        { const arr = ccbGetAll(); arr.push({ id: ccbGenId(), ...item }); ccbSave(arr); }
+    function ccbUpdate(id, item) { const arr = ccbGetAll(); const i = arr.findIndex(c => c.id === id); if (i >= 0) { arr[i] = { ...arr[i], ...item }; ccbSave(arr); } }
+    function ccbDelete(id)       { ccbSave(ccbGetAll().filter(c => c.id !== id)); }
+
+    /* public API */
+    window._ccbGetAll  = ccbGetAll;
+    window._ccbSave    = ccbSave;
+    window._ccbById    = ccbById;
+    window._ccbAdd     = ccbAdd;
+    window._ccbUpdate  = ccbUpdate;
+    window._ccbDelete  = ccbDelete;
+
+    /* ── HTML syntax highlighter (basit regex tabanlı) ── */
+    function ccbHighlight(code) {
+        /* HTML escape */
+        let s = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        /* Yorumlar */
+        s = s.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="cch-comment">$1</span>');
+        /* String literaller (attribute değerleri) */
+        s = s.replace(/(=)(&quot;[^&]*&quot;|'[^']*')/g, '$1<span class="cch-str">$2</span>');
+        /* HTML attribute isimleri */
+        s = s.replace(/\b([\w-]+)(?==)/g, '<span class="cch-attr">$1</span>');
+        /* HTML etiketleri */
+        s = s.replace(/(&lt;\/?)([\w-]+)/g, '$1<span class="cch-tag">$2</span>');
+        /* CSS değerleri içinde renk/sayı */
+        s = s.replace(/(:\s*)([^;<{}\n]+)(;)/g, '$1<span class="cch-css-val">$2</span>$3');
+        /* CSS property */
+        s = s.replace(/([\w-]+)(?=\s*:)/g, '<span class="cch-css-prop">$1</span>');
+        /* JS keywords */
+        s = s.replace(/\b(function|const|let|var|return|if|else|for|while|class|new|this|document|window|addEventListener)\b/g,
+            '<span class="cch-kw">$1</span>');
+        return s;
+    }
+    window._ccbHighlight = ccbHighlight;
+
+    /* ── Render: ccb-block div → iframe ── */
+    function inflateCcbBlocks(root) {
+        (root || document).querySelectorAll('.ccb-block[data-ccb-id]').forEach(block => {
+            if (block.dataset.ccbRendered) return;
+            block.dataset.ccbRendered = '1';
+            const ccb = ccbById(block.dataset.ccbId);
+            if (!ccb) {
+                block.innerHTML = '<div class="ccb-not-found"><i class="fas fa-triangle-exclamation"></i>&nbsp;CCB bulunamadı: <code>' + (block.dataset.ccbId||'?') + '</code></div>';
+                return;
+            }
+            const iframe = document.createElement('iframe');
+            iframe.srcdoc = ccb.code;
+            iframe.style.cssText = 'width:100%;height:' + (ccb.height || 200) + 'px;border:none;display:block;';
+            iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals');
+            iframe.setAttribute('loading', 'lazy');
+            iframe.setAttribute('title', ccb.name || 'CCB');
+            block.innerHTML = '';
+            block.appendChild(iframe);
+        });
+    }
+    window._inflateCcbBlocks = inflateCcbBlocks;
+
+    /* ── Nota CCB ekle ── */
+    function insertCcb(id) {
+        const target = (typeof _activeEditTarget !== 'undefined' && _activeEditTarget) || document.getElementById('content');
+        if (!target) return;
+        target.focus();
+
+        /* slash '/' karakterini sil */
+        if (typeof slashTextNode !== 'undefined' && slashTextNode && slashTextNode.isConnected) {
+            const text = slashTextNode.nodeValue || '';
+            const idx  = text.lastIndexOf('/', (typeof slashOffset !== 'undefined' ? slashOffset : text.length) - 1);
+            if (idx !== -1) {
+                const sel = window.getSelection();
+                const r   = document.createRange();
+                r.setStart(slashTextNode, idx);
+                r.setEnd(slashTextNode, idx + 1);
+                sel.removeAllRanges(); sel.addRange(r);
+                target.focus(); document.execCommand('delete', false, null);
+            }
+        }
+        if (typeof closeSlashMenu === 'function') closeSlashMenu();
+
+        const block = document.createElement('div');
+        block.className = 'ccb-block';
+        block.contentEditable = 'false';
+        block.dataset.ccbId = id;
+        inflateCcbBlocks(block);
+
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(block);
+            if (typeof insertEmptyParaAfter === 'function') insertEmptyParaAfter(block);
+            const r2 = document.createRange();
+            const after = block.nextSibling || block.parentNode;
+            r2.setStart(after, after === block.nextSibling ? 0 : after.childNodes.length);
+            r2.collapse(true);
+            sel.removeAllRanges(); sel.addRange(r2);
+        } else {
+            target.appendChild(block);
+        }
+    }
+    window._insertCcb = insertCcb;
+
+    /* ── Slash menü: CCB kategorisi ── */
+    function _ccbInjectSlash() {
+        if (typeof SLASH_COMMAND_GROUPS === 'undefined') return;
+        /* Eski CCB grubunu kaldır */
+        const idx = SLASH_COMMAND_GROUPS.findIndex(g => g._ccbGroup);
+        if (idx >= 0) SLASH_COMMAND_GROUPS.splice(idx, 1);
+        const ccbs = ccbGetAll();
+        if (!ccbs.length) return;
+        SLASH_COMMAND_GROUPS.push({
+            label: 'CCB',
+            _ccbGroup: true,
+            items: ccbs.map(c => ({
+                type: 'ccb:' + c.id,
+                icon: 'fa-code',
+                label: (c.group ? c.group + ' / ' : '') + c.name,
+                hint: '/ccb'
+            }))
+        });
+    }
+    window._ccbInjectSlash = _ccbInjectSlash;
+    _ccbInjectSlash();
+
+    /* applySlashCommand'a CCB tipi için hook */
+    const _origApply = window._slashApplyHooks || (window._slashApplyHooks = {});
+    _origApply['ccb'] = insertCcb;  /* applySlashCommand içinde 'ccb:ID' → insertCcb(ID) */
+
+    /* ── Settings — Controls sekmesi UI ── */
+    (function initCcbSettings() {
+        const devTab  = document.querySelector('.stab[data-stab="dev"]');
+        const listEl  = document.getElementById('ccb-list');
+        const addBtn  = document.getElementById('ccb-add-btn');
+        if (!devTab || !listEl || !addBtn) return;
+
+        /* Alt sekme geçişi */
+        document.querySelectorAll('.dev-stab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.dev-stab').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.dev-stab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                const panel = document.getElementById('dev-' + btn.dataset.devStab + '-panel');
+                if (panel) panel.classList.add('active');
+            });
+        });
+
+        function renderList() {
+            _ccbInjectSlash();
+            const ccbs = ccbGetAll();
+            if (!ccbs.length) {
+                listEl.innerHTML = '<div class="ccb-empty">Henüz kod bloğu yok. "Yeni CCB" ile ekleyin.</div>';
+                return;
+            }
+            listEl.innerHTML = '';
+            ccbs.forEach(ccb => {
+                const item = document.createElement('div');
+                item.className = 'ccb-item';
+                item.dataset.ccbId = ccb.id;
+                item.innerHTML =
+                    '<div class="ccb-item-head">' +
+                        '<span class="ccb-item-grp">' + _e(ccb.group||'Genel') + '</span>' +
+                        '<span class="ccb-item-name">' + _e(ccb.name) + '</span>' +
+                        '<span class="ccb-item-h">' + (ccb.height||200) + 'px</span>' +
+                        '<span class="ccb-item-arrow"><i class="fas fa-chevron-right"></i></span>' +
+                    '</div>' +
+                    '<div class="ccb-item-body">' +
+                        '<div class="ccb-item-actions">' +
+                            '<button class="ccb-act-btn ccb-edit-btn">Düzenle</button>' +
+                            '<button class="ccb-act-btn danger ccb-del-btn">Sil</button>' +
+                        '</div>' +
+                        '<div class="ccb-code-view">' + _ccbHighlight(ccb.code||'') + '</div>' +
+                    '</div>';
+
+                item.querySelector('.ccb-item-head').addEventListener('click', () => {
+                    item.classList.toggle('open');
+                });
+                item.querySelector('.ccb-edit-btn').addEventListener('click', e => {
+                    e.stopPropagation();
+                    openForm(ccb);
+                });
+                item.querySelector('.ccb-del-btn').addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (confirm('"' + ccb.name + '" silinsin mi?')) {
+                        _ccbDelete(ccb.id);
+                        renderList();
+                    }
+                });
+                listEl.appendChild(item);
+            });
+        }
+
+        function _e(s) {
+            return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function openForm(ccb) {
+            const isEdit = !!ccb;
+            const existing = document.getElementById('ccb-form-wrap');
+            if (existing) existing.remove();
+
+            const wrap = document.createElement('div');
+            wrap.id = 'ccb-form-wrap';
+            wrap.className = 'ccb-form';
+            wrap.innerHTML =
+                '<div class="ccb-form-row ccb-form-row-2">' +
+                    '<div><label>Grup</label><input id="ccb-f-group" type="text" placeholder="Genel" value="' + _e(isEdit ? ccb.group : '') + '"></div>' +
+                    '<div><label>İsim</label><input id="ccb-f-name"  type="text" placeholder="Blok adı" value="' + _e(isEdit ? ccb.name  : '') + '"></div>' +
+                '</div>' +
+                '<div class="ccb-form-row">' +
+                    '<label>Yükseklik (px)</label>' +
+                    '<input id="ccb-f-height" type="number" min="50" max="2000" value="' + (isEdit ? ccb.height : 200) + '">' +
+                '</div>' +
+                '<div class="ccb-form-row">' +
+                    '<label>HTML Kodu</label>' +
+                    '<textarea id="ccb-f-code" rows="8" placeholder="&lt;div&gt;…&lt;/div&gt;\n&lt;style&gt;…&lt;/style&gt;\n&lt;script&gt;…&lt;/script&gt;">' + _e(isEdit ? ccb.code : '') + '</textarea>' +
+                '</div>' +
+                '<div class="ccb-form-foot">' +
+                    '<button class="ccb-form-cancel">İptal</button>' +
+                    '<button class="ccb-form-save">' + (isEdit ? 'Güncelle' : 'Kaydet') + '</button>' +
+                '</div>';
+
+            wrap.querySelector('.ccb-form-cancel').addEventListener('click', () => wrap.remove());
+            wrap.querySelector('.ccb-form-save').addEventListener('click', () => {
+                const group  = document.getElementById('ccb-f-group').value.trim() || 'Genel';
+                const name   = document.getElementById('ccb-f-name').value.trim();
+                const height = parseInt(document.getElementById('ccb-f-height').value, 10) || 200;
+                const code   = document.getElementById('ccb-f-code').value;
+                if (!name) { alert('İsim zorunludur.'); return; }
+                if (!code.trim()) { alert('HTML kodu zorunludur.'); return; }
+                if (isEdit) _ccbUpdate(ccb.id, { group, name, height, code });
+                else        _ccbAdd({ group, name, height, code });
+                wrap.remove();
+                renderList();
+            });
+
+            const ctrl = document.getElementById('dev-controls-panel');
+            if (ctrl) ctrl.insertBefore(wrap, listEl);
+        }
+
+        addBtn.addEventListener('click', () => openForm(null));
+        devTab.addEventListener('click', renderList);
+        renderList();
+    })();
 })();
 
 /* ── Ayarlar modalı AI sekmesi ── */
@@ -15153,7 +15496,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.81</span>
+      <span class="hm-ver">v1.15.82</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -15185,7 +15528,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.81</h2>
+          <h2>Noted v1.15.82</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -15782,6 +16125,7 @@ window._fpOpenPicker = openPicker;
         fpTitle.value = n.title || 'Not';
         fpContent.innerHTML = sanitize(n.content || '');
         if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
+        if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks(fpContent);
         if (_fpInst) { _fpInst._stack = [{ html: n.content || '', cursor: null }]; _fpInst._idx = 0; _fpInst.noteId = String(id); }
         if (_fpResetZoom) _fpResetZoom();
         /* Grup badge güncelle — metin + renk */
@@ -17206,6 +17550,26 @@ if (window._setupScrollJump) {
             items.push(S, grp('Görsel'));
             items.push(it('📋', "URL'yi Kopyala", () => navigator.clipboard.writeText(c.img.src)));
             items.push(it('🗑', 'Görseli Sil', () => c.img.remove(), { danger:true }));
+        }
+
+        /* CCB — yalnızca tablo/pre/callout dışında göster */
+        if (!c.table && !c.pre && !c.callout && typeof window._ccbGetAll === 'function') {
+            const ccbs = window._ccbGetAll();
+            if (ccbs.length > 0) {
+                items.push(S, grp('CCB Ekle'));
+                /* Gruplara böl */
+                const groups = {};
+                ccbs.forEach(b => { (groups[b.group || 'Genel'] = groups[b.group || 'Genel'] || []).push(b); });
+                const gNames = Object.keys(groups);
+                gNames.forEach(gName => {
+                    if (gNames.length > 1) items.push({ type:'grp', label: gName });
+                    groups[gName].forEach(ccb => {
+                        items.push(it('⬜', ccb.name, () => {
+                            if (typeof window._insertCcb === 'function') window._insertCcb(ccb.id);
+                        }));
+                    });
+                });
+            }
         }
 
         return items;
