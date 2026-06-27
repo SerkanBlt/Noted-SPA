@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.83 — CCB: auto-resize iframe, ilk yuklemede gorunur, sag tik cascaded submenu -->
+<!-- Noted v1.15.84 — CCB: submenu L1 kaybolma duzeltildi, ilk gosterim ve ekleme UX duzeltildi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.83</title>
+    <title>Noted v1.15.84</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4578,7 +4578,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.83</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.84</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -12308,9 +12308,14 @@ $content.addEventListener('input', () => {
 
     /* ── Render: ccb-block div → iframe ── */
     function inflateCcbBlocks(root) {
-        (root || document).querySelectorAll('.ccb-block[data-ccb-id]').forEach(block => {
-            if (block.dataset.ccbRendered) return;
-            block.dataset.ccbRendered = '1';
+        const _r = root || document;
+        /* querySelectorAll matches only descendants — also check root itself */
+        const nodes = [];
+        if (_r !== document && _r.matches && _r.matches('.ccb-block[data-ccb-id]')) nodes.push(_r);
+        _r.querySelectorAll('.ccb-block[data-ccb-id]').forEach(n => nodes.push(n));
+        nodes.forEach(block => {
+            /* Guard: iframe presence is reliable; data-ccb-rendered attr survives DOMPurify */
+            if (block.querySelector('iframe, .ccb-not-found')) return;
             const ccb = ccbById(block.dataset.ccbId);
             if (!ccb) {
                 block.innerHTML = '<div class="ccb-not-found"><i class="fas fa-triangle-exclamation"></i>&nbsp;CCB bulunamadı: <code>' + (block.dataset.ccbId||'?') + '</code></div>';
@@ -12360,22 +12365,45 @@ $content.addEventListener('input', () => {
         block.className = 'ccb-block';
         block.contentEditable = 'false';
         block.dataset.ccbId = id;
-        inflateCcbBlocks(block);
 
         const sel = window.getSelection();
+        /* Bulunduğumuz blok elementini bul (target'ın doğrudan çocuğu) */
+        let anchorNode = null;
         if (sel && sel.rangeCount) {
-            const range = sel.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(block);
-            if (typeof insertEmptyParaAfter === 'function') insertEmptyParaAfter(block);
-            const r2 = document.createRange();
-            const after = block.nextSibling || block.parentNode;
-            r2.setStart(after, after === block.nextSibling ? 0 : after.childNodes.length);
-            r2.collapse(true);
-            sel.removeAllRanges(); sel.addRange(r2);
+            let node = sel.getRangeAt(0).startContainer;
+            while (node && node.parentNode !== target && node !== target) node = node.parentNode;
+            if (node && node.parentNode === target) anchorNode = node;
+        }
+
+        /* CCB'den sonra cursor için boş paragraf */
+        const pAfter = document.createElement('p');
+        pAfter.innerHTML = '<br>';
+
+        if (anchorNode) {
+            /* Mevcut blok boşsa (sadece <br> veya hiç içerik yok) → yerini al */
+            const isEmpty = !anchorNode.textContent.trim() &&
+                            /^(<br\/?>)?$/i.test(anchorNode.innerHTML || '');
+            if (isEmpty) {
+                target.replaceChild(block, anchorNode);
+            } else {
+                /* Dolu bloktan sonra CCB ekle */
+                anchorNode.insertAdjacentElement('afterend', block);
+            }
         } else {
             target.appendChild(block);
         }
+        block.insertAdjacentElement('afterend', pAfter);
+
+        /* Şimdi DOM'da, inflateCcbBlocks root kendisini de kontrol ediyor */
+        inflateCcbBlocks(block);
+
+        /* Cursor'ı CCB sonrasındaki paragraf başına taşı */
+        const r2 = document.createRange();
+        r2.setStart(pAfter, 0);
+        r2.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r2);
+        target.focus();
     }
     window._insertCcb = insertCcb;
 
@@ -15537,7 +15565,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.83</span>
+      <span class="hm-ver">v1.15.84</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -15569,7 +15597,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.83</h2>
+          <h2>Noted v1.15.84</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -17621,14 +17649,12 @@ if (window._setupScrollJump) {
 
     /* ── Sub-panel yönetimi ── */
     const _activeSubs = [];
-    let   _subHideTimer = null;
 
     function _closeAllSubs() {
-        clearTimeout(_subHideTimer);
-        _activeSubs.forEach(s => { s.style.display = 'none'; s._activeSub2 = null; });
+        _activeSubs.forEach(s => { clearTimeout(s._timer); s.style.display = 'none'; s._activeSub = null; });
     }
 
-    function _positionPanel(panel, anchorRect, isL2) {
+    function _positionPanel(panel, anchorRect) {
         panel.style.cssText = 'display:block;left:0;top:0;';
         const pw = panel.offsetWidth  || 170;
         const ph = panel.offsetHeight || 100;
@@ -17643,10 +17669,22 @@ if (window._setupScrollJump) {
         panel.style.top  = top  + 'px';
     }
 
-    function _buildSubPanel(items, level) {
+    /*
+     * _buildSubPanel — parentPanel: L1 paneli L2'den de erişebilmek için referans
+     * Her panelin _timer ve _activeSub özellikleri var.
+     * Kurallar:
+     *  - Herhangi bir item hover → o panelin _timer'ını temizle (panel açık kalsın)
+     *  - Sub item hover → kardeş alt paneli kapat, kendi alt panelini aç
+     *  - Sub item / alt panelden ayrılırken → timer başlat
+     *  - Alt panele girerken → hem kendi timer'ını hem parent _timer'ını temizle
+     */
+    function _buildSubPanel(items, parentPanel) {
         const panel = document.createElement('div');
         panel.className = 'ctx-sub-panel';
         panel.style.display = 'none';
+        panel._timer  = null;
+        panel._activeSub = null;
+
         items.forEach(item => {
             if (item.type === 'sep') {
                 panel.appendChild(Object.assign(document.createElement('div'), { className:'cm-sep' }));
@@ -17655,30 +17693,55 @@ if (window._setupScrollJump) {
             const d = document.createElement('div');
             d.className = 'cm-item' + (item.type === 'sub' ? ' cm-has-sub' : '');
             d.innerHTML = `<span class="cm-icon">${item.icon||''}</span><span class="cm-label">${item.label}</span>`;
+
             if (item.type === 'sub' && item.sub) {
-                const child = _buildSubPanel(item.sub, level + 1);
+                const child = _buildSubPanel(item.sub, panel);
                 document.body.appendChild(child);
                 _activeSubs.push(child);
-                let _t2 = null;
+
                 d.addEventListener('mouseenter', () => {
-                    clearTimeout(_t2);
-                    /* L2 sibling'leri kapat */
-                    if (panel._activeSub2 && panel._activeSub2 !== child) {
-                        panel._activeSub2.style.display = 'none';
+                    clearTimeout(panel._timer); /* Bu panel açık kalsın */
+                    if (parentPanel) clearTimeout(parentPanel._timer); /* Üst panel de açık kalsın */
+                    /* Kardeş alt paneli kapat */
+                    if (panel._activeSub && panel._activeSub !== child) {
+                        clearTimeout(panel._activeSub._timer);
+                        panel._activeSub.style.display = 'none';
+                        panel._activeSub = null;
                     }
                     _positionPanel(child, d.getBoundingClientRect());
-                    panel._activeSub2 = child;
+                    panel._activeSub = child;
                 });
                 d.addEventListener('mouseleave', e => {
                     if (e.relatedTarget && child.contains(e.relatedTarget)) return;
-                    _t2 = setTimeout(() => { if (panel._activeSub2 === child) { child.style.display='none'; panel._activeSub2=null; } }, 130);
+                    child._timer = setTimeout(() => {
+                        child.style.display = 'none';
+                        if (panel._activeSub === child) panel._activeSub = null;
+                    }, 200);
                 });
-                child.addEventListener('mouseenter', () => clearTimeout(_t2));
+                child.addEventListener('mouseenter', () => {
+                    clearTimeout(child._timer);
+                    clearTimeout(panel._timer); /* L1 panel açık kalsın */
+                    if (parentPanel) clearTimeout(parentPanel._timer); /* L0 panel açık kalsın */
+                });
                 child.addEventListener('mouseleave', e => {
                     if (e.relatedTarget && d.contains(e.relatedTarget)) return;
-                    _t2 = setTimeout(() => { child.style.display='none'; if(panel._activeSub2===child) panel._activeSub2=null; }, 130);
+                    if (child._activeSub && e.relatedTarget && child._activeSub.contains(e.relatedTarget)) return;
+                    child._timer = setTimeout(() => {
+                        child.style.display = 'none';
+                        if (panel._activeSub === child) panel._activeSub = null;
+                    }, 200);
                 });
             } else if (item.action) {
+                d.addEventListener('mouseenter', () => {
+                    clearTimeout(panel._timer); /* Bu panel açık kalsın */
+                    if (parentPanel) clearTimeout(parentPanel._timer); /* Üst panel de açık kalsın */
+                    /* Bu panelde açık alt panel varsa kapat */
+                    if (panel._activeSub) {
+                        clearTimeout(panel._activeSub._timer);
+                        panel._activeSub.style.display = 'none';
+                        panel._activeSub = null;
+                    }
+                });
                 d.addEventListener('mousedown', e => {
                     e.preventDefault(); e.stopPropagation();
                     close(); setTimeout(() => item.action(), 0);
@@ -17708,23 +17771,25 @@ if (window._setupScrollJump) {
                 const d = document.createElement('div');
                 d.className = 'cm-item cm-has-sub';
                 d.innerHTML = `<span class="cm-icon">${item.icon||''}</span><span class="cm-label">${item.label}</span>`;
-                const sub = _buildSubPanel(item.sub || [], 1);
+                const sub = _buildSubPanel(item.sub || [], null);
+                sub._timer = null;
                 document.body.appendChild(sub);
                 _activeSubs.push(sub);
-                let _t = null;
                 d.addEventListener('mouseenter', () => {
-                    clearTimeout(_t);
-                    _closeAllSubs();
+                    clearTimeout(sub._timer);
+                    /* Kardeş L0 sub-panelleri kapat */
+                    _activeSubs.forEach(s => { if (s !== sub) { clearTimeout(s._timer); s.style.display='none'; } });
                     _positionPanel(sub, d.getBoundingClientRect());
                 });
                 d.addEventListener('mouseleave', e => {
                     if (e.relatedTarget && sub.contains(e.relatedTarget)) return;
-                    _t = setTimeout(() => { sub.style.display='none'; }, 130);
+                    sub._timer = setTimeout(() => { sub.style.display='none'; }, 200);
                 });
-                sub.addEventListener('mouseenter', () => clearTimeout(_t));
+                sub.addEventListener('mouseenter', () => clearTimeout(sub._timer));
                 sub.addEventListener('mouseleave', e => {
                     if (e.relatedTarget && d.contains(e.relatedTarget)) return;
-                    _t = setTimeout(() => { sub.style.display='none'; }, 130);
+                    if (sub._activeSub && e.relatedTarget && sub._activeSub.contains(e.relatedTarget)) return;
+                    sub._timer = setTimeout(() => { sub.style.display='none'; }, 200);
                 });
                 menu.appendChild(d);
                 return;
