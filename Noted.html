@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.93 — AI panel: bot/prompt hover aksiyonlar, bullet liste, dosya ekleme -->
+<!-- Noted v1.15.94 — AI panel: model chip mesajda, pool health badge (429/hata) -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.93</title>
+    <title>Noted v1.15.94</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2072,6 +2072,7 @@ input[type="file"] { display:none; }
             cursor:pointer; transition:background .12s, color .12s;
         }
         .ai-act-btn:hover { background:var(--surface-2); color:var(--accent); }
+        .ai-model-chip { opacity:.72; font-size:.58rem; max-width:140px; overflow:hidden; text-overflow:ellipsis; }
 
         /* Markdown content */
         .ai-bubble p{margin:0 0 7px;} .ai-bubble p:last-child{margin:0;}
@@ -2379,7 +2380,7 @@ input[type="file"] { display:none; }
         .ai-pool-empty { font-size:.78rem; color:var(--text-muted); text-align:center; padding:14px 0; }
         #ai-pool-grid { display:flex; flex-direction:column; gap:4px; }
         .ai-pool-row {
-            display:grid; grid-template-columns:18px 1fr auto auto;
+            display:grid; grid-template-columns:18px 1fr auto auto auto;
             align-items:center; gap:6px; padding:3px 8px; border-radius:8px;
             background:var(--surface-2); border:1px solid var(--border); font-size:.77rem;
             cursor:grab; user-select:none;
@@ -2393,6 +2394,7 @@ input[type="file"] { display:none; }
         .ai-pool-row-sep { opacity:.35; margin:0 3px; font-weight:300; }
         .ai-pool-row-ctx { font-size:.65rem; color:var(--text-muted); }
         .ai-pool-row-badge { font-size:.62rem; padding:1px 5px; border-radius:4px; font-weight:600; white-space:nowrap; }
+        .ai-pool-row-health { font-size:.72rem; color:#e5a000; flex-shrink:0; cursor:default; }
         .ai-pool-row-actions { display:flex; gap:3px; }
         .ai-pool-btn {
             width:22px; height:22px; border-radius:5px; border:none;
@@ -4631,7 +4633,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.93</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.94</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -10254,7 +10256,7 @@ const _SHAPES = [
     const input    = document.getElementById('ai-input');
     const sendBtn  = document.getElementById('ai-send');
 
-    let _open = false, _busy = false, _abort = null, _history = [], _attachments = [];
+    let _open = false, _busy = false, _abort = null, _history = [], _attachments = [], _modelHealth = {};
     const _isFileProtocol = location.protocol === 'file:';
     const _onLocalhost    = ['localhost', '127.0.0.1'].includes(location.hostname);
 
@@ -10406,7 +10408,11 @@ const _SHAPES = [
         return { thinking, reply };
     }
 
-    function addBot(text, thinking, tokenInfo, userText) {
+    function _shortModel(id) {
+        return (id || '').replace(/-(versatile|instruct|preview[\w-]*)$/i,'').replace(/-\d{8}$/,'');
+    }
+
+    function addBot(text, thinking, tokenInfo, userText, modelId) {
         const el = document.getElementById('ai-typing-row');
         if (el) el.remove();
         const d = document.createElement('div');
@@ -10419,7 +10425,9 @@ const _SHAPES = [
                </details>`
             : '';
         const tokChips = tokenInfo ? _buildTokenChips(tokenInfo.usage, tokenInfo.remaining, tokenInfo.limit) : '';
-        d.innerHTML = `${tokChips ? `<div class="ai-tok-top"><div class="ai-tok-chips">${tokChips}</div></div>` : ''}
+        const modelChip = modelId ? `<span class="ai-tok-chip ai-model-chip" title="${esc(modelId)}">${esc(_shortModel(modelId))}</span>` : '';
+        const topHtml = (modelChip || tokChips) ? `<div class="ai-tok-top"><div class="ai-tok-chips">${modelChip}${tokChips}</div></div>` : '';
+        d.innerHTML = `${topHtml}
         <div class="ai-bot-row">
             <div class="ai-bot-av"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="ai-bubble">${thinkHtml}${mdToHtml(text)}</div>
@@ -10835,7 +10843,7 @@ const _SHAPES = [
     }
 
     /* ── Streaming SSE okuyucu (web modu) ── */
-    async function _handleStream(readableStream, remH, limH, userText) {
+    async function _handleStream(readableStream, remH, limH, userText, modelId) {
         const typing = document.getElementById('ai-typing-row');
         if (typing) typing.remove();
 
@@ -10918,9 +10926,10 @@ const _SHAPES = [
             : '';
         bubble.innerHTML = thinkHtml + (mdToHtml(reply || rawText) || '(Boş yanıt geldi)');
 
-        /* Token chip'leri — mesaj üst sağ */
-        const tokChips = _buildTokenChips(usageData, remH, limH);
-        if (tokChips) botRow.insertAdjacentHTML('beforebegin', `<div class="ai-tok-top"><div class="ai-tok-chips">${tokChips}</div></div>`);
+        /* Token + model chip'leri — mesaj üst sağ */
+        const tokChips  = _buildTokenChips(usageData, remH, limH);
+        const modelChip = modelId ? `<span class="ai-tok-chip ai-model-chip" title="${esc(modelId)}">${esc(_shortModel(modelId))}</span>` : '';
+        if (modelChip || tokChips) botRow.insertAdjacentHTML('beforebegin', `<div class="ai-tok-top"><div class="ai-tok-chips">${modelChip}${tokChips}</div></div>`);
 
         scrollDown();
 
@@ -11095,7 +11104,7 @@ const _SHAPES = [
                 });
                 if (!_onLocalhost) {
                     /* Web — SSE stream */
-                    return _handleStream(r.body, remH, limH, text);
+                    return _handleStream(r.body, remH, limH, text, _m);
                 }
                 /* Localhost — server.js proxy tam yanıt döndürür */
                 return r.json().then(data => {
@@ -11106,7 +11115,7 @@ const _SHAPES = [
                     const remaining = rl?.remaining ?? -1;
                     const limit     = rl?.limit     ?? -1;
                     const tokenInfo = { usage: data.usage || null, remaining, limit };
-                    addBot(reply || '(Boş yanıt geldi)', thinking, tokenInfo, text);
+                    addBot(reply || '(Boş yanıt geldi)', thinking, tokenInfo, text, _m);
                     if (reply) {
                         _history.push({ role: 'user',      content: text  });
                         _history.push({ role: 'assistant', content: reply });
@@ -11125,6 +11134,7 @@ const _SHAPES = [
                 const _isNetErr  = !_s && msg === 'Failed to fetch';
                 if (!_isAuthErr && !_isNetErr && qi + 1 < _modelsQueue.length) {
                     _willRetry = true;
+                    _markModelLimited(_entry.providerId, _m, _s);
                     const _next = _modelsQueue[qi + 1]?.modelId || '';
                     if (typeof _showSnack === 'function')
                         _showSnack(`${_m} yanıt veremedi — ${_next} ile deneniyor…`, 'warn', 3500);
@@ -11251,6 +11261,20 @@ const _SHAPES = [
     let _poolClickHandler = null;
     let _poolDragHandlers = null;
 
+    function _markModelLimited(providerId, modelId, httpStatus) {
+        const key = `${providerId}::${modelId}`;
+        if (_modelHealth[key]?._timer) clearTimeout(_modelHealth[key]._timer);
+        const ttl = httpStatus === 429 ? 65000 : 30000; /* 429=rate-limit ~60sn, diğerleri kısa */
+        _modelHealth[key] = {
+            ts: Date.now(), http: httpStatus,
+            _timer: setTimeout(() => {
+                delete _modelHealth[key];
+                if (settingsPanel?.classList.contains('open')) _renderPool();
+            }, ttl)
+        };
+        if (settingsPanel?.classList.contains('open')) _renderPool();
+    }
+
     function _renderPool() {
         const grid  = document.getElementById('ai-pool-grid');
         const empty = document.getElementById('ai-pool-empty');
@@ -11261,6 +11285,11 @@ const _SHAPES = [
         pool.forEach((entry, i) => {
             const cat = AI_PROVIDER_CATALOG.find(p => p.id === entry.providerId) || { name: entry.providerId };
             const ctx = entry.contextWindow ? Math.round(entry.contextWindow / 1000) + 'K' : '';
+            const hKey   = `${entry.providerId}::${entry.modelId}`;
+            const health = _modelHealth[hKey];
+            const healthBadge = health
+                ? `<span class="ai-pool-row-health" title="${health.http === 429 ? 'Rate limit — yakında sıfırlanır' : 'Hata — geçici devre dışı'}">${health.http === 429 ? '⚡' : '⚠'}</span>`
+                : `<span></span>`;
             const row = document.createElement('div');
             row.className = 'ai-pool-row';
             row.draggable = true;
@@ -11274,6 +11303,7 @@ const _SHAPES = [
                   `</div>` +
                 `</div>` +
                 `<span class="ai-pool-row-badge ${entry.free ? 'ai-model-badge-free' : 'ai-model-badge-paid'}">${entry.free ? 'Ücretsiz' : 'Ücretli'}</span>` +
+                healthBadge +
                 `<div class="ai-pool-row-actions">` +
                   `<button class="ai-pool-btn" data-action="up"   data-idx="${i}" title="Yukarı">&#x25B2;</button>` +
                   `<button class="ai-pool-btn" data-action="down" data-idx="${i}" title="Aşağı">&#x25BC;</button>` +
@@ -15855,7 +15885,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.93</span>
+      <span class="hm-ver">v1.15.94</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -15887,7 +15917,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.93</h2>
+          <h2>Noted v1.15.94</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
