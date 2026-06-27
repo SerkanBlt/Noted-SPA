@@ -1,5 +1,13 @@
 # Noted — Sürüm Geçmişi
 
+---
+
+## v1.15.95
+**AI Panel — Pool Health Badge Düzeltmesi**
+- `openSettings()` çağrıldığında `_renderPool()` de çalışır; ayarlar paneli açılınca rate-limit badge'leri artık anında görünür
+
+---
+
 > **Not:** Her yeni versiyon bu dosyaya eklenir.
 
 ---
