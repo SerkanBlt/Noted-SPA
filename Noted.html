@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.82 — CCB: Customized Code Blocks — iframe tabanli HTML/CSS/JS bloklar eklendi -->
+<!-- Noted v1.15.83 — CCB: auto-resize iframe, ilk yuklemede gorunur, sag tik cascaded submenu -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.82</title>
+    <title>Noted v1.15.83</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2695,6 +2695,16 @@ input[type="file"] { display:none; }
             font-size:.63rem; font-weight:700; text-transform:uppercase;
             letter-spacing:.07em; color:var(--text-muted); padding:6px 14px 2px;
         }
+        #ctx-menu .cm-item.cm-has-sub::after { content:'▶'; position:absolute; right:10px; font-size:.6rem; opacity:.55; }
+        #ctx-menu .cm-item.cm-has-sub { position:relative; padding-right:26px; }
+        .ctx-sub-panel { position:fixed; z-index:99600; display:none; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4px 0; box-shadow:0 8px 28px rgba(0,0,0,.2); min-width:160px; max-height:320px; overflow-y:auto; }
+        .ctx-sub-panel .cm-item { padding:7px 14px; font-size:.82rem; color:var(--text); display:flex; align-items:center; gap:9px; cursor:pointer; transition:background .1s; position:relative; }
+        .ctx-sub-panel .cm-item:hover { background:var(--surface-2); }
+        .ctx-sub-panel .cm-item.cm-has-sub { padding-right:26px; }
+        .ctx-sub-panel .cm-item.cm-has-sub::after { content:'▶'; position:absolute; right:10px; font-size:.6rem; opacity:.55; }
+        .ctx-sub-panel .cm-sep { height:1px; background:var(--border); margin:4px 0; }
+        .ctx-sub-panel .cm-grp { font-size:.63rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); padding:5px 12px 2px; }
+        .ctx-sub-panel .cm-icon { width:16px; text-align:center; font-size:.88rem; flex-shrink:0; color:var(--text-muted); }
 
         /* ══ FLOAT PANEL ══ */
         #float-panel {
@@ -4568,7 +4578,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.82</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.83</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -12272,6 +12282,30 @@ $content.addEventListener('input', () => {
     }
     window._ccbHighlight = ccbHighlight;
 
+    /* ── Auto-resize: iframe içeriği yüklenince yüksekliği ayarla ── */
+    const CCB_RESIZE_SCRIPT = `<script>
+(function(){
+  function _send(){
+    var h=Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0);
+    parent.postMessage({_ccbResize:true,height:h},'*');
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',_send);}else{_send();}
+  window.addEventListener('load',_send);
+  if(typeof ResizeObserver!=='undefined'){new ResizeObserver(_send).observe(document.documentElement);}
+  setTimeout(_send,200);
+}());
+<\/script>`;
+
+    window.addEventListener('message', e => {
+        if (!e.data || !e.data._ccbResize) return;
+        const h = e.data.height;
+        if (!h || h < 10) return;
+        /* Mesajı gönderen iframe'i bul */
+        document.querySelectorAll('.ccb-block iframe').forEach(f => {
+            try { if (f.contentWindow === e.source) f.style.height = h + 'px'; } catch(_) {}
+        });
+    });
+
     /* ── Render: ccb-block div → iframe ── */
     function inflateCcbBlocks(root) {
         (root || document).querySelectorAll('.ccb-block[data-ccb-id]').forEach(block => {
@@ -12283,16 +12317,23 @@ $content.addEventListener('input', () => {
                 return;
             }
             const iframe = document.createElement('iframe');
-            iframe.srcdoc = ccb.code;
+            /* Resize script'i kullanıcı kodunun başına enjekte et */
+            iframe.srcdoc = CCB_RESIZE_SCRIPT + '\n' + ccb.code;
+            /* Başlangıç yüksekliği kayıtlı değer; resize mesajıyla otomatik güncellenir */
             iframe.style.cssText = 'width:100%;height:' + (ccb.height || 200) + 'px;border:none;display:block;';
             iframe.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals');
-            iframe.setAttribute('loading', 'lazy');
             iframe.setAttribute('title', ccb.name || 'CCB');
             block.innerHTML = '';
             block.appendChild(iframe);
         });
     }
     window._inflateCcbBlocks = inflateCcbBlocks;
+
+    /* ── İlk yükleme: IIFE çalışmadan önce DOM'a yerleşmiş CCB'leri inflate et ── */
+    setTimeout(() => {
+        inflateCcbBlocks(document.getElementById('content'));
+        inflateCcbBlocks(document.getElementById('fp-content'));
+    }, 0);
 
     /* ── Nota CCB ekle ── */
     function insertCcb(id) {
@@ -15496,7 +15537,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.82</span>
+      <span class="hm-ver">v1.15.83</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -15528,7 +15569,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.82</h2>
+          <h2>Noted v1.15.83</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -17552,31 +17593,106 @@ if (window._setupScrollJump) {
             items.push(it('🗑', 'Görseli Sil', () => c.img.remove(), { danger:true }));
         }
 
-        /* CCB — yalnızca tablo/pre/callout dışında göster */
+        /* CCB — cascaded submenu: CCB Ekle → Grup → CCB */
         if (!c.table && !c.pre && !c.callout && typeof window._ccbGetAll === 'function') {
             const ccbs = window._ccbGetAll();
             if (ccbs.length > 0) {
-                items.push(S, grp('CCB Ekle'));
-                /* Gruplara böl */
                 const groups = {};
-                ccbs.forEach(b => { (groups[b.group || 'Genel'] = groups[b.group || 'Genel'] || []).push(b); });
+                ccbs.forEach(b => { (groups[b.group||'Genel'] = groups[b.group||'Genel']||[]).push(b); });
                 const gNames = Object.keys(groups);
-                gNames.forEach(gName => {
-                    if (gNames.length > 1) items.push({ type:'grp', label: gName });
-                    groups[gName].forEach(ccb => {
-                        items.push(it('⬜', ccb.name, () => {
-                            if (typeof window._insertCcb === 'function') window._insertCcb(ccb.id);
-                        }));
-                    });
-                });
+                const mkCcbItem = ccb => ({ type:'item', icon:'⬛', label: ccb.name, action: () => { if (typeof window._insertCcb==='function') window._insertCcb(ccb.id); } });
+                let subItems;
+                if (gNames.length === 1) {
+                    /* Tek grup → doğrudan CCB listesi */
+                    subItems = groups[gNames[0]].map(mkCcbItem);
+                } else {
+                    /* Çok grup → her grup bir sub-sub */
+                    subItems = gNames.map(gName => ({
+                        type: 'sub', icon: '▸', label: gName,
+                        sub: groups[gName].map(mkCcbItem)
+                    }));
+                }
+                items.push(S, { type:'sub', icon:'⬛', label:'CCB Ekle', sub: subItems });
             }
         }
 
         return items;
     }
 
+    /* ── Sub-panel yönetimi ── */
+    const _activeSubs = [];
+    let   _subHideTimer = null;
+
+    function _closeAllSubs() {
+        clearTimeout(_subHideTimer);
+        _activeSubs.forEach(s => { s.style.display = 'none'; s._activeSub2 = null; });
+    }
+
+    function _positionPanel(panel, anchorRect, isL2) {
+        panel.style.cssText = 'display:block;left:0;top:0;';
+        const pw = panel.offsetWidth  || 170;
+        const ph = panel.offsetHeight || 100;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        let left = anchorRect.right + 4;
+        if (left + pw > vw - 6) left = anchorRect.left - pw - 4;
+        if (left < 6) left = 6;
+        let top = anchorRect.top;
+        if (top + ph > vh - 6) top = vh - ph - 6;
+        if (top < 6) top = 6;
+        panel.style.left = left + 'px';
+        panel.style.top  = top  + 'px';
+    }
+
+    function _buildSubPanel(items, level) {
+        const panel = document.createElement('div');
+        panel.className = 'ctx-sub-panel';
+        panel.style.display = 'none';
+        items.forEach(item => {
+            if (item.type === 'sep') {
+                panel.appendChild(Object.assign(document.createElement('div'), { className:'cm-sep' }));
+                return;
+            }
+            const d = document.createElement('div');
+            d.className = 'cm-item' + (item.type === 'sub' ? ' cm-has-sub' : '');
+            d.innerHTML = `<span class="cm-icon">${item.icon||''}</span><span class="cm-label">${item.label}</span>`;
+            if (item.type === 'sub' && item.sub) {
+                const child = _buildSubPanel(item.sub, level + 1);
+                document.body.appendChild(child);
+                _activeSubs.push(child);
+                let _t2 = null;
+                d.addEventListener('mouseenter', () => {
+                    clearTimeout(_t2);
+                    /* L2 sibling'leri kapat */
+                    if (panel._activeSub2 && panel._activeSub2 !== child) {
+                        panel._activeSub2.style.display = 'none';
+                    }
+                    _positionPanel(child, d.getBoundingClientRect());
+                    panel._activeSub2 = child;
+                });
+                d.addEventListener('mouseleave', e => {
+                    if (e.relatedTarget && child.contains(e.relatedTarget)) return;
+                    _t2 = setTimeout(() => { if (panel._activeSub2 === child) { child.style.display='none'; panel._activeSub2=null; } }, 130);
+                });
+                child.addEventListener('mouseenter', () => clearTimeout(_t2));
+                child.addEventListener('mouseleave', e => {
+                    if (e.relatedTarget && d.contains(e.relatedTarget)) return;
+                    _t2 = setTimeout(() => { child.style.display='none'; if(panel._activeSub2===child) panel._activeSub2=null; }, 130);
+                });
+            } else if (item.action) {
+                d.addEventListener('mousedown', e => {
+                    e.preventDefault(); e.stopPropagation();
+                    close(); setTimeout(() => item.action(), 0);
+                });
+            }
+            panel.appendChild(d);
+        });
+        return panel;
+    }
+
     /* ── Render ── */
     function render(items) {
+        _closeAllSubs();
+        _activeSubs.length = 0;
         menu.innerHTML = '';
         items.forEach(item => {
             if (item.type === 'sep') {
@@ -17587,6 +17703,31 @@ if (window._setupScrollJump) {
                 const d = document.createElement('div');
                 d.className = 'cm-grp'; d.textContent = item.label;
                 menu.appendChild(d); return;
+            }
+            if (item.type === 'sub') {
+                const d = document.createElement('div');
+                d.className = 'cm-item cm-has-sub';
+                d.innerHTML = `<span class="cm-icon">${item.icon||''}</span><span class="cm-label">${item.label}</span>`;
+                const sub = _buildSubPanel(item.sub || [], 1);
+                document.body.appendChild(sub);
+                _activeSubs.push(sub);
+                let _t = null;
+                d.addEventListener('mouseenter', () => {
+                    clearTimeout(_t);
+                    _closeAllSubs();
+                    _positionPanel(sub, d.getBoundingClientRect());
+                });
+                d.addEventListener('mouseleave', e => {
+                    if (e.relatedTarget && sub.contains(e.relatedTarget)) return;
+                    _t = setTimeout(() => { sub.style.display='none'; }, 130);
+                });
+                sub.addEventListener('mouseenter', () => clearTimeout(_t));
+                sub.addEventListener('mouseleave', e => {
+                    if (e.relatedTarget && d.contains(e.relatedTarget)) return;
+                    _t = setTimeout(() => { sub.style.display='none'; }, 130);
+                });
+                menu.appendChild(d);
+                return;
             }
             const d = document.createElement('div');
             d.className = 'cm-item'
@@ -17614,7 +17755,12 @@ if (window._setupScrollJump) {
         menu.style.top  = Math.min(y, window.innerHeight - mh - 6) + 'px';
     }
 
-    function close() { menu.style.display = 'none'; }
+    function close() {
+        _closeAllSubs();
+        _activeSubs.forEach(s => s.remove());
+        _activeSubs.length = 0;
+        menu.style.display = 'none';
+    }
 
     /* Tarayıcı sağ-tık menüsünü uygulama genelinde kapat */
     document.addEventListener('contextmenu', e => e.preventDefault());
