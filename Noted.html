@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.92 — grid: overflow-x:clip kaldirildi, border kesik gorunme duzeltildi -->
+<!-- Noted v1.15.93 — AI panel: bot/prompt hover aksiyonlar, bullet liste, dosya ekleme -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.92</title>
+    <title>Noted v1.15.93</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2043,11 +2043,8 @@ input[type="file"] { display:none; }
             max-height:300px; overflow-y:auto;
         }
 
-        /* Alt satır: saat (sol) + token chip'leri (sağ) */
-        .ai-msg-foot {
-            display:flex; align-items:center; justify-content:space-between;
-            gap:6px; padding:3px 3px 0; align-self:stretch;
-        }
+        /* Token chip'leri — bot mesajı sağ üst */
+        .ai-tok-top { align-self:flex-end; flex-shrink:0; padding-bottom:3px; }
         .ai-tok-chips { display:flex; gap:4px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
         .ai-tok-chip {
             display:inline-flex; align-items:center;
@@ -2056,15 +2053,25 @@ input[type="file"] { display:none; }
             padding:1px 6px; font-variant-numeric:tabular-nums; white-space:nowrap;
         }
         .ai-tok-warn { color:#e5a000 !important; font-weight:600; }
-        .ai-msg-foot .ai-msg-time { padding:0; flex-shrink:0; }
-        .ai-insert-btn {
-            display:inline-flex; align-items:center; gap:5px;
-            margin-left:auto; padding:3px 9px; border-radius:6px; border:none;
-            background:var(--accent); color:#fff; font-size:.72rem; font-weight:500;
-            cursor:pointer; opacity:.82; transition:opacity .15s;
+        /* Alt satır: saat (sol) + aksiyon butonları (sağ) */
+        .ai-msg-foot, .ai-user-foot {
+            display:flex; align-items:center; justify-content:space-between;
+            gap:6px; padding:2px 3px 0; align-self:stretch;
         }
-        .ai-insert-btn:hover { opacity:1; }
-        .ai-insert-btn i { font-size:.75rem; }
+        .ai-msg-foot .ai-msg-time, .ai-user-foot .ai-msg-time { padding:0; flex-shrink:0; }
+        /* Mesaj aksiyon butonları — hover'da görünür */
+        .ai-msg-acts {
+            display:flex; gap:2px; align-items:center;
+            opacity:0; transition:opacity .15s; flex-shrink:0;
+        }
+        .ai-msg:hover .ai-msg-acts { opacity:1; }
+        .ai-act-btn {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:24px; height:24px; border-radius:6px; border:none;
+            background:transparent; color:var(--text-muted); font-size:.68rem;
+            cursor:pointer; transition:background .12s, color .12s;
+        }
+        .ai-act-btn:hover { background:var(--surface-2); color:var(--accent); }
 
         /* Markdown content */
         .ai-bubble p{margin:0 0 7px;} .ai-bubble p:last-child{margin:0;}
@@ -2082,12 +2089,12 @@ input[type="file"] { display:none; }
         /* Footer input */
         .ai-panel-foot {
             padding:10px 14px 14px; border-top:1px solid var(--border);
-            background:var(--surface); flex-shrink:0;
+            background:var(--surface); flex-shrink:0; position:relative;
         }
         .ai-input-wrap {
             display:flex; align-items:center; gap:7px;
             background:var(--surface-2); border:1px solid var(--border);
-            border-radius:14px; padding:7px 7px 7px 13px;
+            border-radius:14px; padding:7px 7px 7px 7px;
             transition:border-color .15s;
         }
         .ai-input-wrap:focus-within { border-color:var(--accent); }
@@ -2125,6 +2132,48 @@ input[type="file"] { display:none; }
             background:rgba(255,255,255,.12); border-radius:3px;
             padding:1px 4px; font-size:.68rem;
         }
+        /* Dosya ekleme (+) butonu */
+        .ai-attach-btn {
+            width:28px; height:28px; border-radius:8px; flex-shrink:0;
+            border:1px solid var(--border); background:transparent;
+            color:var(--text-muted); font-size:.78rem; font-weight:600;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:border-color .15s, color .15s;
+        }
+        .ai-attach-btn:hover, .ai-attach-btn.open { border-color:var(--accent); color:var(--accent); }
+        .ai-attach-drop {
+            display:none; flex-direction:column; gap:2px;
+            position:absolute; bottom:calc(100% - 8px); left:14px;
+            min-width:130px; background:var(--surface); border:1px solid var(--border);
+            border-radius:10px; padding:4px; box-shadow:0 4px 14px var(--shadow,rgba(0,0,0,.18));
+            z-index:220;
+        }
+        .ai-attach-drop.open { display:flex; }
+        .ai-attach-opt {
+            display:flex; align-items:center; gap:8px;
+            padding:6px 10px; border-radius:7px; border:none;
+            background:none; color:var(--text); font-size:.82rem;
+            cursor:pointer; text-align:left; white-space:nowrap;
+        }
+        .ai-attach-opt:hover { background:var(--hover,rgba(120,120,120,.12)); color:var(--accent); }
+        .ai-attach-opt i { color:var(--accent); font-size:.75rem; width:14px; text-align:center; }
+        /* Eklenen dosya chip'leri */
+        .ai-attach-chips {
+            display:flex; flex-wrap:wrap; gap:5px; padding:6px 2px 0;
+        }
+        .ai-attach-chip {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:3px 8px; border-radius:8px;
+            background:var(--surface-2); border:1px solid var(--border);
+            font-size:.72rem; color:var(--text); max-width:200px;
+        }
+        .ai-attach-chip i { color:var(--accent); font-size:.7rem; flex-shrink:0; }
+        .ai-attach-chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .ai-attach-chip-rm {
+            background:none; border:none; color:var(--text-muted);
+            cursor:pointer; padding:0 0 0 3px; font-size:.78rem; line-height:1; flex-shrink:0;
+        }
+        .ai-attach-chip-rm:hover { color:var(--danger,#e5534b); }
 
         @media(max-width:600px){
             #ai-chat-panel {
@@ -4582,7 +4631,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.92</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.93</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -4721,10 +4770,18 @@ input[type="file"] { display:none; }
         </div>
     </div>
     <div class="ai-panel-foot">
+        <div class="ai-attach-drop" id="ai-attach-drop">
+            <button class="ai-attach-opt" id="ai-attach-doc-btn"><i class="fas fa-file-lines"></i> Belge</button>
+            <button class="ai-attach-opt" id="ai-attach-img-btn"><i class="fas fa-image"></i> Resim</button>
+        </div>
         <div class="ai-input-wrap">
+            <button class="ai-attach-btn" id="ai-attach-btn" title="Dosya ekle"><i class="fas fa-plus"></i></button>
             <textarea id="ai-input" placeholder="Notlarınız hakkında bir şey sorun…" rows="1"></textarea>
             <button id="ai-send" title="Gönder (Enter)"><i class="fas fa-arrow-up"></i></button>
         </div>
+        <div id="ai-attach-chips" class="ai-attach-chips" style="display:none"></div>
+        <input type="file" id="ai-file-doc" accept=".txt,.md,.csv,.json,.pdf,.docx" style="display:none">
+        <input type="file" id="ai-file-img" accept="image/*" style="display:none">
         <div class="ai-foot-hint">AI yanıtları doğrulanması gereken konularda yanıltıcı olabilir.</div>
     </div>
 </div>
@@ -10197,7 +10254,7 @@ const _SHAPES = [
     const input    = document.getElementById('ai-input');
     const sendBtn  = document.getElementById('ai-send');
 
-    let _open = false, _busy = false, _abort = null, _history = [];
+    let _open = false, _busy = false, _abort = null, _history = [], _attachments = [];
     const _isFileProtocol = location.protocol === 'file:';
     const _onLocalhost    = ['localhost', '127.0.0.1'].includes(location.hostname);
 
@@ -10301,8 +10358,16 @@ const _SHAPES = [
         welcome.style.display = 'none';
         const d = document.createElement('div');
         d.className = 'ai-msg user';
+        d.dataset.userText = text;
         d.innerHTML = `<div class="ai-bubble">${esc(text).replace(/\n/g,'<br>')}</div>
-                       <span class="ai-msg-time">${now()}</span>`;
+            <div class="ai-user-foot">
+                <span class="ai-msg-time">${now()}</span>
+                <div class="ai-msg-acts">
+                    <button class="ai-act-btn" data-act="edit"   title="Değiştir"><i class="fas fa-pencil"></i></button>
+                    <button class="ai-act-btn" data-act="copy"   title="Kopyala"><i class="fas fa-copy"></i></button>
+                    <button class="ai-act-btn" data-act="resend" title="Yenile"><i class="fas fa-rotate-right"></i></button>
+                </div>
+            </div>`;
         msgs.appendChild(d); scrollDown();
     }
 
@@ -10341,11 +10406,12 @@ const _SHAPES = [
         return { thinking, reply };
     }
 
-    function addBot(text, thinking, tokenInfo) {
+    function addBot(text, thinking, tokenInfo, userText) {
         const el = document.getElementById('ai-typing-row');
         if (el) el.remove();
         const d = document.createElement('div');
         d.className = 'ai-msg bot';
+        if (userText) d.dataset.userText = userText;
         const thinkHtml = thinking
             ? `<details class="ai-think">
                 <summary><span class="ai-think-arrow">▶</span> Düşünme süreci</summary>
@@ -10353,14 +10419,17 @@ const _SHAPES = [
                </details>`
             : '';
         const tokChips = tokenInfo ? _buildTokenChips(tokenInfo.usage, tokenInfo.remaining, tokenInfo.limit) : '';
-        d.innerHTML = `<div class="ai-bot-row">
+        d.innerHTML = `${tokChips ? `<div class="ai-tok-top"><div class="ai-tok-chips">${tokChips}</div></div>` : ''}
+        <div class="ai-bot-row">
             <div class="ai-bot-av"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="ai-bubble">${thinkHtml}${mdToHtml(text)}</div>
         </div>
         <div class="ai-msg-foot">
             <span class="ai-msg-time">${now()}</span>
-            ${tokChips ? `<div class="ai-tok-chips">${tokChips}</div>` : ''}
-            <button class="ai-insert-btn" title="Editöre Ekle"><i class="fas fa-file-import"></i></button>
+            <div class="ai-msg-acts">
+                <button class="ai-act-btn" data-act="regen"  title="Yenile"><i class="fas fa-rotate-right"></i></button>
+                <button class="ai-act-btn" data-act="insert" title="Editöre Ekle"><i class="fas fa-file-import"></i></button>
+            </div>
         </div>`;
         msgs.appendChild(d); scrollDown();
     }
@@ -10772,16 +10841,22 @@ const _SHAPES = [
 
         const d = document.createElement('div');
         d.className = 'ai-msg bot';
+        if (userText) d.dataset.userText = userText;
         d.innerHTML = `<div class="ai-bot-row">
             <div class="ai-bot-av"><i class="fas fa-wand-magic-sparkles"></i></div>
             <div class="ai-bubble"><span class="ai-stream-cursor"></span></div>
         </div>
         <div class="ai-msg-foot">
             <span class="ai-msg-time">${now()}</span>
+            <div class="ai-msg-acts">
+                <button class="ai-act-btn" data-act="regen"  title="Yenile"><i class="fas fa-rotate-right"></i></button>
+                <button class="ai-act-btn" data-act="insert" title="Editöre Ekle"><i class="fas fa-file-import"></i></button>
+            </div>
         </div>`;
         msgs.appendChild(d);
         const bubble = d.querySelector('.ai-bubble');
         const foot   = d.querySelector('.ai-msg-foot');
+        const botRow = d.querySelector('.ai-bot-row');
         scrollDown();
 
         const reader  = readableStream.getReader();
@@ -10843,10 +10918,9 @@ const _SHAPES = [
             : '';
         bubble.innerHTML = thinkHtml + (mdToHtml(reply || rawText) || '(Boş yanıt geldi)');
 
-        /* Token chip'leri */
+        /* Token chip'leri — mesaj üst sağ */
         const tokChips = _buildTokenChips(usageData, remH, limH);
-        if (tokChips) foot.insertAdjacentHTML('beforeend', `<div class="ai-tok-chips">${tokChips}</div>`);
-        foot.insertAdjacentHTML('beforeend', `<button class="ai-insert-btn" title="Editöre Ekle"><i class="fas fa-file-import"></i></button>`);
+        if (tokChips) botRow.insertAdjacentHTML('beforebegin', `<div class="ai-tok-top"><div class="ai-tok-chips">${tokChips}</div></div>`);
 
         scrollDown();
 
@@ -10891,10 +10965,24 @@ const _SHAPES = [
     }
 
     msgs.addEventListener('click', e => {
-        const btn = e.target.closest('.ai-insert-btn');
+        const btn = e.target.closest('[data-act]');
         if (!btn) return;
-        const bubble = btn.closest('.ai-msg.bot')?.querySelector('.ai-bubble');
-        if (bubble) _insertToEditor(bubble);
+        const msg  = btn.closest('.ai-msg');
+        const act  = btn.dataset.act;
+        const uTxt = msg?.dataset.userText || '';
+
+        if (act === 'insert') {
+            const bubble = msg?.querySelector('.ai-bubble');
+            if (bubble) _insertToEditor(bubble);
+        } else if (act === 'regen') {
+            if (uTxt && !_busy) { input.value = uTxt; send(); }
+        } else if (act === 'resend') {
+            if (uTxt && !_busy) { input.value = uTxt; send(); }
+        } else if (act === 'copy') {
+            if (uTxt) navigator.clipboard.writeText(uTxt).catch(() => {});
+        } else if (act === 'edit') {
+            if (uTxt) { input.value = uTxt; input.focus(); resize(); }
+        }
     });
 
     /* ── Gönder ── */
@@ -10920,7 +11008,15 @@ const _SHAPES = [
         sendBtn.innerHTML = '<i class="fas fa-stop"></i>';
         sendBtn.title = 'Durdur';
         sendBtn.classList.add('stopping');
+        const _docAtts = _attachments.filter(a => a.type === 'doc');
+        const _imgAtts = _attachments.filter(a => a.type === 'img');
+        let _userContent = text;
+        if (_docAtts.length) _userContent = _docAtts.map(a => `[Belge: ${a.name}]\n${a.content}`).join('\n\n---\n\n') + '\n\n---\n\n' + text;
+        const _userMsg = _imgAtts.length
+            ? { role: 'user', content: [{ type: 'text', text: _userContent }, ..._imgAtts.map(a => ({ type: 'image_url', image_url: { url: a.b64 } }))] }
+            : { role: 'user', content: _userContent };
         addUser(text); input.value = ''; resize();
+        _attachments = []; _renderChips();
         showTyping();
 
         const model      = cfg.model || 'llama-3.3-70b-versatile';
@@ -10952,7 +11048,7 @@ const _SHAPES = [
             messages: [
                 { role: 'system', content: sysContent },
                 ..._historySlice,
-                { role: 'user',   content: text }
+                _userMsg
             ],
             max_tokens  : 1024,
             temperature : cfg.temp ?? 0.7,
@@ -11010,7 +11106,7 @@ const _SHAPES = [
                     const remaining = rl?.remaining ?? -1;
                     const limit     = rl?.limit     ?? -1;
                     const tokenInfo = { usage: data.usage || null, remaining, limit };
-                    addBot(reply || '(Boş yanıt geldi)', thinking, tokenInfo);
+                    addBot(reply || '(Boş yanıt geldi)', thinking, tokenInfo, text);
                     if (reply) {
                         _history.push({ role: 'user',      content: text  });
                         _history.push({ role: 'assistant', content: reply });
@@ -11536,6 +11632,70 @@ const _SHAPES = [
     loadCfg();
     _loadServerConfig(); /* localhost'ta config.json'dan API key otomatik al */
 
+    /* ── Dosya ekleme ── */
+    const attachBtn    = document.getElementById('ai-attach-btn');
+    const attachDrop   = document.getElementById('ai-attach-drop');
+    const attachDocBtn = document.getElementById('ai-attach-doc-btn');
+    const attachImgBtn = document.getElementById('ai-attach-img-btn');
+    const fileDocInput = document.getElementById('ai-file-doc');
+    const fileImgInput = document.getElementById('ai-file-img');
+    const chipsEl      = document.getElementById('ai-attach-chips');
+
+    function _renderChips() {
+        if (!chipsEl) return;
+        if (!_attachments.length) { chipsEl.style.display = 'none'; chipsEl.innerHTML = ''; return; }
+        chipsEl.style.display = 'flex';
+        chipsEl.innerHTML = _attachments.map((a, i) =>
+            `<span class="ai-attach-chip">
+                <i class="fas ${a.type === 'img' ? 'fa-image' : 'fa-file-lines'}"></i>
+                <span>${esc(a.name)}</span>
+                <button class="ai-attach-chip-rm" data-idx="${i}" title="Kaldır">×</button>
+             </span>`
+        ).join('');
+    }
+
+    chipsEl?.addEventListener('click', e => {
+        const btn = e.target.closest('.ai-attach-chip-rm');
+        if (!btn) return;
+        _attachments.splice(parseInt(btn.dataset.idx), 1);
+        _renderChips();
+    });
+
+    function _closeAttachDrop() {
+        attachDrop?.classList.remove('open');
+        attachBtn?.classList.remove('open');
+    }
+
+    attachBtn?.addEventListener('click', e => {
+        e.stopPropagation();
+        const nowOpen = attachDrop.classList.toggle('open');
+        attachBtn.classList.toggle('open', nowOpen);
+    });
+
+    document.addEventListener('click', e => {
+        if (attachDrop?.classList.contains('open') && !attachBtn?.contains(e.target) && !attachDrop?.contains(e.target))
+            _closeAttachDrop();
+    });
+
+    attachDocBtn?.addEventListener('click', () => { _closeAttachDrop(); fileDocInput?.click(); });
+    attachImgBtn?.addEventListener('click', () => { _closeAttachDrop(); fileImgInput?.click(); });
+
+    fileDocInput?.addEventListener('change', () => {
+        const file = fileDocInput.files[0]; if (!file) return;
+        fileDocInput.value = '';
+        const reader = new FileReader();
+        reader.onload = ev => { _attachments.push({ type: 'doc', name: file.name, content: ev.target.result }); _renderChips(); };
+        reader.readAsText(file, 'UTF-8');
+    });
+
+    fileImgInput?.addEventListener('change', () => {
+        const file = fileImgInput.files[0]; if (!file) return;
+        fileImgInput.value = '';
+        const reader = new FileReader();
+        reader.onload = ev => { _attachments.push({ type: 'img', name: file.name, b64: ev.target.result }); _renderChips(); };
+        reader.readAsDataURL(file);
+    });
+
     /* ── Olaylar ── */
     openBtn  ?.addEventListener('click', () => _open ? close() : open());
     closeBtn ?.addEventListener('click', close);
@@ -11547,8 +11707,45 @@ const _SHAPES = [
     });
 
     input?.addEventListener('input', resize);
+    /* "- " → "• " otomatik madde dönüşümü */
+    input?.addEventListener('input', () => {
+        const val = input.value, pos = input.selectionStart;
+        const ls  = val.lastIndexOf('\n', pos - 1) + 1;
+        const le  = val.indexOf('\n', pos);
+        const line = val.slice(ls, le === -1 ? undefined : le);
+        const m = line.match(/^(\s*)- $/);
+        if (m) {
+            const repl = m[1] + '• ';
+            input.value = val.slice(0, ls) + repl + val.slice(le === -1 ? val.length : le);
+            input.selectionStart = input.selectionEnd = ls + repl.length;
+            resize();
+        }
+    });
     input?.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        if (e.key !== 'Enter') return;
+        const val = input.value, pos = input.selectionStart;
+        const ls  = val.lastIndexOf('\n', pos - 1) + 1;
+        const le  = val.indexOf('\n', pos);
+        const line = val.slice(ls, le === -1 ? undefined : le);
+        const bm = line.match(/^(\s*)(•\s)/);
+        if (bm) {
+            e.preventDefault();
+            const indent = bm[1], content = line.slice(bm[0].length);
+            if (e.altKey) {
+                const sub = '\n' + indent + '  • ';
+                input.value = val.slice(0, pos) + sub + val.slice(pos);
+                input.selectionStart = input.selectionEnd = pos + sub.length;
+            } else if (!content.trim()) {
+                input.value = val.slice(0, ls) + val.slice(ls + bm[0].length);
+                input.selectionStart = input.selectionEnd = ls;
+            } else {
+                const nb = '\n' + indent + '• ';
+                input.value = val.slice(0, pos) + nb + val.slice(pos);
+                input.selectionStart = input.selectionEnd = pos + nb.length;
+            }
+            resize(); return;
+        }
+        if (!e.shiftKey && !e.altKey) { e.preventDefault(); send(); }
     });
 
     document.querySelectorAll('.ai-chip').forEach(c =>
@@ -15658,7 +15855,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.92</span>
+      <span class="hm-ver">v1.15.93</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -15690,7 +15887,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.92</h2>
+          <h2>Noted v1.15.93</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
