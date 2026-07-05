@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.96
+**localStorage Konsolidasyonu**
+- ~35 dağınık localStorage anahtarı 3 birleşik nesneye indirildi: `noted_ai_v1`, `noted_ui_v1`, `noted_content_v1`
+- Tek seferlik migration IIFE: eski anahtarları okuyup yeni yapıya aktarır, eski anahtarları siler, `noted_storage_v=2` bayrağı ile tekrar çalışmaz
+- `getAiCfg()` / `patchAiCfg()`, `getUiCfg()` / `patchUiCfg()`, `getContentCfg()` / `patchContentCfg()` yardımcı fonksiyonları eklendi
+- sessionStorage kullanımı tamamen kaldırıldı (AI config artık localStorage'da kalıcı)
+- Export/import: yeni `noted_ai_v1` formatını yazar; eski formatlı JSON dosyaları geriye dönük uyumlu olarak okunur
+
+---
+
 ## v1.15.95
 **AI Panel — Pool Health Badge Düzeltmesi**
 - `openSettings()` çağrıldığında `_renderPool()` de çalışır; ayarlar paneli açılınca rate-limit badge'leri artık anında görünür
