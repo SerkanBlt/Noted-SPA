@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.96 — refactor: localStorage konsolidasyonu, 3 birlesik nesne (noted_ai_v1, noted_ui_v1, noted_content_v1) -->
+<!-- Noted v1.15.97 — refactor: HTML markup temizleme - paste intercept, allowlist sanitize, normalize-on-save -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.96</title>
+    <title>Noted v1.15.97</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4633,7 +4633,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.96</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.97</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -5668,10 +5668,64 @@ function getColor(str) {
     h = Math.abs(h) % 360;
     return { main: `hsl(${h},50%,50%)`, bg: `hsla(${h},50%,50%,.11)` };
 }
+function normalizeHtml(html) {
+    if (!html) return html;
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    const INLINE = new Set(['STRONG','EM','U','S','MARK','CODE','SUB','SUP']);
+    div.querySelectorAll('*').forEach(el => {
+        /* Boş style/class attribute'larını temizle */
+        if (el.getAttribute('style') === '') el.removeAttribute('style');
+        if (el.getAttribute('class') === '') el.removeAttribute('class');
+        /* İç içe aynı inline tag'ları düzleştir: <strong><strong>x</strong></strong> → <strong>x</strong> */
+        if (INLINE.has(el.tagName) && el.parentElement?.tagName === el.tagName) {
+            el.replaceWith(...el.childNodes);
+        }
+    });
+    /* Yalnızca <br> içeren boş blok elementleri temizle (birden fazla art arda <br>) */
+    div.querySelectorAll('p,div').forEach(el => {
+        if (el.children.length === 0 && !(el.textContent || '').trim()) el.remove();
+    });
+    return div.innerHTML;
+}
+
 function sanitize(html) {
-    return typeof DOMPurify !== 'undefined'
-        ? DOMPurify.sanitize(html, { ADD_ATTR: ['data-note-id', 'data-wikilink', 'target', 'data-grid-type', 'data-gridtype', 'data-cols', 'data-ph', 'data-col', 'data-placeholder', 'data-stab', 'data-type', 'data-tpl', 'contenteditable', 'spellcheck', 'data-bookmark', 'data-shape', 'data-sx', 'data-sy', 'data-sw', 'data-sh', 'data-stroke', 'data-fill-mode', 'data-rotate', 'preserveAspectRatio', 'data-valign', 'data-halign', 'data-ccb-id'] })
-        : html;
+    if (typeof DOMPurify === 'undefined') return html;
+    return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+            /* Yapısal */
+            'p','div','br','hr','h1','h2','h3','h4','h5','h6',
+            'blockquote','pre','code','details','summary',
+            /* İnline */
+            'strong','b','em','i','u','s','strike','del','mark','sub','sup','span','a',
+            /* Listeler */
+            'ul','ol','li','dl','dt','dd',
+            /* Tablo */
+            'table','thead','tbody','tfoot','tr','th','td','colgroup','col',
+            /* Medya */
+            'img','figure','figcaption','iframe',
+            /* SVG (çizim) */
+            'svg','path','circle','rect','ellipse','line','polyline','polygon',
+            'g','defs','use','text','tspan','image',
+            /* Uygulama özel */
+            'ng-wrap','ng-col','ng-cell','ng-row',
+        ],
+        ALLOWED_ATTR: [
+            'href','src','alt','title','target','rel',
+            'colspan','rowspan','width','height',
+            'class','style','id',
+            'contenteditable','spellcheck',
+            'preserveAspectRatio','viewBox','xmlns',
+            /* data-* uygulamaya özel */
+            'data-note-id','data-wikilink','data-grid-type','data-gridtype',
+            'data-cols','data-col','data-ph','data-placeholder',
+            'data-stab','data-type','data-tpl','data-bookmark',
+            'data-shape','data-sx','data-sy','data-sw','data-sh',
+            'data-stroke','data-fill-mode','data-rotate',
+            'data-valign','data-halign','data-ccb-id','data-checked',
+        ],
+        FORCE_BODY: false,
+    });
 }
 function saveNotes() {
     try {
@@ -8113,7 +8167,7 @@ function saveNote() {
         return;
     }
     /* v1.3: elle yazılan [[Not Adı]] dizgilerini wiki-bağlantıya çevir */
-    const content = sanitize(convertWikiSyntax(rawHtml));
+    const content = normalizeHtml(sanitize(convertWikiSyntax(rawHtml)));
     /* v1.1: etiketleri parse et */
     const tags = parseTagsFromContent(rawHtml);
     if (eId) {
@@ -15745,6 +15799,49 @@ document.addEventListener('keydown', function ngArrowNav(e) {
     };
 
     /* ── Gözlemci ve olay dinleyicileri — hedef elemente bağla/kopar ── */
+    /* ── Dış kaynaktan gelen HTML'i temizle (Word, web sayfası, vb.) ── */
+    function _cleanExternalHtml(html) {
+        const ALLOWED = {
+            tags: ['p','div','br','hr','h1','h2','h3','h4','h5','h6',
+                   'strong','b','em','i','u','s','strike','mark','sub','sup',
+                   'ul','ol','li','dl','dt','dd',
+                   'table','thead','tbody','tfoot','tr','th','td','colgroup','col',
+                   'a','img','figure','figcaption',
+                   'span','blockquote','pre','code'],
+            attr: ['href','src','alt','title','target','colspan','rowspan','width','height']
+        };
+        const safe = typeof DOMPurify !== 'undefined'
+            ? DOMPurify.sanitize(html, { ALLOWED_TAGS: ALLOWED.tags, ALLOWED_ATTR: ALLOWED.attr })
+            : html;
+        const div = document.createElement('div');
+        div.innerHTML = safe;
+        /* <b> → <strong>, <i> → <em> */
+        div.querySelectorAll('b').forEach(el => { const s = document.createElement('strong'); s.append(...el.childNodes); el.replaceWith(s); });
+        div.querySelectorAll('i').forEach(el => { const s = document.createElement('em');     s.append(...el.childNodes); el.replaceWith(s); });
+        /* Anlamsız kalan boş span'ları kaldır */
+        div.querySelectorAll('span').forEach(el => { if (!el.attributes.length) el.replaceWith(...el.childNodes); });
+        /* Boş blok elementleri kaldır */
+        div.querySelectorAll('p,div').forEach(el => { if (!el.innerHTML.trim()) el.remove(); });
+        return div.innerHTML;
+    }
+
+    /* ── Harici HTML yapıştırma yakalayıcı (en yüksek öncelik) ── */
+    function _pasteHandlerClean(e) {
+        const cd  = e.clipboardData || window.clipboardData;
+        const htm = cd?.getData('text/html');
+        if (!htm) return; /* Sadece HTML içeriyorsa devreye gir */
+        /* MD tablo ise _pasteHandler1'e bırak */
+        const txt = cd?.getData('text/plain') || '';
+        if (/^[ \t]*\|?[ \t]*:?-{2,}[-: |]*[ \t]*\r?$/m.test(txt) && txt.split('\n').filter(l => /\|/.test(l)).length >= 2) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const cleaned = _cleanExternalHtml(htm);
+        document.execCommand('insertHTML', false, cleaned);
+        if (typeof _restoreGrids === 'function') _restoreGrids();
+        if (!_locked && !_setup) _flushDebounce();
+        if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
+    }
+
     function _pasteHandler1(e) {
         const txt = (e.clipboardData || window.clipboardData)?.getData('text/plain') || '';
         if (!txt || typeof window._mdToHtml !== 'function') return;
@@ -15797,6 +15894,7 @@ document.addEventListener('keydown', function ngArrowNav(e) {
             attributeFilter: ['style', 'data-checked', 'data-col', 'data-cols', 'data-grid-type', 'data-bookmark',
                               'data-sx', 'data-sy', 'data-sw', 'data-sh', 'data-stroke', 'data-fill-mode', 'data-rotate', 'data-shape']
         });
+        el.addEventListener('paste', _pasteHandlerClean, true);
         el.addEventListener('paste', _pasteHandler1, true);
         el.addEventListener('paste', _pasteHandler2, true);
         el.addEventListener('keydown', _keydownHandler, true);
@@ -15806,6 +15904,7 @@ document.addEventListener('keydown', function ngArrowNav(e) {
     function _detach(el) {
         if (!el) return;
         if (_obs) _obs.disconnect();
+        el.removeEventListener('paste', _pasteHandlerClean, true);
         el.removeEventListener('paste', _pasteHandler1, true);
         el.removeEventListener('paste', _pasteHandler2, true);
         el.removeEventListener('keydown', _keydownHandler, true);
@@ -15919,7 +16018,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.96</span>
+      <span class="hm-ver">v1.15.97</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -15951,7 +16050,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.96</h2>
+          <h2>Noted v1.15.97</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
