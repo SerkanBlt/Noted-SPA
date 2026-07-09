@@ -2,6 +2,15 @@
 
 ---
 
+## v1.15.101
+**Grid — Panel Aktif Kolon Accent**
+- Panel kartlarında odaklanılan kolon: yalnızca o kolona ait th/td `col-active` class'ı alır; `.ng-panel-frame:focus-within .col-active` CSS kuralıyla sadece aktif kolona accent border verilir
+- `_setPanelColumnActive(table, colIdx)`: tüm th/td üzerinde `col-active` toggle eder
+- `createGrid()` panel th/td focus handler'larına `_setPanelColumnActive` çağrısı eklendi
+- `_upgradeGridWraps()`: mevcut panel notlarına `data-col` attribute ve focus handler'ları geriye dönük olarak bağlanır
+
+---
+
 ## v1.15.100
 **Grid — Panel Kart Görünümü, Header Gap, Kolon Accent (3 düzeltme)**
 - Panel: her kolon bağımsız kart — `ng-panel-frame` sadece `overflow:hidden + border-radius`, th/td'lere tam border verildi; kartlar arası boşluk `border-spacing:10px`, dış kenarlarda sub-pixel gap (görünmez, flush görünüm)
