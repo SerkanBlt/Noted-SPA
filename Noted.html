@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.97 — refactor: HTML markup temizleme - paste intercept, allowlist sanitize, normalize-on-save -->
+<!-- Noted v1.15.98 — feat: panel kart gorunumu, header bg fix, kolon opacity kaldirildi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.97</title>
+    <title>Noted v1.15.98</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4297,39 +4297,46 @@ input[type="file"] { display:none; }
         .ng-align-btn.ng-align-active { background: var(--accent); color: #fff; border-color: var(--accent); }
         .noted-grid td:focus, .noted-grid th:focus { outline: none; }
 
-        /* ── Panel (başlık satırı + border) ── */
+        /* ── Panel (kart görünümü: her kolon ayrı kart) ── */
         .noted-grid.grid-panel {
-            border: 1px solid var(--pnl-border);
-            border-radius: 8px; overflow: hidden;
-            background: var(--surface);
-            box-shadow: 0 1px 4px var(--shadow);
+            border: none; border-radius: 0; overflow: visible;
+            background: transparent; box-shadow: none;
+            border-collapse: separate;
+            border-spacing: 12px 0;
+            margin-inline: -12px;
         }
-        .noted-grid.grid-panel:focus-within {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px var(--accent-dim);
-        }
-        /* Panel başlık satırı — thead tr */
+        .noted-grid.grid-panel:focus-within { border: none; box-shadow: none; }
+        /* Panel başlık satırı — her th kendi kartının üst kısmı */
+        .noted-grid.grid-panel thead tr,
+        .noted-grid.grid-panel thead { background: var(--pnl-header-bg); }
         .noted-grid.grid-panel thead tr th {
             background: var(--pnl-header-bg);
+            border: 1px solid var(--pnl-border);
             border-bottom: 1px solid var(--pnl-border);
+            border-radius: 8px 8px 0 0;
             padding: 3px 10px 3px 8px;
             font-size: .82rem; font-weight: 700;
             color: var(--text); text-align: left;
         }
-        .noted-grid.grid-panel thead tr th + th {
-            border-left: none; /* ng-resize::after üstleniyor */
-        }
-        /* Panel içerik hücreleri */
+        .noted-grid.grid-panel thead tr th + th { border-left: 1px solid var(--pnl-border); }
+        /* Panel içerik hücreleri — her td kendi kartının alt kısmı */
         .noted-grid.grid-panel tbody td {
             padding: 8px 14px;
-            height: 52px; /* table-cell'de min-height çalışmaz; height min-height gibi davranır */
+            height: 52px;
             font-family: var(--font-body);
             line-height: 1.45;
             color: var(--text);
+            background: var(--surface);
+            border: 1px solid var(--pnl-border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 1px 4px var(--shadow);
         }
-        .noted-grid.grid-panel tbody td + td {
-            border-left: none; /* ng-resize::after border görevi üstleniyor */
-        }
+        .noted-grid.grid-panel tbody td + td { border-left: 1px solid var(--pnl-border); }
+        /* Resize çizgisi: kart modunda gizle — kartın kendi border'ı var */
+        .noted-grid.grid-panel .ng-resize::after { background: transparent; }
+        .noted-grid.grid-panel .ng-resize:hover::after,
+        .noted-grid.grid-panel .ng-resize.resizing::after { background: var(--accent); opacity: 1; }
 
         /* ── Tablo (standart tablo) ── */
         /* Tablo: panel gibi border + radius — noted-grid üzerinde */
@@ -4343,6 +4350,8 @@ input[type="file"] { display:none; }
             border-color: var(--accent);
             box-shadow: 0 0 0 2px var(--accent-dim);
         }
+        .noted-grid.grid-table thead,
+        .noted-grid.grid-table thead tr { background: var(--tbl-header-bg); }
         .noted-grid.grid-table thead tr th {
             background: var(--tbl-header-bg);
             border-bottom: 1px solid var(--tbl-border);
@@ -4386,7 +4395,7 @@ input[type="file"] { display:none; }
             padding-left: 8px;
             border-left: 1px solid var(--col-sep);
         }
-        .noted-grid.grid-column:focus-within tbody td + td { border-left-color: var(--accent); opacity: .5; }
+        .noted-grid.grid-column:focus-within tbody td + td { border-left-color: var(--accent); }
 
         /* ── Sütun içerik alanı (contenteditable) ── */
         .ng-cell {
@@ -4427,6 +4436,7 @@ input[type="file"] { display:none; }
             top: 0; bottom: 0; left: -4px; right: -4px;
         }
         .noted-grid:focus-within .ng-resize::after { background: var(--accent); opacity: .5; }
+        .noted-grid.grid-column:focus-within .ng-resize::after { opacity: 1; }
         .ng-resize:hover::after, .ng-resize.resizing::after {
             background: var(--accent) !important; opacity: 1;
         }
@@ -4490,11 +4500,13 @@ input[type="file"] { display:none; }
         .noted-grid.grid-table:focus-within tbody tr + tr td {
             border-top-color: var(--accent);
         }
-        .noted-grid.grid-panel:focus-within thead tr th + th {
-            border-left-color: var(--accent);
-        }
+        /* Panel kart focus: tüm kart border'ları accent alır */
+        .noted-grid.grid-panel:focus-within thead tr th,
+        .noted-grid.grid-panel:focus-within thead tr th + th { border-color: var(--accent); }
+        .noted-grid.grid-panel:focus-within tbody td,
         .noted-grid.grid-panel:focus-within tbody td + td {
-            border-left-color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim), 0 1px 4px var(--shadow);
         }
 
         /* ── ng-title: display:block ile background renklendirme çalışsın ── */
@@ -4633,7 +4645,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.97</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.98</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -16018,7 +16030,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.97</span>
+      <span class="hm-ver">v1.15.98</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -16050,7 +16062,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.97</h2>
+          <h2>Noted v1.15.98</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
