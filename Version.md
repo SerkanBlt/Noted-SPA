@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.99
+**Grid — Panel Çerçeve Korunumu, Header Arka Plan Düzeltmesi**
+- Panel dış çerçevesi korundu: `ng-panel-frame` wrapper div eklendi; `overflow: hidden` sayesinde `margin-inline: -10px` hilesi çalışır, ilk/son kolonun dış kenarında boşluk kalmaz
+- Panel toolbar çerçevenin dışında (ng-wrap içinde) kalır; `overflow: hidden` toolbar'ı kesmez
+- Kolon arası boşluk: `border-collapse: separate; border-spacing: 10px 0` ile tam ortada dikey ayırıcılar
+- Tablo başlık arka plan gap'i düzeltildi: köşe `th` hücrelerine `border-top-left-radius`/`border-top-right-radius` eklendi (Chrome `border-collapse:collapse + overflow:hidden` bug'ı için)
+- Mevcut notlardaki panel blokları `_upgradeGridWraps()` içinde otomatik migrate edilir
+
+---
+
 ## v1.15.98
 **Grid — Panel Kart Görünümü, Header Arka Plan, Kolon Opacity**
 - Panel bloğu kart görünümüne dönüştürüldü: her kolon ayrı bir kart olarak çerçevelenir, kolonlar arası boşluk 12px, ilk/son kolonun dış kenarında boşluk yok
