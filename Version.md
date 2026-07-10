@@ -2,6 +2,15 @@
 
 ---
 
+## v1.15.106
+**Grid — Kritik Kayıt/Yükleme Bug'ları + Splitter Konumu**
+- **KRİTİK — kayıt kaybı düzeltildi:** `normalizeHtml()` her kayıtta boş (`children.length===0` ve metinsiz) `<div>`/`<p>` elemanlarını siliyordu; bu, henüz yazı girilmemiş `.ng-cell`/`.ng-title`/`.ng-resize` grid elemanlarını da siliyordu (yeni eklenen Tablo/Panel/Kolon bloklarında hücrelerin çoğu başlangıçta boştur). Artık `data-ph` attribute'lu veya `ng-` prefixli class'a sahip elemanlar bu temizlikten muaf
+- **KRİTİK — not yeniden açma crash'i düzeltildi:** `_restoreGrids()` toolbar'ı `wrap.insertBefore(toolbar, table)` ile ekliyordu; Panel'de `table` artık `wrap`'ın değil `.ng-panel-frame`'in çocuğu olduğundan bu `"not a child of this node"` hatası fırlatıp **`editNote()`'un tamamını yarıda kesiyordu** (not açılışında locked/pinned/dirty state hiç kurulmuyordu). Artık toolbar her zaman `wrap`'ın ilk çocuğu olarak ekleniyor, yapıya bakılmaksızın çalışıyor
+- Bu iki bug birlikte "Tablo/Panel/Kolon kayıt almıyor" ve "not kapatılıp açılınca toolbar çalışmıyor/farklı görünüyor" şikayetlerinin kök nedeniydi
+- Panel resize splitter'ı artık iki kart arasındaki 10px boşluğun tam ortasında (`right: 5px`); hover/sürükleme dahil her durumda tamamen transparan kalıyor (`!important` ile accent sızıntısı kesin engellendi)
+
+---
+
 ## v1.15.105
 **Grid — Panel: 6 Düzeltme (Taşma, Gölge, Splitter, Aktif Kolon)**
 - **Kritik taşma bug'ı düzeltildi:** kart görseli (border/radius/background/boşluk) `th`/`td`'den `.ng-v-wrap` iç elemanına taşındı; `th`/`td` artık tamamen sade (border/padding yok). Önceden kilitli px kolon genişlikleri (resize sonrası) üstüne border-spacing eklenince panel sayfa dışına taşıyordu — artık table-layout hesabı kart border/boşluğundan hiç etkilenmiyor, taşma imkansız
