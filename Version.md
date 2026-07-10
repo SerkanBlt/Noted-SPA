@@ -2,6 +2,14 @@
 
 ---
 
+## v1.15.107
+**Grid — Panel Arka Plan Davranışı, Çoklu Satır, Başlık Placeholder**
+- Panel arka plan boyama ayrıştırıldı: **başlıkta** (th) araç yine hücre/kart arka planını değiştirir; **içerik satırlarında** (td) artık seçili metnin arka planını değiştirir (Kolon bloğuyla aynı davranış). Kart arka planı görsel olarak `.ng-v-wrap` üzerinde olduğundan hedef ona göre düzeltildi
+- Panel'e "Satır Ekle" ile yeni satır eklendiğinde: yuvarlak alt köşeler artık en alt satıra taşınıyor (ara satırlar köşesiz, tek parça kart görünümü sürüyor), yeni satırdaki hücreler doğru `data-col` alıyor ve aktif kolon (col-active) accent'i artık TÜM satırları kapsıyor (`_restoreGrids()`'in .ng-cell/.ng-title klonlaması col-active listener'ını siliyordu, düzeltildi; `_upgradeGridWraps()`'teki satır bazlı kolon-index hesaplama hatası da giderildi)
+- Tablo ve Panel başlıkları artık "Başlık 1" / "Panel 1" gibi varsayılan metinle gelmiyor — placeholder zaten yeterli, başlıklar boş oluşturuluyor
+
+---
+
 ## v1.15.106
 **Grid — Kritik Kayıt/Yükleme Bug'ları + Splitter Konumu**
 - **KRİTİK — kayıt kaybı düzeltildi:** `normalizeHtml()` her kayıtta boş (`children.length===0` ve metinsiz) `<div>`/`<p>` elemanlarını siliyordu; bu, henüz yazı girilmemiş `.ng-cell`/`.ng-title`/`.ng-resize` grid elemanlarını da siliyordu (yeni eklenen Tablo/Panel/Kolon bloklarında hücrelerin çoğu başlangıçta boştur). Artık `data-ph` attribute'lu veya `ng-` prefixli class'a sahip elemanlar bu temizlikten muaf

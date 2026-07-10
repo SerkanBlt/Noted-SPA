@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.106 — fix: panel cerceve korundu, ng-panel-frame wrapper, tablo header radius -->
+<!-- Noted v1.15.107 — fix: panel cerceve korundu, ng-panel-frame wrapper, tablo header radius -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.106</title>
+    <title>Noted v1.15.107</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4334,13 +4334,13 @@ input[type="file"] { display:none; }
             color: var(--text); text-align: left;
             box-sizing: border-box;
         }
-        /* Kart — içerik (alt köşeler yuvarlak, üst kenar yok) */
+        /* Kart — içerik satırları: üst kenar yok (bir üstteki satır/başlıkla birleşik).
+           Alt köşe yuvarlaklığı YALNIZCA en alt satırda (aşağıda) — birden fazla içerik satırı
+           varsa (Satır Ekle ile) ara satırlar köşesiz kalıp tek parça kart görünümü sürer. */
         .noted-grid.grid-panel tbody td .ng-v-wrap {
             background: var(--surface);
             border: 1px solid var(--pnl-border);
             border-top: none;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
             width: calc(100% - 10px);
             margin-right: 10px;
             padding: 8px 14px;
@@ -4348,6 +4348,10 @@ input[type="file"] { display:none; }
             line-height: 1.45;
             color: var(--text);
             box-sizing: border-box;
+        }
+        .noted-grid.grid-panel tbody tr:last-child td .ng-v-wrap {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
         }
         /* Son kolon: sağda boşluk yok, kart dış kenara flush */
         .noted-grid.grid-panel thead tr th:last-child .ng-v-wrap,
@@ -4668,7 +4672,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.106</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.107</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -8509,8 +8513,11 @@ function applyBgColor(color,close=true) {
             if (td) {
                 const table = td.closest('.noted-grid');
                 const gType = table ? table.dataset.gridType : '';
-                if (gType === 'column') {
-                    /* Kolon: metin arka planı — execCommand */
+                /* Kolon: her zaman metin arka planı. Panel: yalnızca içerik satırında (td) metin
+                   arka planı — başlıkta (th) hücre arka planı. Tablo: her zaman hücre arka planı. */
+                const useTextHighlight = gType === 'column' || (gType === 'panel' && td.tagName === 'TD');
+                if (useTextHighlight) {
+                    /* Metin arka planı — execCommand */
                     if (color) {
                         if (!document.execCommand('hiliteColor', false, color)) document.execCommand('backColor', false, color);
                     } else {
@@ -8518,8 +8525,11 @@ function applyBgColor(color,close=true) {
                         document.execCommand('backColor',  false, 'transparent');
                     }
                 } else {
-                    /* Panel ve Tablo: hücre arka planı */
-                    td.style.backgroundColor = color || '';
+                    /* Panel başlığı (th) ve Tablo: hücre arka planı.
+                       Panel'de görsel kart arka planı th/td'nin kendisinde değil .ng-v-wrap'te
+                       (bkz. v1.15.105 taşma düzeltmesi) — bg oraya uygulanmazsa görünmez kalır. */
+                    const bgTarget = gType === 'panel' ? (td.querySelector('.ng-v-wrap') || td) : td;
+                    bgTarget.style.backgroundColor = color || '';
                 }
                 if (bar) { bar.style.background = color || 'transparent'; }
                 lastBgColor = color || lastBgColor;
@@ -14213,10 +14223,14 @@ function _upgradeGridWraps(root) {
             const title = th.querySelector('.ng-title');
             if (title) title.addEventListener('focus', () => _setPanelColumnActive(table, i));
         });
-        table.querySelectorAll('tbody tr td').forEach((td, i) => {
-            td.dataset.col = td.dataset.col || String(i);
-            const cell = td.querySelector('.ng-cell');
-            if (cell) cell.addEventListener('focus', () => _setPanelColumnActive(table, i));
+        /* Satır başına kolon indexi hesaplanır — birden fazla satırda global index
+           (0,1,2,3,4,5...) yanlış olurdu; her satırda 0'dan başlamalı (0,1,2 / 0,1,2). */
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            [...tr.children].forEach((td, i) => {
+                td.dataset.col = td.dataset.col || String(i);
+                const cell = td.querySelector('.ng-cell');
+                if (cell) cell.addEventListener('focus', () => _setPanelColumnActive(table, i));
+            });
         });
     });
 }
@@ -14263,7 +14277,6 @@ function createGrid(type, cols, rows, colWidths) {
             title.contentEditable = 'true';
             title.spellcheck = false;
             title.dataset.ph = type === 'table' ? 'Başlık ' + (c+1) : 'Panel ' + (c+1);
-            title.textContent = type === 'table' ? 'Başlık ' + (c+1) : 'Panel ' + (c+1);
             title.addEventListener('keydown', e => { if (e.key==='Enter'){e.preventDefault();title.blur();} });
             title.addEventListener('mousedown', e => e.stopPropagation());
             title.addEventListener('focus', () => { _activeEditTarget = title; _saveToolbarSel(); if (type === 'panel') _setPanelColumnActive(table, c); });
@@ -14480,16 +14493,18 @@ function _gridDeleteCol(table) {
 
 function _gridAddRow(table) {
     const cols = parseInt(table.dataset.cols) || 3;
+    const isPanel = table.dataset.gridType === 'panel';
     const tbody = table.querySelector('tbody');
     if (!tbody) return;
     const tr = document.createElement('tr');
     for (let c = 0; c < cols; c++) {
         const td = document.createElement('td');
         td.style.position = 'relative';
+        if (isPanel) td.dataset.col = String(c);
         const div = document.createElement('div');
         div.className = 'ng-cell'; div.contentEditable = 'true';
         div.spellcheck = false; div.dataset.ph = '…';
-        div.addEventListener('focus', () => { _activeEditTarget = div; setTimeout(_saveToolbarSel, 0); });
+        div.addEventListener('focus', () => { _activeEditTarget = div; setTimeout(_saveToolbarSel, 0); if (isPanel) _setPanelColumnActive(table, c); });
         const rWrap = document.createElement('div'); rWrap.className = 'ng-v-wrap'; rWrap.appendChild(div);
         rWrap.addEventListener('click', e => { if (!div.contains(e.target) && e.target !== div) div.focus(); });
         td.appendChild(rWrap);
@@ -15206,19 +15221,28 @@ function _restoreGrids() {
         wrap.insertBefore(_createGridToolbar(wrap, table), wrap.firstChild);
         /* Resize handle'larını yenile */
         _bindGridResize(table);
-        /* ng-title listener'larını yenile */
+        /* ng-title listener'larını yenile.
+           Panel'de _upgradeGridWraps'in bağladığı _setPanelColumnActive listener'ı bu clone+replace
+           siliyordu (col-active reload sonrası hiç tetiklenmiyordu) — burada yeniden ekleniyor. */
+        const isPanelType = gType === 'panel';
         table.querySelectorAll('.ng-title').forEach(title => {
             const fresh = title.cloneNode(true);
             fresh.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();fresh.blur();} });
             fresh.addEventListener('mousedown', e => e.stopPropagation());
-            fresh.addEventListener('focus', () => { _activeEditTarget = fresh; _saveToolbarSel(); });
+            fresh.addEventListener('focus', () => {
+                _activeEditTarget = fresh; _saveToolbarSel();
+                if (isPanelType) { const th = fresh.closest('th'); if (th) _setPanelColumnActive(table, parseInt(th.dataset.col || '0')); }
+            });
             title.parentNode.replaceChild(fresh, title);
         });
         /* ng-cell listener'larını yenile */
         table.querySelectorAll('.ng-cell').forEach(cell => {
             cell.contentEditable = 'true';
             const fresh = cell.cloneNode(true);
-            fresh.addEventListener('focus', () => { _activeEditTarget = fresh; setTimeout(_saveToolbarSel, 0); });
+            fresh.addEventListener('focus', () => {
+                _activeEditTarget = fresh; setTimeout(_saveToolbarSel, 0);
+                if (isPanelType) { const td = fresh.closest('td'); if (td) _setPanelColumnActive(table, parseInt(td.dataset.col || '0')); }
+            });
             cell.parentNode.replaceChild(fresh, cell);
         });
 
@@ -16100,7 +16124,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.106</span>
+      <span class="hm-ver">v1.15.107</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -16132,7 +16156,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.106</h2>
+          <h2>Noted v1.15.107</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
