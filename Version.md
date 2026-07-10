@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.105
+**Grid — Panel: 6 Düzeltme (Taşma, Gölge, Splitter, Aktif Kolon)**
+- **Kritik taşma bug'ı düzeltildi:** kart görseli (border/radius/background/boşluk) `th`/`td`'den `.ng-v-wrap` iç elemanına taşındı; `th`/`td` artık tamamen sade (border/padding yok). Önceden kilitli px kolon genişlikleri (resize sonrası) üstüne border-spacing eklenince panel sayfa dışına taşıyordu — artık table-layout hesabı kart border/boşluğundan hiç etkilenmiyor, taşma imkansız
+- Kolon arası gerçek 10px boşluk artık `.ng-v-wrap`'te `width: calc(100% - 10px) + margin-right: 10px` ile sağlanıyor (önceki `width:100%+margin-right` denemesi kartı taşırıp boşluğu iptal ediyordu)
+- Kart satırlarındaki (başlık hariç) sol/sağ/alt gölgeleme kaldırıldı (`box-shadow` tamamen silindi)
+- Resize splitter'ı artık panele odaklanıldığında da tamamen transparan kalıyor — specificity çakışması (`.noted-grid:focus-within .ng-resize::after` sızıntısı) `.ng-panel-frame` ile bertaraf edildi
+- Aktif kolon accent'i artık tablo ile aynı mantıkta çalışıyor: yalnızca panel fokustayken (`.ng-wrap:focus-within`) aktif kolonun kartı accent border alır; panelden çıkılınca (blur) otomatik nötr renge döner
+- Panel üst sağ toolbar butonları doğrulandı — `:focus-within` ile doğru şekilde görünüyor
+
+---
+
 ## v1.15.104
 **Grid — Panel Bağımsız Yuvarlak Köşeli Kartlar**
 - Panel yeniden her kolonun bağımsız bir kart olduğu tasarıma döndürüldü: th/td tam border alır (`border: 1px solid var(--pnl-border)`), th üst köşeler + td alt köşeler `border-radius: 8px` ile yuvarlatıldı, header/içerik arası çizgi yok (tek parça kart görünümü)
