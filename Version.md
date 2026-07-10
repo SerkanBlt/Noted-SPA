@@ -2,6 +2,13 @@
 
 ---
 
+## v1.15.108
+**Grid — Panel Kartları Tablo ile Aynı Aile Görünümü**
+- Panel kartlarına tablonun dış çerçevesiyle birebir aynı `box-shadow: 0 1px 4px var(--shadow)` eklendi (başlık + içerik kartlarında)
+- Aktif kolon (col-active + panel fokusta) artık tablonun `:focus-within` formülüyle birebir aynı: `border-color: var(--accent)` + `box-shadow: 0 0 0 2px var(--accent-dim)` glow ring — önceden yalnızca border rengi değişiyordu, glow yoktu
+
+---
+
 ## v1.15.107
 **Grid — Panel Arka Plan Davranışı, Çoklu Satır, Başlık Placeholder**
 - Panel arka plan boyama ayrıştırıldı: **başlıkta** (th) araç yine hücre/kart arka planını değiştirir; **içerik satırlarında** (td) artık seçili metnin arka planını değiştirir (Kolon bloğuyla aynı davranış). Kart arka planı görsel olarak `.ng-v-wrap` üzerinde olduğundan hedef ona göre düzeltildi
