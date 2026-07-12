@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.15.108 — fix: panel cerceve korundu, ng-panel-frame wrapper, tablo header radius -->
+<!-- Noted v1.15.109 — fix: panel cerceve korundu, ng-panel-frame wrapper, tablo header radius -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.15.108</title>
+    <title>Noted v1.15.109</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -4679,7 +4679,7 @@ input[type="file"] { display:none; }
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.108</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.15.109</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -7171,6 +7171,13 @@ function _saveToolbarSel() {
 }
 
 function _restoreToolbarSel() {
+    /* _savedToolbarSel selectionchange'te debounce'lu (RAF/setTimeout) güncelleniyor.
+       Toolbar butonuna seçimden hemen sonra tıklanırsa debounce henüz çalışmamış olabilir —
+       _savedToolbarSel eski/boş kalır, restore de o eski range'i uygulayıp canlı seçimi
+       (asıl doğru olanı) ezer, format komutu hiçbir şeye uygulanmamış gibi olur.
+       Restore etmeden önce senkron bir _saveToolbarSel() çağrısı, mousedown anındaki
+       canlı seçim hâlâ geçerliyse onu hemen yakalayıp bu yarışı ortadan kaldırır. */
+    _saveToolbarSel();
     if (!_savedToolbarSel) return;
     const { et, range } = _savedToolbarSel;
     et.focus();
@@ -8444,7 +8451,21 @@ $tfBadge.addEventListener('click', e => {
     ci.addEventListener('click',e=>e.stopPropagation()); ci.addEventListener('mousedown',e=>e.stopPropagation());
     function applyColor(color,close=true) {
         _restoreToolbarSel();
-        if (color) { document.execCommand('foreColor',false,color); lastColor=color; bar.style.background=color; }
+        if (color) {
+            document.execCommand('foreColor',false,color);
+            /* execCommand('foreColor') <font color="..."> üretir — sanitize() allowlist'inde
+               'font' tag'ı yok, kayıtta tamamen siliniyordu (renk kayboluyordu). fontFamily'deki
+               aynı workaround: <font> -> <span style="color"> dönüşümü. */
+            const et = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget || $content;
+            et.querySelectorAll('font[color]').forEach(font => {
+                const span = document.createElement('span');
+                span.style.color = font.color;
+                if (font.face) span.style.fontFamily = font.face;
+                span.innerHTML = font.innerHTML;
+                font.parentNode.replaceChild(span, font);
+            });
+            lastColor=color; bar.style.background=color;
+        }
         else { document.execCommand('removeFormat',false,null); bar.style.background='#000'; }
         if (close) popup.classList.remove('open');
     }
@@ -8647,10 +8668,13 @@ function getCurrentFontSize() {
         if (!found) select.value = '';
     }
 
-    /* Font seçici: select açılırken selection kaybolur — mousedown'da snapshot al */
+    /* Font seçici: select açılırken selection kaybolur — mousedown'da snapshot al.
+       _savedToolbarSel debounce'lu (RAF/setTimeout) güncellendiğinden seçimden hemen
+       sonra mousedown olursa eski/boş kalabilir — snapshot almadan önce senkron
+       _saveToolbarSel() ile tazelenir (bkz. _restoreToolbarSel aynı sorun). */
     let _fontSelSnapshot = null;
     $('tb-font-select').addEventListener('mousedown', () => {
-        /* Bu anda _savedToolbarSel güncel — kopyala */
+        _saveToolbarSel();
         _fontSelSnapshot = _savedToolbarSel
             ? { et: _savedToolbarSel.et, range: _savedToolbarSel.range.cloneRange() }
             : null;
@@ -16131,7 +16155,7 @@ window._fpOpenPicker = openPicker;
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.15.108</span>
+      <span class="hm-ver">v1.15.109</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -16163,7 +16187,7 @@ window._fpOpenPicker = openPicker;
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.15.108</h2>
+          <h2>Noted v1.15.109</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>

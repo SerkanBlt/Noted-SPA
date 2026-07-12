@@ -2,6 +2,14 @@
 
 ---
 
+## v1.15.109
+**Grid — Zengin Metin Biçimlendirme: 2 Kök Neden Düzeltildi**
+- **Yarış durumu (race condition):** `_savedToolbarSel` yalnızca debounce'lu (RAF/`setTimeout`) `selectionchange` ile güncelleniyordu; bir grid hücresinde metin seçilip hemen ardından toolbar'da font boyutu/ailesi gibi bir işlem tetiklenirse debounce henüz çalışmamış oluyor, `_restoreToolbarSel()` eski/boş bir range'i geri yükleyip canlı (doğru) seçimi eziyordu — komut hiçbir şeye uygulanmıyordu. Özellikle madde imli liste (`<li>`) içeriğinde tutarlı şekilde tetikleniyordu. `_restoreToolbarSel()` artık restore etmeden önce senkron `_saveToolbarSel()` ile tazeleniyor; font seçici (`tb-font-select`) kendi mousedown snapshot'ında da aynı düzeltme uygulandı
+- **Yazı tipi rengi kayıtta kayboluyordu:** `applyColor()` `execCommand('foreColor')` kullanıyordu, bu da `<font color="...">` üretiyor; `sanitize()`'in izin verilen etiket listesinde `font` yok, kayıtta tamamen siliniyordu (renk canlı editörde görünüp kayıttan sonra kayboluyordu — Kolon bloğunda fark edilen sorun buydu). `fontFamily`'deki mevcut `<font>`→`<span style>` dönüşüm deseni `applyColor()`'a da uygulandı
+- Doğrulama: liste içinde font ailesi/boyutu ilk denemede uygulanıyor, Kolon bloğunda renk artık `<span style="color">` olarak üretilip sanitize sonrası korunuyor, tam kaydet+yeniden aç döngüsünde içerik kaybolmuyor
+
+---
+
 ## v1.15.108
 **Grid — Panel Kartları Tablo ile Aynı Aile Görünümü**
 - Panel kartlarına tablonun dış çerçevesiyle birebir aynı `box-shadow: 0 1px 4px var(--shadow)` eklendi (başlık + içerik kartlarında)
