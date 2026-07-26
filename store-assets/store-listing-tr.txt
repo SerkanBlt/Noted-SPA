@@ -1,0 +1,46 @@
+KISA AÇIKLAMA (76/80 karakter):
+Zengin editörlü, AI destekli, tamamen çevrimdışı çalışan not alma uygulaması
+
+---
+
+UZUN AÇIKLAMA:
+
+Noted, verilerinizin tamamen kendi cihazınızda kaldığı, sunucu gerektirmeyen bir not alma uygulamasıdır. İnternet bağlantısı olmadan da tam kapasiteyle çalışır.
+
+📝 GÜÇLÜ NOT YÖNETİMİ
+Notlarınızı gruplara ayırın, renk etiketleriyle önceliklendirin, #hashtag ile etiketleyin, önemlilerini sabitleyin. Silinen notlar geri yüklenebilir çöp kutusuna gider.
+
+✏️ ZENGİN EDİTÖR
+Kalın, italik, renkli metin, 60'tan fazla renk seçeneği, kod blokları, alıntılar, bağlantılar, madde imli/numaralı/görev listeleri. Biçim kopyalayıcı ile tek tıkla biçim aktarımı.
+
+⬛ TABLO, PANEL VE KOLON BLOKLARI
+Sürükle-bırak ile yeniden boyutlandırılabilen gerçek tablo, panel (kart) ve çok kolonlu düzenler oluşturun — dokunmatik ekranlarda da tam destekli.
+
+🔗 WIKI BAĞLANTILARI VE BİLGİ GRAFİĞİ
+[[Not Adı]] yazarak notlarınızı birbirine bağlayın. Tüm bağlantı ağınızı görsel bir bilgi grafiğinde keşfedin.
+
+🤖 İSTEĞE BAĞLI AI ASİSTANI
+Kendi API anahtarınızla Groq, OpenRouter, Together AI, Fireworks AI, Mistral veya özel bir sağlayıcı bağlayın; notlarınızla ilgili sorular sorun. Kullanmak istemezseniz uygulama internete hiç çıkmaz.
+
+🎙️ SESLİ GİRİŞ VE ARAMA
+Türkçe ses tanıma ile not yazın veya notlarınızda sesle arama yapın.
+
+🪟 YÜZEN EDİTÖR
+İki notu aynı anda, yan yana düzenleyin.
+
+📋 ŞABLONLAR VE HIZLI KOMUTLAR
+Günlük not, toplantı notu gibi hazır şablonlarla başlayın; "/" ile hızlı komut menüsünü açın.
+
+🔔 HATIRLATICILAR
+Notlarınıza tarih/saat bazlı hatırlatıcılar ekleyin.
+
+📤 ESNEK DIŞA/İÇE AKTARMA
+Notlarınızı JSON, Markdown veya biçimlendirilmiş HTML olarak dışa aktarın; istediğiniz zaman geri yükleyin.
+
+🎨 AÇIK/KOYU TEMA
+Sistem temanızı otomatik takip eder veya elle seçin.
+
+💾 VERİLERİNİZ HER ZAMAN SİZİN
+Noted'un sunucusu yoktur. Notlarınız yalnızca cihazınızda saklanır, hiçbir yere yüklenmez. Uygulama çevrimdışıyken de sorunsuz çalışır.
+
+Noted, tek bir bağımsız geliştirici tarafından geliştirilir ve sürekli geliştirilmeye devam eder.
