@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.123
+**Fix — Dokunmatik sürükleme çalışmıyordu (Mobil hazırlığı 1/3)**
+- **Kök neden:** Tüm sürükleme etkileşimleri yalnızca `mousedown` + `document.mousemove/mouseup` dinliyordu. Tarayıcılar dokunmayı *tıklama* için fare olayına çevirir ama **sürükleme** için çevirmez — parmak hareketi sayfa kaydırmasına gider. Sonuç: kolon genişliği değiştirme ve şekil taşı/boyutlandır/döndür dokunmatik cihazlarda tamamen ölüydü, konsolda hiçbir hata vermeden
+- **Çözüm:** `startPointerDrag(onMove, onEnd)` ortak yardımcısı eklendi (`js/01`). Pointer olayları fare + dokunmatik + kalemi tek kodla kapsıyor. Dört sürükleme noktası (grid kolon resize, şekil taşı/boyutlandır/döndür) bu yardımcıya bağlandı — her birinde tekrarlanan 6 satırlık listener ekle/kaldır kalıbı tek çağrıya indi
+- **Kritik detay:** Pointer olayları tek başına yetmiyor — sürükleme kolunda CSS `touch-action: none` yoksa tarayıcı dokunuşu kaydırmaya ayırır ve `pointermove` hiç gelmez. `.ng-resize`, `.shape-resize-handle`, `.shape-rotate-handle`, `.note-shape-overlay`'e eklendi. `.shape-text-wrap` bilerek `touch-action:auto` bırakıldı (orada sürükleme yok; JS zaten erken `return` ediyor, metin seçimi/kaydırma tarayıcıya ait). Bu tuzak `Comments.json` → `trap-pointer-drag-needs-touch-action-none` olarak kaydedildi
+- **Bonus:** Eski kod `pointercancel` karşılığı olan bir durumu hiç ele almıyordu; yardımcı bunu da temizliyor (sistem sürüklemeyi kesince state takılı kalmaz)
+- **Kapsam notu:** Telefonlarda (`max-width:640px`) kolon resize kolu zaten bilinçli olarak gizli — panel/kolon kartları orada dikey diziliyor, boyutlandırma anlamsız. Bu tasarım kararına dokunulmadı; kolon resize düzeltmesi tabletler/dokunmatik dizüstüler/yatay mod için geçerli. **Şekiller ise hiçbir boyutta gizlenmiyordu, yani telefon dahil tüm dokunmatik cihazlarda düzeldi**
+- Doğrulama: Düzeltme öncesi dokunmatik sürükleme ölçüldü (328px → 328px, değişim yok), sonrası ölçüldü (397.6px → 334.6px ✅). Şekil taşıma (sx 44→104), boyutlandırma (220×130→287×177), döndürme (0°→56°) dokunmatikle doğrulandı. Fare regresyonu ayrıca test edildi (çalışıyor), metin alanının sürüklemeyi tetiklemediği doğrulandı. Not kaydet→yeniden aç sonrası dokunmatiğin hâlâ çalıştığı test edildi (listener yeniden bağlama tuzağının bulunduğu bölge). Tam RKL-1…RKL-15 + mobil (375×812) ekran görüntüsü; konsolda sıfır hata
+
+---
+
 ## v1.15.122
 **CCB Dışa Aktar / İçe Aktar — Addin'e Giden İlk Adım**
 - Kullanıcı talebi üzerine: CCB'ler artık tek tek `.ccb.json` dosyası olarak dışa/içe aktarılabiliyor — ileride bir "store"dan CCB seçip kurma özelliğine giden ilk, düşük riskli adım. Tam bir plugin/addin API'si **bilinçli olarak yapılmadı** (REFACTOR_PLAN.md'nin kapsam dışı listesinde: "stabil sınırlar oturmadan tasarlanamaz") — bunun yerine mevcut mimariye (localStorage tabanlı CCB listesi) dokunmadan, üstüne eklenen basit bir dosya taşınabilirliği katmanı

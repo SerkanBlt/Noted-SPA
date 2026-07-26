@@ -3206,7 +3206,10 @@ input[type="file"] { display:none; }
             position:absolute; z-index:10;
             cursor:move; user-select:none; box-sizing:border-box;
             min-width:60px; min-height:40px;
+            touch-action:none;
         }
+        /* Metin alanı hariç — orada sürükleme yok, tarayıcı kaydırma/seçimi çalışsın */
+        .shape-text-wrap { touch-action:auto; }
         .note-shape-overlay.shape-selected { outline:2px dashed var(--accent); outline-offset:3px; }
         .note-shape-overlay svg { display:block; width:100%; height:100%; overflow:visible; }
         .shape-resize-handle {
@@ -3214,6 +3217,7 @@ input[type="file"] { display:none; }
             width:13px; height:13px;
             background:var(--accent); border:2px solid var(--surface);
             border-radius:3px; cursor:se-resize;
+            touch-action:none;
         }
         .shape-toolbar {
             position:absolute; bottom:calc(100% + 8px); left:0;
@@ -4392,6 +4396,7 @@ input[type="file"] { display:none; }
         .ng-resize {
             position: absolute; top: 0; right: 0; bottom: 0;
             width: 0; cursor: col-resize; z-index: 4;
+            touch-action: none;
         }
         /* Görsel çizgi: ::after — 1px, tam kenarda */
         .ng-resize::after {

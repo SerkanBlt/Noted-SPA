@@ -213,6 +213,19 @@ window._mainEditorInstance = createInstance(DOM.$content, '');
 EditorState.activeInstance = window._mainEditorInstance;
 
 /* ══ HELPERS ══ */
+/* Fare + dokunmatik + kalem sürüklemesi — tüm sürükleme noktaları bunu kullanır */
+function startPointerDrag(onMove, onEnd) {
+    function _move(ev) { onMove(ev); }
+    function _end(ev) {
+        document.removeEventListener('pointermove',   _move);
+        document.removeEventListener('pointerup',     _end);
+        document.removeEventListener('pointercancel', _end);
+        if (typeof onEnd === 'function') onEnd(ev);
+    }
+    document.addEventListener('pointermove',   _move);
+    document.addEventListener('pointerup',     _end);
+    document.addEventListener('pointercancel', _end);
+}
 function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

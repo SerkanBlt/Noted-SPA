@@ -391,14 +391,10 @@ function _startGridResize(e, table, colIdx) {
         leftCol.style.width  = newL + 'px';
         rightCol.style.width = newR + 'px';
     }
-    function onUp() {
+    startPointerDrag(onMove, function onUp() {
         handle.classList.remove('resizing');
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup',   onUp);
         _markDirty(); updateFooterVisibility();
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup',   onUp);
+    });
 }
 
 /* Yeni sütun ekle — son sütunun yarısı kadar */
@@ -475,7 +471,7 @@ function _bindGridResize(table) {
         const actualIdx = (row && cell) ? [...row.children].indexOf(cell) : parseInt(h.dataset.col || '0');
         const fresh = h.cloneNode(true);
         fresh.dataset.col = actualIdx;
-        fresh.addEventListener('mousedown', e => _startGridResize(e, table, actualIdx));
+        fresh.addEventListener('pointerdown', e => _startGridResize(e, table, actualIdx));
         h.parentNode.replaceChild(fresh, h);
     });
 }
@@ -813,7 +809,7 @@ function _selectShape(el) {
     const rotH = document.createElement('div');
     rotH.className = 'shape-rotate-handle'; rotH.title = 'Döndür';
     rotH.innerHTML = '<i class="fas fa-rotate"></i>';
-    rotH.addEventListener('mousedown', function(e) {
+    rotH.addEventListener('pointerdown', function(e) {
         e.preventDefault(); e.stopPropagation();
         const sw = +el.dataset.sw || 220, sh = +el.dataset.sh || 130;
         const cRect = DOM.$content.getBoundingClientRect();
@@ -827,20 +823,14 @@ function _selectShape(el) {
             el.dataset.rotate = angle;
             el.style.transform = `rotate(${angle}deg)`;
         }
-        function onUp() {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-            _markDirty();
-        }
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
+        startPointerDrag(onMove, _markDirty);
     });
     el.appendChild(rotH);
 
     /* Resize kolu */
     const rh = document.createElement('div');
     rh.className = 'shape-resize-handle';
-    rh.addEventListener('mousedown', function(e) {
+    rh.addEventListener('pointerdown', function(e) {
         e.preventDefault(); e.stopPropagation();
         const startX = e.clientX, startY = e.clientY;
         const startW = +el.dataset.sw || 220, startH = +el.dataset.sh || 130;
@@ -852,20 +842,14 @@ function _selectShape(el) {
             _updateRoundedCorners(el);
             if (el._shapeRefreshSize) el._shapeRefreshSize();
         }
-        function onUp() {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-            _markDirty();
-        }
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
+        startPointerDrag(onMove, _markDirty);
     });
     el.appendChild(rh);
     el.appendChild(_buildShapeToolbar(el));
 }
 
 function _makeShapeInteractive(el) {
-    el.addEventListener('mousedown', function(e) {
+    el.addEventListener('pointerdown', function(e) {
         /* Kontroller veya metin alanına tıklama → sürükleme başlatma */
         if (e.target.classList.contains('shape-resize-handle')) return;
         if (e.target.classList.contains('shape-rotate-handle') || e.target.closest('.shape-rotate-handle')) return;
@@ -887,13 +871,9 @@ function _makeShapeInteractive(el) {
             el.dataset.sx = Math.round(nl); el.dataset.sy = Math.round(nt);
             el.style.left = nl + 'px'; el.style.top = nt + 'px';
         }
-        function onUp() {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
+        startPointerDrag(onMove, function onUp() {
             if (moved) _markDirty();
-        }
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
+        });
     });
 }
 
