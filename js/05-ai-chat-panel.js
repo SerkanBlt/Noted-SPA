@@ -705,7 +705,7 @@
         wrapper.setAttribute('data-generated-by', 'ai');
         wrapper.innerHTML = cl.innerHTML;
 
-        $content.appendChild(wrapper);
+        DOM.$content.appendChild(wrapper);
 
         let gridsRestored = false;
         Array.from(wrapper.querySelectorAll('.ng-wrap')).forEach(wrap => {
@@ -718,11 +718,11 @@
             wrapper.remove();
         }
 
-        $content.dispatchEvent(new Event('input', { bubbles: true }));
+        DOM.$content.dispatchEvent(new Event('input', { bubbles: true }));
         if (gridsRestored && typeof _restoreGrids === 'function') _restoreGrids();
         if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
         
-        const scrollTarget = wrapper.parentNode ? wrapper : ($content.lastElementChild || $content);
+        const scrollTarget = wrapper.parentNode ? wrapper : (DOM.$content.lastElementChild || DOM.$content);
         if (scrollTarget.scrollIntoView) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 

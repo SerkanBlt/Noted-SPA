@@ -212,7 +212,7 @@ function _createGridToolbar(wrap, table) {
         w.parentNode.insertBefore(p, w); w.remove();
         const r = document.createRange(); r.setStart(p,0); r.collapse(true);
         const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-        $content.focus(); _markDirty(); updateFooterVisibility();
+        DOM.$content.focus(); _markDirty(); updateFooterVisibility();
     }
 
     function equalizeWidths() {
@@ -628,15 +628,15 @@ function _gridSetColAlign(table, valign, halign) {
 
 /* _positionGridAddBtn kaldırıldı — toolbar üstlendi */
 
-/* ── Cursor'un olduğu $content satırından sonrasına grid ekle ── */
+/* ── Cursor'un olduğu DOM.$content satırından sonrasına grid ekle ── */
 function _insertGridAfterCursor(wrap) {
     const sr  = _savedToolbarSel ? _savedToolbarSel.range : null;
     const sel = window.getSelection();
     let node  = sr ? sr.startContainer : (sel&&sel.rangeCount ? sel.getRangeAt(0).startContainer : null);
     if (node && node.nodeType === 3) node = node.parentElement;
-    while (node && node.parentElement !== $content) node = node.parentElement;
-    if (node && node.nextSibling) $content.insertBefore(wrap, node.nextSibling);
-    else $content.appendChild(wrap);
+    while (node && node.parentElement !== DOM.$content) node = node.parentElement;
+    if (node && node.nextSibling) DOM.$content.insertBefore(wrap, node.nextSibling);
+    else DOM.$content.appendChild(wrap);
     const exitP = document.createElement('p'); exitP.innerHTML = '<br>';
     wrap.parentNode.insertBefore(exitP, wrap.nextSibling);
     const table = wrap.querySelector ? wrap.querySelector('.noted-grid') : wrap;
@@ -658,9 +658,9 @@ function applyBookmark() {
     if (!node) return;
     if (node.nodeType === 3) node = node.parentElement;
 
-    /* Aktif kök: fp-content içindeyse fp-content, değilse $content */
+    /* Aktif kök: fp-content içindeyse fp-content, değilse DOM.$content */
     const fpEl = document.getElementById('fp-content');
-    const root = (fpEl && fpEl.contains(node)) ? fpEl : $content;
+    const root = (fpEl && fpEl.contains(node)) ? fpEl : DOM.$content;
 
     let block = null;
     let cur = node;
@@ -737,7 +737,7 @@ function _deselectShape(el) {
 }
 
 function _cleanShapeControls() {
-    $content.querySelectorAll('.note-shape-overlay.shape-selected').forEach(_deselectShape);
+    DOM.$content.querySelectorAll('.note-shape-overlay.shape-selected').forEach(_deselectShape);
 }
 
 /* Yuvarlatılmış köşeleri şekil boyutuna göre güncelle — sabit görsel radüs */
@@ -809,7 +809,7 @@ function _buildShapeToolbar(el) {
 }
 
 function _selectShape(el) {
-    $content.querySelectorAll('.note-shape-overlay.shape-selected').forEach(s => { if (s !== el) _deselectShape(s); });
+    DOM.$content.querySelectorAll('.note-shape-overlay.shape-selected').forEach(s => { if (s !== el) _deselectShape(s); });
     if (el.classList.contains('shape-selected')) return;
     el.classList.add('shape-selected');
 
@@ -820,9 +820,9 @@ function _selectShape(el) {
     rotH.addEventListener('mousedown', function(e) {
         e.preventDefault(); e.stopPropagation();
         const sw = +el.dataset.sw || 220, sh = +el.dataset.sh || 130;
-        const cRect = $content.getBoundingClientRect();
+        const cRect = DOM.$content.getBoundingClientRect();
         const cx = cRect.left + (+el.dataset.sx || 0) + sw / 2;
-        const cy = cRect.top  - ($content.scrollTop || 0) + (+el.dataset.sy || 0) + sh / 2;
+        const cy = cRect.top  - (DOM.$content.scrollTop || 0) + (+el.dataset.sy || 0) + sh / 2;
         const startMouseAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
         const startRotate = +el.dataset.rotate || 0;
         function onMove(ev) {
@@ -902,7 +902,7 @@ function _makeShapeInteractive(el) {
 }
 
 function initShapeOverlays() {
-    $content.querySelectorAll('.note-shape-overlay').forEach(el => {
+    DOM.$content.querySelectorAll('.note-shape-overlay').forEach(el => {
         _applyShapeStyles(el);
         _ensureShapeText(el);
         _updateRoundedCorners(el);
@@ -916,7 +916,7 @@ document.addEventListener('mousedown', function(e) {
 });
 
 function insertShapeOverlay(shapeId) {
-    const scrollTop = $content.scrollTop || 0;
+    const scrollTop = DOM.$content.scrollTop || 0;
     const stroke = '#1e90ff', fillMode = 'none';
     const sw = 220, sh = 130;
 
@@ -938,7 +938,7 @@ function insertShapeOverlay(shapeId) {
     const txt  = document.createElement('div'); txt.className  = 'shape-text'; txt.contentEditable = 'true';
     wrap.appendChild(txt); el.appendChild(wrap);
 
-    $content.appendChild(el);
+    DOM.$content.appendChild(el);
     _applyShapeStyles(el);
     _updateRoundedCorners(el);
     _makeShapeInteractive(el);
@@ -1022,7 +1022,7 @@ document.addEventListener('keydown', function ngTabNav(e) {
 
 /* ── editNote restore: noted-grid tablolarını yenile ── */
 function _restoreGrids() {
-    $content.querySelectorAll('.ng-wrap').forEach(wrap => {
+    DOM.$content.querySelectorAll('.ng-wrap').forEach(wrap => {
         const table = wrap.querySelector('.noted-grid');
         if (!table) return;
         /* data-gridType sync: dataset'ten veya class'tan çıkar */
@@ -1071,7 +1071,7 @@ function _restoreGrids() {
     });
 
     /* Callout sil butonlarını yenile */
-    $content.querySelectorAll('.callout').forEach(callout => {
+    DOM.$content.querySelectorAll('.callout').forEach(callout => {
         let btn = callout.querySelector('.callout-del');
         if (!btn) {
             btn = document.createElement('button');
@@ -1089,13 +1089,13 @@ function _restoreGrids() {
             if (callout.parentNode) { callout.parentNode.insertBefore(p, callout); callout.remove(); }
             const r = document.createRange(); r.setStart(p,0); r.collapse(true);
             const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-            $content.focus(); _markDirty(); updateFooterVisibility();
+            DOM.$content.focus(); _markDirty(); updateFooterVisibility();
         });
         btn.parentNode.replaceChild(fresh, btn);
     });
 
     /* Eski col-block ve layout-block'ları migrate et */
-    $content.querySelectorAll('.col-block').forEach(blk => {
+    DOM.$content.querySelectorAll('.col-block').forEach(blk => {
         const cols = blk.querySelectorAll('.col-panel').length || 2;
         const wrap = createGrid('panel', cols, 1);
         const grid = wrap.querySelector('.noted-grid');
@@ -1110,7 +1110,7 @@ function _restoreGrids() {
         });
         blk.parentNode.replaceChild(wrap, blk);
     });
-    $content.querySelectorAll('.layout-block').forEach(blk => {
+    DOM.$content.querySelectorAll('.layout-block').forEach(blk => {
         const cols = blk.querySelectorAll('.layout-col').length || 2;
         const wrap2 = createGrid('column', cols, 1);
         const grid2 = wrap2.querySelector('.noted-grid');
@@ -1216,7 +1216,7 @@ document.addEventListener('keydown', function clearRowSelKey(e) {
             /* backgroundColor: computed style şeffaf elementi page arka planıyla renklendirir,
                bu yüzden inline stil için DOM'da yukarı çık */
             let n = anchorEl;
-            while (n && n !== $content && n !== document.body) {
+            while (n && n !== DOM.$content && n !== document.body) {
                 if (n.style && n.style.backgroundColor &&
                     n.style.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
                     n.style.backgroundColor !== 'transparent') {
@@ -1230,7 +1230,7 @@ document.addEventListener('keydown', function clearRowSelKey(e) {
                DOM'da yukarı çıkarak inline stil VE semantik tag'ları topla */
             const tdSet = new Set();
             n = anchorEl;
-            while (n && n !== $content && n !== document.body) {
+            while (n && n !== DOM.$content && n !== document.body) {
                 if (n.style && n.style.textDecoration) {
                     n.style.textDecoration.split(/\s+/).forEach(v => v && tdSet.add(v));
                 }

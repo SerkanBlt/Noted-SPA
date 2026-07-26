@@ -105,34 +105,34 @@ function exportNoteAsHtml(noteId) {
 }
 
 $('export-html-btn').addEventListener('click', function() {
-    var eId = $editId.value;
+    var eId = DOM.$editId.value;
     if (eId) exportNoteAsHtml(eId);
 });
 
 /* v1.6: İçindekiler */
-if ($tocToggleBtn) $tocToggleBtn.addEventListener('click', toggleTocPanel);
+if (DOM.$tocToggleBtn) DOM.$tocToggleBtn.addEventListener('click', toggleTocPanel);
 
 /* v1.6: Hatırlatıcı */
-if ($reminderBtn) $reminderBtn.addEventListener('click', function(e) {
+if (DOM.$reminderBtn) DOM.$reminderBtn.addEventListener('click', function(e) {
     e.stopPropagation();
-    if ($reminderPopup.classList.contains('show')) closeReminderPopup();
+    if (DOM.$reminderPopup.classList.contains('show')) closeReminderPopup();
     else openReminderPopup();
 });
 if ($('reminder-save'))   $('reminder-save').addEventListener('click', saveReminderFromPopup);
 if ($('reminder-clear'))  $('reminder-clear').addEventListener('click', clearReminderFromPopup);
 if ($('reminder-cancel')) $('reminder-cancel').addEventListener('click', closeReminderPopup);
 document.addEventListener('click', function(e) {
-    if (!$reminderPopup || !$reminderPopup.classList.contains('show')) return;
-    if (e.target === $reminderBtn || $reminderBtn.contains(e.target)) return;
-    if ($reminderPopup.contains(e.target)) return;
+    if (!DOM.$reminderPopup || !DOM.$reminderPopup.classList.contains('show')) return;
+    if (e.target === DOM.$reminderBtn || DOM.$reminderBtn.contains(e.target)) return;
+    if (DOM.$reminderPopup.contains(e.target)) return;
     closeReminderPopup();
 });
 setInterval(checkReminders, 60000);
 setTimeout(checkReminders, 2000);
 
 /* v1.6: Markdown dışa aktar */
-if ($exportMdBtn) $exportMdBtn.addEventListener('click', function() {
-    var eId = $editId.value;
+if (DOM.$exportMdBtn) DOM.$exportMdBtn.addEventListener('click', function() {
+    var eId = DOM.$editId.value;
     if (eId) exportNoteAsMarkdown(eId);
 });
 
@@ -195,8 +195,8 @@ function buildTemplateDropdownContent() {
 }
 
 function saveCurrentNoteAsTemplate() {
-    var title = $title.value.trim();
-    var content = $content.innerHTML;
+    var title = DOM.$title.value.trim();
+    var content = DOM.$content.innerHTML;
     if (!title && !stripHtml(content).trim()) {
         alert('Şablon kaydetmek için önce başlık veya içerik ekleyin.'); return;
     }
@@ -217,11 +217,11 @@ function deleteCustomTemplate(id) {
 function applyCustomTemplate(tpl) {
     closeTemplateDropdown();
     if (typeof activateInstance === 'function' && window._mainEditorInstance) activateInstance(window._mainEditorInstance);
-    $title.value = tpl.title || '';
-    $content.innerHTML = sanitize(tpl.content || '');
+    DOM.$title.value = tpl.title || '';
+    DOM.$content.innerHTML = sanitize(tpl.content || '');
     _snapTitle = '';
     updateFooterVisibility();
-    $title.focus();
+    DOM.$title.focus();
 }
 
 
@@ -239,22 +239,22 @@ buildTemplateDropdownContent();
 /* v1.5: NOT SIRALAMA */
 let sortOrder = getUiCfg().sort || 'newest';
 
-const $sortBadge    = $('sort-badge');
-const $sortDropdown = $('sort-dropdown');
+DOM.$sortBadge    = $('sort-badge');
+DOM.$sortDropdown = $('sort-dropdown');
 
 function setSortOrder(value) {
     sortOrder = value;
     patchUiCfg({sort: value});
-    $sortBadge.classList.toggle('active-sort', value !== 'newest');
-    $sortDropdown.classList.remove('open');
-    $sortBadge.classList.remove('open');
+    DOM.$sortBadge.classList.toggle('active-sort', value !== 'newest');
+    DOM.$sortDropdown.classList.remove('open');
+    DOM.$sortBadge.classList.remove('open');
     buildSortDropdown();
     render();
 }
 
 function buildSortDropdown() {
-    if (!$sortDropdown) return;
-    $sortDropdown.innerHTML = '';
+    if (!DOM.$sortDropdown) return;
+    DOM.$sortDropdown.innerHTML = '';
     const SORT_ITEMS = [
         { value:'newest', label:'En Yeni' },
         { value:'oldest', label:'En Eski' },
@@ -266,15 +266,15 @@ function buildSortDropdown() {
         d.className = 'sort-item' + (sortOrder === it.value ? ' active' : '');
         d.textContent = it.label;
         d.addEventListener('click', () => setSortOrder(it.value));
-        $sortDropdown.appendChild(d);
+        DOM.$sortDropdown.appendChild(d);
     });
 }
 
 /* ── Liste Görünüm Modu ── */
 let listView = getUiCfg().listView || 'standard';
 
-const $viewBadge    = $('view-badge');
-const $viewDropdown = $('view-dropdown');
+DOM.$viewBadge    = $('view-badge');
+DOM.$viewDropdown = $('view-dropdown');
 
 Const.VIEW_ITEMS = [
     { value:'standard', label:'Standart', icon:'fa-list' },
@@ -285,42 +285,42 @@ Const.VIEW_ITEMS = [
 ];
 
 function applyListView(v) {
-    ['view-wide','view-compact','view-cascade','view-pill'].forEach(c => $mainList.classList.remove(c));
-    if (v !== 'standard') $mainList.classList.add('view-' + v);
-    if ($viewBadge) $viewBadge.classList.toggle('active-view', v !== 'standard');
+    ['view-wide','view-compact','view-cascade','view-pill'].forEach(c => DOM.$mainList.classList.remove(c));
+    if (v !== 'standard') DOM.$mainList.classList.add('view-' + v);
+    if (DOM.$viewBadge) DOM.$viewBadge.classList.toggle('active-view', v !== 'standard');
 }
 
 function setListView(value) {
     listView = value;
     patchUiCfg({listView: value});
     applyListView(value);
-    if ($viewDropdown) $viewDropdown.classList.remove('open');
-    if ($viewBadge)    $viewBadge.classList.remove('open');
+    if (DOM.$viewDropdown) DOM.$viewDropdown.classList.remove('open');
+    if (DOM.$viewBadge)    DOM.$viewBadge.classList.remove('open');
     buildViewDropdown();
 }
 
 function buildViewDropdown() {
-    if (!$viewDropdown) return;
-    $viewDropdown.innerHTML = '';
+    if (!DOM.$viewDropdown) return;
+    DOM.$viewDropdown.innerHTML = '';
     Const.VIEW_ITEMS.forEach(it => {
         const d = document.createElement('div');
         d.className = 'view-item' + (listView === it.value ? ' active' : '');
         d.innerHTML = `<i class="fas ${it.icon}"></i>${esc(it.label)}`;
         d.addEventListener('click', () => setListView(it.value));
-        $viewDropdown.appendChild(d);
+        DOM.$viewDropdown.appendChild(d);
     });
 }
 
-if ($viewBadge) {
-    $viewBadge.addEventListener('click', e => {
+if (DOM.$viewBadge) {
+    DOM.$viewBadge.addEventListener('click', e => {
         e.stopPropagation();
-        const willOpen = !$viewDropdown.classList.contains('open');
+        const willOpen = !DOM.$viewDropdown.classList.contains('open');
         _closeHeaderDropdowns('view');
         if (willOpen) {
-            $viewBadge.classList.add('open');
-            $viewDropdown.classList.add('open');
+            DOM.$viewBadge.classList.add('open');
+            DOM.$viewDropdown.classList.add('open');
             buildViewDropdown();
-            _positionDropdown($viewBadge, $viewDropdown);
+            _positionDropdown(DOM.$viewBadge, DOM.$viewDropdown);
         }
     });
 }
@@ -339,20 +339,20 @@ function applySort(arr) {
     }
 }
 
-$sortBadge.addEventListener('click', e => {
+DOM.$sortBadge.addEventListener('click', e => {
     e.stopPropagation();
-    const willOpen = !$sortDropdown.classList.contains('open');
+    const willOpen = !DOM.$sortDropdown.classList.contains('open');
     _closeHeaderDropdowns('sort');
     if (willOpen) {
-        $sortBadge.classList.add('open');
-        $sortDropdown.classList.add('open');
+        DOM.$sortBadge.classList.add('open');
+        DOM.$sortDropdown.classList.add('open');
         buildSortDropdown();
-        _positionDropdown($sortBadge, $sortDropdown);
+        _positionDropdown(DOM.$sortBadge, DOM.$sortDropdown);
     }
 });
 
 /* Ilk yukleme aktif gosterge */
-if (sortOrder !== 'newest') $sortBadge.classList.add('active-sort');
+if (sortOrder !== 'newest') DOM.$sortBadge.classList.add('active-sort');
 
 
 /* v1.5: ZAMAN DAMGASI — side toolbar ve kısayol ile tetiklenir */
@@ -361,7 +361,7 @@ function insertTimestamp() {
     const dateStr = now.toLocaleDateString('tr-TR', { day:'numeric', month:'long', year:'numeric' });
     const timeStr = now.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
     const text = '📅 ' + dateStr + ', ' + timeStr;
-    (_activeEditTarget||$content).focus();
+    (_activeEditTarget||DOM.$content).focus();
     document.execCommand('insertText', false, text);
 }
 
@@ -431,7 +431,7 @@ Const.SLASH_INLINE_MAP = {
     'ci':'callout-info', 'cw':'callout-warning', 'ct':'callout-tip', 'cs':'callout-success',
 };
 
-const $slashMenu = $('slash-menu');
+DOM.$slashMenu = $('slash-menu');
 let slashMenuOpen = false, slashTextNode = null, slashOffset = 0, slashSelIndex = 0;
 let _slashActiveSub = null; /* Açık alt panel referansı */
 let _slashHideTimer = null;
@@ -461,7 +461,7 @@ function _slashPositionSub(catEl, subEl) {
 function buildSlashMenuItems(filter) {
     /* Açık sub paneli temizle */
     if (_slashActiveSub) { _slashActiveSub.remove(); _slashActiveSub = null; }
-    $slashMenu.innerHTML = '';
+    DOM.$slashMenu.innerHTML = '';
 
     if (filter) {
         /* Filtre varsa düz liste */
@@ -474,7 +474,7 @@ function buildSlashMenuItems(filter) {
                 d.dataset.type = cmd.type;
                 d.innerHTML = '<i class="fas ' + cmd.icon + '"></i><span class="sm-label">' + cmd.label + '</span><span class="sm-hint">' + cmd.hint + '</span>';
                 d.addEventListener('mousedown', ev => { ev.preventDefault(); applySlashCommand(cmd.type); });
-                $slashMenu.appendChild(d);
+                DOM.$slashMenu.appendChild(d);
                 first = false;
             });
         });
@@ -513,7 +513,7 @@ function buildSlashMenuItems(filter) {
             /* Diğer açık sub'ları gizle */
             if (_slashActiveSub && _slashActiveSub !== sub) {
                 _slashActiveSub.style.display = 'none';
-                const prevCat = $slashMenu.querySelector('.slash-cat.active');
+                const prevCat = DOM.$slashMenu.querySelector('.slash-cat.active');
                 if (prevCat) prevCat.classList.remove('active');
             }
             sub.style.display = 'block';
@@ -546,7 +546,7 @@ function buildSlashMenuItems(filter) {
         });
         cat.addEventListener('click', showSub);
 
-        $slashMenu.appendChild(cat);
+        DOM.$slashMenu.appendChild(cat);
     });
 }
 
@@ -554,19 +554,19 @@ function openSlashMenu(rect) {
     slashMenuOpen = true; slashSelIndex = 0;
     buildSlashMenuItems(null);
 
-    $slashMenu.style.visibility = 'hidden';
-    $slashMenu.style.left = '0';
-    $slashMenu.style.top  = '0';
-    $slashMenu.classList.add('open');
+    DOM.$slashMenu.style.visibility = 'hidden';
+    DOM.$slashMenu.style.left = '0';
+    DOM.$slashMenu.style.top  = '0';
+    DOM.$slashMenu.classList.add('open');
 
     requestAnimationFrame(() => {
-        const mW  = $slashMenu.offsetWidth  || 164;
-        const mH  = $slashMenu.offsetHeight || 200;
+        const mW  = DOM.$slashMenu.offsetWidth  || 164;
+        const mH  = DOM.$slashMenu.offsetHeight || 200;
         const PAD = 6;
         const vW  = window.innerWidth;
         const vH  = window.innerHeight;
 
-        const editorEl = (_activeEditTarget || $content).closest('.editor-card') || document.body;
+        const editorEl = (_activeEditTarget || DOM.$content).closest('.editor-card') || document.body;
         const eR = editorEl.getBoundingClientRect();
 
         /* Yatay: slash'ın hemen solundan başla, sığmazsa sola kaydır */
@@ -583,9 +583,9 @@ function openSlashMenu(rect) {
         }
         top = Math.max(eR.top + PAD, Math.max(PAD, Math.min(top, vH - mH - PAD)));
 
-        $slashMenu.style.left = left + 'px';
-        $slashMenu.style.top  = top  + 'px';
-        $slashMenu.style.visibility = '';
+        DOM.$slashMenu.style.left = left + 'px';
+        DOM.$slashMenu.style.top  = top  + 'px';
+        DOM.$slashMenu.style.visibility = '';
     });
 }
 
@@ -595,19 +595,19 @@ function closeSlashMenu() {
     if (_slashHideTimer) { clearTimeout(_slashHideTimer); _slashHideTimer = null; }
     /* Tüm body'e eklenmiş sub panelleri temizle */
     document.querySelectorAll('.slash-cat-sub').forEach(s => s.remove());
-    $slashMenu.classList.remove('open');
+    DOM.$slashMenu.classList.remove('open');
 }
 
 /* Slash menü dışına tıklayınca kapat */
 document.addEventListener('mousedown', e => {
     if (!slashMenuOpen) return;
-    if ($slashMenu.contains(e.target)) return;
+    if (DOM.$slashMenu.contains(e.target)) return;
     if (e.target.closest('.slash-cat-sub')) return;
     closeSlashMenu();
 }, true);
 
 function applySlashCommand(type) {
-    (_activeEditTarget||$content).focus();
+    (_activeEditTarget||DOM.$content).focus();
     /* '/' karakterini tarayıcı selection API ile sil
        (deleteData() paragrafı boşaltınca formatBlock yanlış bloğu hedef alıyor → cursor kayıyor) */
     if (slashTextNode && slashTextNode.isConnected) {
@@ -619,7 +619,7 @@ function applySlashCommand(type) {
             r.setStart(slashTextNode, idx);
             r.setEnd(slashTextNode, idx + 1); /* '/' karakterini seç */
             sel.removeAllRanges(); sel.addRange(r);
-            (_activeEditTarget||$content).focus(); document.execCommand('delete', false, null); /* seçili '/' sil */
+            (_activeEditTarget||DOM.$content).focus(); document.execCommand('delete', false, null); /* seçili '/' sil */
         }
     }
     closeSlashMenu();
@@ -667,7 +667,7 @@ function applySlashCommand(type) {
             let anchorNode = savedRange.startContainer;
             if (anchorNode.nodeType === 3) anchorNode = anchorNode.parentElement;
             let blockNode = anchorNode;
-            while (blockNode && blockNode.parentElement !== $content) blockNode = blockNode.parentElement;
+            while (blockNode && blockNode.parentElement !== DOM.$content) blockNode = blockNode.parentElement;
             if (blockNode) {
                 const isEmpty = blockNode.textContent.trim() === '';
                 if (!isEmpty) insertAfterNode = blockNode;
@@ -699,7 +699,7 @@ function applySlashCommand(type) {
                 if (callout.parentNode) { callout.parentNode.insertBefore(p, callout); callout.remove(); }
                 const r = document.createRange(); r.setStart(p,0); r.collapse(true);
                 const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-                $content.focus(); _markDirty(); updateFooterVisibility();
+                DOM.$content.focus(); _markDirty(); updateFooterVisibility();
             });
             callout.appendChild(hdr);
             callout.appendChild(body);
@@ -707,13 +707,13 @@ function applySlashCommand(type) {
 
             if (insertAfterNode) {
                 if (insertAfterNode.nextSibling) {
-                    $content.insertBefore(callout, insertAfterNode.nextSibling);
+                    DOM.$content.insertBefore(callout, insertAfterNode.nextSibling);
                 } else {
-                    $content.appendChild(callout);
+                    DOM.$content.appendChild(callout);
                 }
             } else {
-                if (savedRange) { try { savedRange.deleteContents(); savedRange.insertNode(callout); } catch(e) { $content.appendChild(callout); } }
-                else $content.appendChild(callout);
+                if (savedRange) { try { savedRange.deleteContents(); savedRange.insertNode(callout); } catch(e) { DOM.$content.appendChild(callout); } }
+                else DOM.$content.appendChild(callout);
             }
             insertEmptyParaAfter(callout);
             requestAnimationFrame(() => { body.focus(); });
@@ -724,7 +724,7 @@ function applySlashCommand(type) {
 }
 
 /* Alıntı (blockquote) sonunda Enter → normal paragraf */
-$content.addEventListener('keydown', function blockquoteExitOnEnter(e) {
+DOM.$content.addEventListener('keydown', function blockquoteExitOnEnter(e) {
     if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
@@ -733,7 +733,7 @@ $content.addEventListener('keydown', function blockquoteExitOnEnter(e) {
     if (!node) return;
     const el = node.nodeType === 3 ? node.parentElement : node;
     const bq = el ? el.closest('blockquote') : null;
-    if (!bq || !$content.contains(bq)) return;
+    if (!bq || !DOM.$content.contains(bq)) return;
 
     /* Cursor'dan blockquote sonuna kadar kalan içerik var mı? */
     const tail = document.createRange();
@@ -744,14 +744,14 @@ $content.addEventListener('keydown', function blockquoteExitOnEnter(e) {
     /* Blokquote sonunda: normal metne geç */
     e.preventDefault();
     insertEmptyParaAfter(bq);
-    $content.dispatchEvent(new Event('input', { bubbles: true }));
+    DOM.$content.dispatchEvent(new Event('input', { bubbles: true }));
 }, false);
 
 /* "/" tetikleme: input event */
-/* Slash menüsü — $content + panel/layout içinde çalışsın */
+/* Slash menüsü — DOM.$content + panel/layout içinde çalışsın */
 function _isInEditorArea(node) {
     if (!node) return false;
-    if ($content.contains(node)) return true;
+    if (DOM.$content.contains(node)) return true;
     const _fpC = document.getElementById('fp-content');
     if (_fpC && _fpC.contains(node)) return true;
     if (node.nodeType === 3) node = node.parentElement;
@@ -777,10 +777,10 @@ function _tryOpenSlash(node, sel) {
     }
 }
 
-$content.addEventListener('input', function slashDetect() {
+DOM.$content.addEventListener('input', function slashDetect() {
     if (wlAcActive) { if (slashMenuOpen) closeSlashMenu(); return; }
     const sel = window.getSelection();
-    if (!sel || !sel.isCollapsed || !sel.rangeCount || !$content.contains(sel.anchorNode)) {
+    if (!sel || !sel.isCollapsed || !sel.rangeCount || !DOM.$content.contains(sel.anchorNode)) {
         if (slashMenuOpen) closeSlashMenu(); return;
     }
     _tryOpenSlash(sel.anchorNode, sel);
@@ -799,10 +799,10 @@ document.addEventListener('input', function slashDetectDelegate(e) {
 
 /* Klavye navigasyonu — tüm editör alanları, capture phase */
 document.addEventListener('keydown', function slashKeydown(e) {
-    if (!slashMenuOpen || !$slashMenu.classList.contains('open')) return;
+    if (!slashMenuOpen || !DOM.$slashMenu.classList.contains('open')) return;
     if (!_isInEditorArea(window.getSelection()?.anchorNode)) return;
 
-    const cats = [...$slashMenu.querySelectorAll('.slash-cat')];
+    const cats = [...DOM.$slashMenu.querySelectorAll('.slash-cat')];
     if (!cats.length) return;
 
     /* Aktif kategori — active sınıfına bak */
@@ -921,7 +921,7 @@ document.addEventListener('keydown', function inlineSlashShortcut(e) {
         r.setStart(node, slashPos + 1);
         r.setEnd(node, offset);
         sel.removeAllRanges(); sel.addRange(r);
-        (_activeEditTarget || $content).focus();
+        (_activeEditTarget || DOM.$content).focus();
         document.execCommand('delete', false, null);
     }
     slashTextNode = node;
@@ -974,7 +974,7 @@ document.addEventListener('keydown', function inlineMdShortcut(e) {
         r.setStart(node, leadingWs);
         r.setEnd(node, offset);
         sel.removeAllRanges(); sel.addRange(r);
-        (_activeEditTarget || $content).focus();
+        (_activeEditTarget || DOM.$content).focus();
         document.execCommand('delete', false, null);
     }
     slashTextNode = null; /* applySlashCommand'ın '/' silme adımı atlansın — zaten sildik */
@@ -1053,7 +1053,7 @@ Const._SHAPES = [
             item.addEventListener('mouseleave', () => item.style.background = '');
             item.addEventListener('mousedown', ev => {
                 ev.preventDefault(); ev.stopPropagation();
-                (_activeEditTarget || $content).focus();
+                (_activeEditTarget || DOM.$content).focus();
                 applyFn(n);
                 dd.style.display = 'none';
             });
@@ -1138,7 +1138,7 @@ Const._SHAPES = [
             item.addEventListener('mouseleave', () => item.style.background = '');
             item.addEventListener('mousedown', ev => {
                 ev.preventDefault(); ev.stopPropagation();
-                (_activeEditTarget || $content).focus();
+                (_activeEditTarget || DOM.$content).focus();
                 applySlashCommand(co.type);
                 dd.style.display = 'none';
             });
@@ -1183,7 +1183,7 @@ Const._SHAPES = [
                     catch { const frag = range.extractContents(); span.appendChild(frag); range.insertNode(span); }
                     _markDirty();
                 } else {
-                    const target = _activeEditTarget || $content;
+                    const target = _activeEditTarget || DOM.$content;
                     target.style.lineHeight = v;
                 }
                 lhDD.style.display = 'none';
@@ -1219,7 +1219,7 @@ Const._SHAPES = [
             item.addEventListener('mouseleave', () => item.style.background = '');
             item.addEventListener('mousedown', ev => {
                 ev.preventDefault(); ev.stopPropagation();
-                (_activeEditTarget || $content).focus();
+                (_activeEditTarget || DOM.$content).focus();
                 insertShapeOverlay(sh.id);
                 shDD.style.display = 'none';
             });

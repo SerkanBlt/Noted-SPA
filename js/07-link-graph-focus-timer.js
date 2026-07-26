@@ -694,8 +694,8 @@ function tw_findActiveBlock() {
     /* v1.10 güncelleme (5. tur): ToDo olmayan bullet/numarali liste satırı da tespit edilir */
     const liNode = (node.closest ? node.closest('li') : null);
     const listLi = (liNode && !todoLi && liNode.closest('ul,ol')) ? liNode : null;
-    while (node && node.parentNode !== $content) node = node.parentNode;
-    const block = (node && $content.contains(node)) ? node : null;
+    while (node && node.parentNode !== DOM.$content) node = node.parentNode;
+    const block = (node && DOM.$content.contains(node)) ? node : null;
     return {
         block: block,
         todoLi: (todoLi && block && block.contains(todoLi)) ? todoLi : null,
@@ -706,10 +706,10 @@ function tw_findActiveBlock() {
 function tw_updateActiveBlock() {
     if (!typewriterActive) return;
     const res = tw_findActiveBlock();
-    Array.prototype.forEach.call($content.children, ch => ch.classList.remove('tw-active'));
-    Array.prototype.forEach.call($content.querySelectorAll('.todo-item'), li => li.classList.remove('tw-todo-active'));
+    Array.prototype.forEach.call(DOM.$content.children, ch => ch.classList.remove('tw-active'));
+    Array.prototype.forEach.call(DOM.$content.querySelectorAll('.todo-item'), li => li.classList.remove('tw-todo-active'));
     /* v1.10 güncelleme (5. tur): genel liste satırlarındaki onceki aktif vurgu temizlenir */
-    Array.prototype.forEach.call($content.querySelectorAll('li.tw-li-active'), li => li.classList.remove('tw-li-active'));
+    Array.prototype.forEach.call(DOM.$content.querySelectorAll('li.tw-li-active'), li => li.classList.remove('tw-li-active'));
     if (res) {
         if (res.block && res.block.classList) res.block.classList.add('tw-active');
         if (res.todoLi) res.todoLi.classList.add('tw-todo-active');
@@ -729,7 +729,7 @@ function setTypewriterMode(on) {
     }
     patchUiCfg({ typewriter: typewriterActive });
     if (typewriterActive) tw_updateActiveBlock();
-    else Array.prototype.forEach.call($content.children, ch => ch.classList && ch.classList.remove('tw-active'));
+    else Array.prototype.forEach.call(DOM.$content.children, ch => ch.classList && ch.classList.remove('tw-active'));
 }
 
 function toggleTypewriterMode() { setTypewriterMode(!typewriterActive); }
@@ -737,10 +737,10 @@ function toggleTypewriterMode() { setTypewriterMode(!typewriterActive); }
 (function initTypewriterMode() {
     const btn = $('tw-btn');
     if (btn) btn.addEventListener('click', toggleTypewriterMode);
-    if ($content) {
-        $content.addEventListener('keyup', tw_updateActiveBlock);
-        $content.addEventListener('click', tw_updateActiveBlock);
-        $content.addEventListener('focus', tw_updateActiveBlock);
+    if (DOM.$content) {
+        DOM.$content.addEventListener('keyup', tw_updateActiveBlock);
+        DOM.$content.addEventListener('click', tw_updateActiveBlock);
+        DOM.$content.addEventListener('focus', tw_updateActiveBlock);
     }
     document.addEventListener('selectionchange', () => { if (typewriterActive) tw_updateActiveBlock(); });
     if (typewriterActive) setTypewriterMode(true);

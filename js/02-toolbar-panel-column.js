@@ -2,19 +2,19 @@
 function updateReminderBtn(reminders, reminderNote) {
     editorReminders    = Array.isArray(reminders) ? reminders : [];
     editorReminderNote = reminderNote || '';
-    if (!$reminderBtn) return;
-    $reminderBtn.classList.remove('has-reminder', 'overdue');
+    if (!DOM.$reminderBtn) return;
+    DOM.$reminderBtn.classList.remove('has-reminder', 'overdue');
     const active = editorReminders.filter(r => r && r.at && !r.fired);
     if (active.length > 0) {
         const overdue = active.some(r => r.at <= Date.now());
-        $reminderBtn.classList.add(overdue ? 'overdue' : 'has-reminder');
+        DOM.$reminderBtn.classList.add(overdue ? 'overdue' : 'has-reminder');
         const next = active.slice().sort((a, b) => a.at - b.at)[0];
         const d = new Date(next.at);
-        $reminderBtn.title = 'Hatırlatıcı (' + active.length + '): '
+        DOM.$reminderBtn.title = 'Hatırlatıcı (' + active.length + '): '
             + d.toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'})
             + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
     } else {
-        $reminderBtn.title = 'Hatırlatıcı Kur';
+        DOM.$reminderBtn.title = 'Hatırlatıcı Kur';
     }
 }
 
@@ -46,31 +46,31 @@ function _buildRpItem(r) {
 }
 
 function openReminderPopup() {
-    if (!$reminderPopup || !$reminderBtn) return;
+    if (!DOM.$reminderPopup || !DOM.$reminderBtn) return;
     const list = $('reminder-list');
     if (list) {
         list.innerHTML = '';
         const rows = editorReminders.length > 0 ? editorReminders : [null];
         rows.forEach(r => list.appendChild(_buildRpItem(r)));
     }
-    $reminderPopup.classList.add('show');
-    const r = $reminderBtn.getBoundingClientRect();
-    const popW = $reminderPopup.offsetWidth  || 300;
-    const popH = $reminderPopup.offsetHeight || 340;
+    DOM.$reminderPopup.classList.add('show');
+    const r = DOM.$reminderBtn.getBoundingClientRect();
+    const popW = DOM.$reminderPopup.offsetWidth  || 300;
+    const popH = DOM.$reminderPopup.offsetHeight || 340;
     let top  = r.top - popH - 8;
     let left = r.right + 8;
     if (top < 8) top = r.bottom + 8;
     if (left + popW > window.innerWidth - 8) left = r.left - popW - 8;
     if (left < 8) left = 8;
-    $reminderPopup.style.top  = top + 'px';
-    $reminderPopup.style.left = left + 'px';
+    DOM.$reminderPopup.style.top  = top + 'px';
+    DOM.$reminderPopup.style.left = left + 'px';
 }
 function closeReminderPopup() {
-    if ($reminderPopup) $reminderPopup.classList.remove('show');
+    if (DOM.$reminderPopup) DOM.$reminderPopup.classList.remove('show');
     window._fpReminderContext = null;
 }
 window._fpOpenReminderForNote = function(noteId, anchorEl) {
-    if (!$reminderPopup || !anchorEl) return;
+    if (!DOM.$reminderPopup || !anchorEl) return;
     const n = notes.find(x => String(x.id) === String(noteId));
     const _rems = n ? (n.reminders || (n.reminder ? [n.reminder] : [])) : [];
     editorReminders    = _rems.slice();
@@ -82,16 +82,16 @@ window._fpOpenReminderForNote = function(noteId, anchorEl) {
         const rows = editorReminders.length > 0 ? editorReminders : [null];
         rows.forEach(r => list.appendChild(_buildRpItem(r)));
     }
-    $reminderPopup.classList.add('show');
+    DOM.$reminderPopup.classList.add('show');
     const r = anchorEl.getBoundingClientRect();
-    const popW = $reminderPopup.offsetWidth  || 300;
-    const popH = $reminderPopup.offsetHeight || 340;
+    const popW = DOM.$reminderPopup.offsetWidth  || 300;
+    const popH = DOM.$reminderPopup.offsetHeight || 340;
     let top  = r.top - popH - 8, left = r.right + 8;
     if (top < 8) top = r.bottom + 8;
     if (left + popW > window.innerWidth - 8) left = r.left - popW - 8;
     if (left < 8) left = 8;
-    $reminderPopup.style.top  = top + 'px';
-    $reminderPopup.style.left = left + 'px';
+    DOM.$reminderPopup.style.top  = top + 'px';
+    DOM.$reminderPopup.style.left = left + 'px';
 };
 function saveReminderFromPopup() {
     const list = $('reminder-list');
@@ -120,7 +120,7 @@ function clearReminderFromPopup() {
 function persistReminderIfEditing() {
     const fpCtx = window._fpReminderContext;
     if (fpCtx) window._fpReminderContext = null;
-    const eId = fpCtx || $editId.value;
+    const eId = fpCtx || DOM.$editId.value;
     if (!eId) return;
     const idx = notes.findIndex(n => String(n.id) === String(eId));
     if (idx === -1) return;
@@ -145,7 +145,7 @@ function formatReminderShort(at) {
     return sameDay ? ('Bugün ' + time) : (d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short'}) + ' ' + time);
 }
 function showReminderToast(note, reminder) {
-    if (!$reminderToastOverlay) return;
+    if (!DOM.$reminderToastOverlay) return;
     const t = document.createElement('div');
     t.className = 'reminder-toast';
     const r = reminder || {};
@@ -159,7 +159,7 @@ function showReminderToast(note, reminder) {
         setTimeout(() => { if (t.parentNode) t.remove(); }, 480);
     }
     if (note) t.addEventListener('click', () => { handleEditNoteRequest(note.id); _dismiss(); });
-    $reminderToastOverlay.appendChild(t);
+    DOM.$reminderToastOverlay.appendChild(t);
     setTimeout(_dismiss, 8000);
 }
 function checkReminders() {
@@ -173,14 +173,14 @@ function checkReminders() {
             if (r && r.at && !r.fired && r.at <= now) {
                 r.fired = true; changed = true;
                 showReminderToast(n, r);
-                if (String($editId.value) === String(n.id)) updateReminderBtn(n.reminders, n.reminderNote || '');
+                if (String(DOM.$editId.value) === String(n.id)) updateReminderBtn(n.reminders, n.reminderNote || '');
             }
         });
         /* Legacy single reminder */
         if (!n.reminders && n.reminder && n.reminder.at && !n.reminder.fired && n.reminder.at <= now) {
             n.reminder.fired = true; changed = true;
             showReminderToast(n, n.reminder);
-            if (String($editId.value) === String(n.id)) updateReminderBtn([], '');
+            if (String(DOM.$editId.value) === String(n.id)) updateReminderBtn([], '');
         }
     });
     if (changed) { saveNotes(); render(); }
@@ -249,8 +249,8 @@ function exportNoteAsMarkdown(noteId) {
 function updateColorLabelBtn(key) {
     editorColorLabel = key;
     const cl = Const.COLOR_LABELS.find(c => c.key === key);
-    $clBtn.style.color = cl ? cl.hex : 'var(--text-muted)';
-    $clBtn.style.borderColor = cl ? cl.hex : 'var(--border)';
+    DOM.$clBtn.style.color = cl ? cl.hex : 'var(--text-muted)';
+    DOM.$clBtn.style.borderColor = cl ? cl.hex : 'var(--border)';
     /* Rozet satırlarını aktif olarak işaretle */
     const popup = $('color-label-popup');
     if (popup) {
@@ -266,10 +266,10 @@ document.addEventListener('click', () => {
     $('color-label-popup').classList.remove('open');
 });
 
-$clBtn.addEventListener('click', e => {
+DOM.$clBtn.addEventListener('click', e => {
     e.stopPropagation();
     const popup = $('color-label-popup');
-    const rect  = $clBtn.getBoundingClientRect();
+    const rect  = DOM.$clBtn.getBoundingClientRect();
     let top  = rect.bottom + 4;
     let left = rect.left;
     if (left + 210 > window.innerWidth) left = window.innerWidth - 215;
@@ -291,7 +291,7 @@ function insertEmptyParaAfter(el) {
 }
 
 function insertEmptyParaBefore(el) {
-    /* el $content'in (veya panel içeriğinin) ilk child'ıysa önüne boş paragraf ekle */
+    /* el DOM.$content'in (veya panel içeriğinin) ilk child'ıysa önüne boş paragraf ekle */
     const prev = el.previousElementSibling;
     if (!prev || (prev.nodeType === 1 && prev === el)) return; /* zaten var */
     const p = document.createElement('p');
@@ -300,8 +300,8 @@ function insertEmptyParaBefore(el) {
 }
 
 /* Aktif editör alanını takip et — panel içi formatlamada doğru alana uygulansın */
-let _activeEditTarget = $content;
-$content.addEventListener('focus', () => { _activeEditTarget = $content; });
+let _activeEditTarget = DOM.$content;
+DOM.$content.addEventListener('focus', () => { _activeEditTarget = DOM.$content; });
 document.addEventListener('focusin', e => {
     if (e.target.classList.contains('col-panel-content') ||
         e.target.classList.contains('layout-col') ||
@@ -319,7 +319,7 @@ let _savedToolbarSel = null;
 function _saveToolbarSel() {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
-    const et = _activeEditTarget || $content;
+    const et = _activeEditTarget || DOM.$content;
     /* Seçimin gerçekten title veya editable alandan geldiğini doğrula */
     if (et.contains(sel.anchorNode)) {
         _savedToolbarSel = { et, range: sel.getRangeAt(0).cloneRange() };
@@ -351,7 +351,7 @@ document.addEventListener('selectionchange', () => {
         _selChangePending = false;
         const sel = window.getSelection();
         if (!sel || !sel.rangeCount) return;
-        const et = _activeEditTarget || $content;
+        const et = _activeEditTarget || DOM.$content;
         if (et && sel.anchorNode && et.contains(sel.anchorNode)) {
             _savedToolbarSel = { et, range: sel.getRangeAt(0).cloneRange() };
         }
@@ -371,7 +371,7 @@ $('toolbar').addEventListener('mousedown', e => {
         const newSz = btn.id === 'tb-fsize-dec' ? Math.max(8, sz - 2) : Math.min(96, sz + 2);
         applyInlineStyle('fontSize', newSz + 'px');
         $('tb-fsize-val').textContent = newSz;
-        clearTimeout(toolbarHideTimer); $toolbar.classList.add('tb-active');
+        clearTimeout(toolbarHideTimer); DOM.$toolbar.classList.add('tb-active');
         requestAnimationFrame(() => { _fsizeApplying = false; });
         return;
     }
@@ -382,7 +382,7 @@ $('toolbar').addEventListener('mousedown', e => {
             const s = window.getSelection();
             if (s && s.rangeCount) {
                 let node = s.getRangeAt(0).startContainer;
-                while (node && node !== _activeEditTarget && node !== $content) {
+                while (node && node !== _activeEditTarget && node !== DOM.$content) {
                     if (node.nodeName === 'BLOCKQUOTE') { insertEmptyParaAfter(node); break; }
                     node = node.parentNode;
                 }
@@ -460,7 +460,7 @@ function _tbAiNotif(anchorEl, msg) {
 
 function _showAiGutterInd(savedRange) {
     const rangeRect   = savedRange.getBoundingClientRect();
-    const contentRect = $content.getBoundingClientRect();
+    const contentRect = DOM.$content.getBoundingClientRect();
     const el = document.createElement('div');
     el.className = 'ai-gutter-ind';
     el.innerHTML = '<i class="fas fa-spinner"></i>';
@@ -607,7 +607,7 @@ function _showAiGutterInd(savedRange) {
             const cr = document.createRange();
             cr.setStartAfter(lastInserted.parentNode ? lastInserted : (savedEt.lastChild || savedEt)); cr.collapse(true);
             s.removeAllRanges(); s.addRange(cr);
-            $content.dispatchEvent(new Event('input', { bubbles: true }));
+            DOM.$content.dispatchEvent(new Event('input', { bubbles: true }));
             /* ng-wrap içeriyorsa toolbar + resize handle'ları bağla */
             if (gridsRestored && typeof _restoreGrids === 'function') _restoreGrids();
             ind.success();
@@ -624,7 +624,7 @@ function _showAiGutterInd(savedRange) {
         const selectedText = sel ? sel.toString().trim() : '';
         if (!selectedText) return;
         const savedRange = sel.getRangeAt(0).cloneRange();
-        const savedEt    = _activeEditTarget || $content;
+        const savedEt    = _activeEditTarget || DOM.$content;
         _runAiFlow(action, selectedText, savedRange, savedEt);
     }
     window._execInlineAI = _execAiAction;
@@ -684,7 +684,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* ══ TODO KLAVYE YÖNETİMİ ══ */
-/* $content + panel içerikleri için ortak handler — capture phase */
+/* DOM.$content + panel içerikleri için ortak handler — capture phase */
 document.addEventListener('keydown', function todoKeydown(e) {
     if (e.key !== 'Enter' && e.key !== 'Backspace' && e.key !== 'Delete') return;
     const sel = window.getSelection();
@@ -721,7 +721,7 @@ document.addEventListener('keydown', function todoKeydown(e) {
         const textContent = textSpan ? textSpan.textContent.trim() : li.textContent.trim();
         if (!textContent) {
             const ul = li.closest('.todo-list');
-            const et = li.closest('.col-panel-content, .layout-col, .ng-cell') || $content;
+            const et = li.closest('.col-panel-content, .layout-col, .ng-cell') || DOM.$content;
             const p  = document.createElement('p'); p.innerHTML = '<br>';
             ul.parentNode.insertBefore(p, ul.nextSibling);
             li.remove();
@@ -772,7 +772,7 @@ document.addEventListener('keydown', function todoKeydown(e) {
         if (atStart) {
             e.preventDefault();
             const ul = li.closest('.todo-list');
-            const et = li.closest('.col-panel-content, .layout-col, .ng-cell') || $content;
+            const et = li.closest('.col-panel-content, .layout-col, .ng-cell') || DOM.$content;
             const prevLi = li.previousElementSibling;
 
             if (prevLi && prevLi.classList.contains('todo-item')) {
@@ -890,7 +890,7 @@ function focusTodoLi(li) {
 }
 
 function runSpecial(type) {
-    const _et = _activeEditTarget || $content;
+    const _et = _activeEditTarget || DOM.$content;
     const sel = window.getSelection();
     const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
     if (type === 'icode') {
@@ -996,7 +996,7 @@ function runSpecial(type) {
             const has = SCHEMES.some(s => raw.startsWith(s));
             const url = has ? raw : schemeEl.value + raw;
             if (savedRange2) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange2); }
-            (_activeEditTarget || $content).focus();
+            (_activeEditTarget || DOM.$content).focus();
             document.execCommand('createLink', false, url);
             document.querySelectorAll(`a[href="${url}"]`).forEach(a => { a.target='_blank'; a.rel='noopener noreferrer'; });
             closeDialog();
@@ -1120,7 +1120,7 @@ function getColCount() {
     });
 })();
 
-$content.addEventListener('keydown', e => {
+DOM.$content.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); saveNote(); return; }
     if (e.key === 'Tab') {
         /* ng-cell veya ng-title içindeyse tablo navigasyonu üstlendi */
@@ -1181,14 +1181,14 @@ document.addEventListener('keydown', e => {
 }, true);
 
 /* ══ TOOLBAR KONUMLANDIRMA ══ */
-const $toolbar = $('toolbar');
+DOM.$toolbar = $('toolbar');
 let toolbarHideTimer = null, toolbarDragged = false, _fsizeApplying = false;
 
 /* Seçimin hangi editör alanında olduğunu döndür: #content veya panel */
 function getActiveEditorArea(sel) {
     if (!sel || !sel.anchorNode) return null;
     const node = sel.anchorNode;
-    if ($content.contains(node)) return $content;
+    if (DOM.$content.contains(node)) return DOM.$content;
     const fpContent = document.getElementById('fp-content');
     if (fpContent && fpContent.contains(node)) return fpContent;
     const panelCe = node.nodeType === 3
@@ -1204,20 +1204,20 @@ function positionToolbar() {
     const rect = sel.getRangeAt(0).getBoundingClientRect();
     if (!rect.width && !rect.height) { scheduleHideToolbar(); return; }
     if (!toolbarDragged) {
-        const tbW=($toolbar.offsetWidth||248), tbH=($toolbar.offsetHeight||80), margin=8;
+        const tbW=(DOM.$toolbar.offsetWidth||248), tbH=(DOM.$toolbar.offsetHeight||80), margin=8;
         let top=rect.top-tbH-margin, left=rect.left+(rect.width-tbW)/2;
         if (top < margin) top = rect.bottom + margin;
         if (left < margin) left = margin;
         if (left + tbW > window.innerWidth - margin) left = window.innerWidth - tbW - margin;
-        $toolbar.style.top=top+'px'; $toolbar.style.left=left+'px';
+        DOM.$toolbar.style.top=top+'px'; DOM.$toolbar.style.left=left+'px';
     }
     clearTimeout(toolbarHideTimer);
-    $toolbar.classList.add('tb-active');
+    DOM.$toolbar.classList.add('tb-active');
     updateToolbarState();
 }
 function scheduleHideToolbar(delay=300) {
     clearTimeout(toolbarHideTimer);
-    toolbarHideTimer = setTimeout(() => { $toolbar.classList.remove('tb-active'); toolbarDragged = false; }, delay);
+    toolbarHideTimer = setTimeout(() => { DOM.$toolbar.classList.remove('tb-active'); toolbarDragged = false; }, delay);
 }
 document.addEventListener('selectionchange', () => {
     if (_fsizeApplying) return;
@@ -1227,13 +1227,13 @@ document.addEventListener('selectionchange', () => {
     if (sel && !sel.isCollapsed && getActiveEditorArea(sel)) positionToolbar();
     else scheduleHideToolbar();
 });
-$toolbar.addEventListener('mouseenter', () => {
+DOM.$toolbar.addEventListener('mouseenter', () => {
     clearTimeout(toolbarHideTimer);
     /* Kolon dropdown açıkken toolbar’un üzerinden çıkılsa bile gizleme */
     const colDrop = $('tb-col-dropdown');
     if (colDrop && colDrop.classList.contains('open')) clearTimeout(toolbarHideTimer);
 });
-$toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
+DOM.$toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
 
 /* Sürükleme */
 (function() {
@@ -1242,19 +1242,19 @@ $toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
     handle.addEventListener('mousedown', e => {
         if (e.button !== 0) return; e.preventDefault();
         dragging=true; startX=e.clientX; startY=e.clientY;
-        origLeft=parseInt($toolbar.style.left)||0; origTop=parseInt($toolbar.style.top)||0;
-        $toolbar.classList.add('dragging');
+        origLeft=parseInt(DOM.$toolbar.style.left)||0; origTop=parseInt(DOM.$toolbar.style.top)||0;
+        DOM.$toolbar.classList.add('dragging');
         document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
     });
     function onMove(e) {
         if (!dragging) return;
-        const tbW=$toolbar.offsetWidth, tbH=$toolbar.offsetHeight;
+        const tbW=DOM.$toolbar.offsetWidth, tbH=DOM.$toolbar.offsetHeight;
         let l=origLeft+(e.clientX-startX), t=origTop+(e.clientY-startY);
         l=Math.max(8,Math.min(l,window.innerWidth-tbW-8)); t=Math.max(8,Math.min(t,window.innerHeight-tbH-8));
-        $toolbar.style.left=l+'px'; $toolbar.style.top=t+'px'; toolbarDragged=true;
+        DOM.$toolbar.style.left=l+'px'; DOM.$toolbar.style.top=t+'px'; toolbarDragged=true;
     }
     function onUp() {
-        dragging=false; $toolbar.classList.remove('dragging');
+        dragging=false; DOM.$toolbar.classList.remove('dragging');
         document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
     }
 })();
@@ -1266,23 +1266,23 @@ function openPicker(targetEl, noteId) {
     let top=rect.bottom+5, left=rect.left;
     if (left+234>window.innerWidth) left=window.innerWidth-238;
     if (top+260>window.innerHeight) top=rect.top-262;
-    $picker.style.top=top+'px'; $picker.style.left=left+'px';
-    if ($picker.classList.contains('open') && $picker._forId===noteId) { $picker.classList.remove('open'); return; }
-    $picker._forId=noteId; $picker.classList.add('open'); buildPickerList();
+    DOM.$picker.style.top=top+'px'; DOM.$picker.style.left=left+'px';
+    if (DOM.$picker.classList.contains('open') && DOM.$picker._forId===noteId) { DOM.$picker.classList.remove('open'); return; }
+    DOM.$picker._forId=noteId; DOM.$picker.classList.add('open'); buildPickerList();
 }
-$editorBadge.addEventListener('click', e => { e.stopPropagation(); openPicker(e.currentTarget, null); });
+DOM.$editorBadge.addEventListener('click', e => { e.stopPropagation(); openPicker(e.currentTarget, null); });
 function buildPickerList() {
     const gs=[...(new Set(notes.map(n=>n.group)))].sort();
     if (!gs.includes('Genel')) gs.unshift('Genel');
-    $gpList.innerHTML='';
+    DOM.$gpList.innerHTML='';
     gs.forEach(g => {
         const div=document.createElement('div'); div.className='gp-item'; div.textContent=g;
         div.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); applyGroup(g); });
-        $gpList.appendChild(div);
+        DOM.$gpList.appendChild(div);
     });
 }
 function applyGroup(gName) {
-    $picker.classList.remove('open');
+    DOM.$picker.classList.remove('open');
     if (activePickerId !== null) {
         const n=notes.find(x=>String(x.id)===String(activePickerId));
         if (n) { n.group=gName; saveNotes(); }
@@ -1298,14 +1298,14 @@ function applyGroup(gName) {
     } else {
         editorGroup=gName;
         /* Not açıksa grubu hemen kaydet (float editördeki gibi anlık) */
-        const _editId = $editId.value;
+        const _editId = DOM.$editId.value;
         if (_editId) {
             const _n = notes.find(x => String(x.id) === String(_editId));
             if (_n) { _n.group = gName; saveNotes(); }
         }
     }
     /* Ana editör badge'ini güncelle */
-    $badgeText.textContent = editorGroup;
+    DOM.$badgeText.textContent = editorGroup;
     render();
 }
 $('ng-btn').addEventListener('mousedown', e => {
@@ -1316,7 +1316,7 @@ $('ng-input').addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key==='Enter') { const v=e.target.value.trim(); if (v) { applyGroup(v); e.target.value=''; } }
 });
-$picker.addEventListener('click', e => e.stopPropagation());
+DOM.$picker.addEventListener('click', e => e.stopPropagation());
 
 /* ══ CRUD ══ */
 
@@ -1326,17 +1326,17 @@ let _editorLocked = false;
 function setEditorLocked(locked) {
     _editorLocked = locked;
     const btn = $('lock-btn');
-    const editor = $editor;
+    const editor = DOM.$editor;
     if (locked) {
         editor.classList.add('editor-locked');
-        $content.contentEditable = 'false';
-        $title.readOnly = true;
+        DOM.$content.contentEditable = 'false';
+        DOM.$title.readOnly = true;
         editor.querySelectorAll('.ng-cell,.ng-title,.col-panel-content,.col-panel-title,.layout-col').forEach(el => { el.contentEditable = 'false'; });
         if (btn) { btn.classList.add('locked'); btn.title = 'Kilidi Aç'; btn.innerHTML = '<i class="fas fa-lock"></i>'; }
     } else {
         editor.classList.remove('editor-locked');
-        $content.contentEditable = 'true';
-        $title.readOnly = false;
+        DOM.$content.contentEditable = 'true';
+        DOM.$title.readOnly = false;
         editor.querySelectorAll('.ng-cell,.ng-title,.col-panel-content,.col-panel-title,.layout-col').forEach(el => { el.contentEditable = 'true'; });
         if (btn) { btn.classList.remove('locked'); btn.title = 'Notu Kilitle'; btn.innerHTML = '<i class="fas fa-lock-open"></i>'; }
     }
@@ -1347,37 +1347,37 @@ function setEditorLocked(locked) {
     if (!btn) return;
     btn.addEventListener('click', function() {
         /* Kilitleme editörde aktif not varsa çalışır */
-        if (!$editId.value) return;
+        if (!DOM.$editId.value) return;
         setEditorLocked(!_editorLocked);
         /* Kilit durumunu not verisine kaydet */
-        const idx = notes.findIndex(n => String(n.id) === String($editId.value));
+        const idx = notes.findIndex(n => String(n.id) === String(DOM.$editId.value));
         if (idx !== -1) { notes[idx].locked = _editorLocked; saveNotes(); }
     });
 })();
 
 function saveNote() {
-    const title   = $title.value.trim();
+    const title   = DOM.$title.value.trim();
     /* ng-toolbar kaldır/geri-koy döngüsü childList mutation'ı tetikler —
        undo stack'i kirletmemesi için observer'ı kilitle */
     if (typeof window._undoLockForSave === 'function') window._undoLockForSave();
     /* ng-toolbar ve ng-block-del gibi UI elementlerini geçici olarak kaldır */
     const _tmpRemoved = [];
-    $content.querySelectorAll('.ng-toolbar, .ng-add-col').forEach(el => {
+    DOM.$content.querySelectorAll('.ng-toolbar, .ng-add-col').forEach(el => {
         _tmpRemoved.push({ parent: el.parentNode, next: el.nextSibling, el });
         el.remove();
     });
-    const rawHtml = $content.innerHTML;
+    const rawHtml = DOM.$content.innerHTML;
     /* UI elementlerini geri koy */
     _tmpRemoved.forEach(({ parent, next, el }) => {
         if (next) parent.insertBefore(el, next);
         else parent.appendChild(el);
     });
-    const eId     = $editId.value;
+    const eId     = DOM.$editId.value;
     /* Başlık zorunlu — içerik olmadan da kaydedilebilir */
     if (!title) {
-        $title.focus();
-        $title.style.outline = '2px solid var(--danger)';
-        setTimeout(() => { $title.style.outline = ''; }, 1200);
+        DOM.$title.focus();
+        DOM.$title.style.outline = '2px solid var(--danger)';
+        setTimeout(() => { DOM.$title.style.outline = ''; }, 1200);
         return;
     }
     /* v1.3: elle yazılan [[Not Adı]] dizgilerini wiki-bağlantıya çevir */
@@ -1419,19 +1419,19 @@ $('save-btn').addEventListener('click', () => {
         }
     }, 350);
 });
-$cancelBtn.addEventListener('click', () => { resetEditor(); render(); });
+DOM.$cancelBtn.addEventListener('click', () => { resetEditor(); render(); });
 $('cancel-btn-hm') && $('cancel-btn-hm').addEventListener('click', () => { resetEditor(); render(); });
 /* Editor close button in header */
 $('editor-close-btn') && $('editor-close-btn').addEventListener('click', () => { resetEditor(); render(); });
 /* Sağa Yerleştir — saves current note, resets main editor, opens note in float panel */
 $('editor-to-fp-btn') && $('editor-to-fp-btn').addEventListener('click', () => {
-    const noteId = $editId.value;
+    const noteId = DOM.$editId.value;
     if (!noteId) return;
-    if ($title.value.trim()) saveNote(); /* saveNote calls resetEditor+render internally */
+    if (DOM.$title.value.trim()) saveNote(); /* saveNote calls resetEditor+render internally */
     else { resetEditor(); render(); }
     if (typeof window._fpLoadNoteFromMain === 'function') window._fpLoadNoteFromMain(noteId);
 });
-$('edit-del-btn').addEventListener('click', () => { const eId=$editId.value; if(!eId) return; delNote(eId); });
+$('edit-del-btn').addEventListener('click', () => { const eId=DOM.$editId.value; if(!eId) return; delNote(eId); });
 
 function delNote(id) {
     const note=notes.find(x=>String(x.id)===String(id)); if (!note) return;
@@ -1455,7 +1455,7 @@ $('toast-yes').addEventListener('click', () => {
                 patchContentCfg({groups: openGroups});
             }
         }
-        if (String($editId.value)===deleteTargetId) resetEditor();
+        if (String(DOM.$editId.value)===deleteTargetId) resetEditor();
         if (typeof window._fpGetCurrentNoteId === 'function' && String(window._fpGetCurrentNoteId()) === deleteTargetId && typeof window._fpClose === 'function') window._fpClose();
     }
     deleteTargetId=null; deletePermanent=false; $('delete-toast-overlay').classList.remove('show');

@@ -142,41 +142,42 @@ notes = notes.map(n => ({
 
 /* ══ DOM CACHE ══ */
 const $ = id => document.getElementById(id);
-const $title       = $('title');
-let $content       = $('content');
-const $editId      = $('edit-id');
-const $editor      = $('editor');
-const $cancelBtn   = $('cancel-btn');
-const $badgeText   = $('badge-text');
-const $editorBadge = $('editor-badge');
-const $mainList    = $('main-list');
-const $headerCount = $('header-count');
-const $gfBadge     = $('gf-badge');
-const $gfDropdown  = $('gf-dropdown');
-const $tfBadge     = $('tf-badge');     /* v1.1 */
-const $tfDropdown  = $('tf-dropdown');  /* v1.1 */
-const $picker      = $('group-picker');
-const $gpList      = $('gp-list');
-const $pinBtn      = $('pin-btn');      /* v1.1 */
-const $clBtn       = $('color-label-btn'); /* v1.1 */
+const DOM = {};
+DOM.$title       = $('title');
+DOM.$content       = $('content');
+DOM.$editId      = $('edit-id');
+DOM.$editor      = $('editor');
+DOM.$cancelBtn   = $('cancel-btn');
+DOM.$badgeText   = $('badge-text');
+DOM.$editorBadge = $('editor-badge');
+DOM.$mainList    = $('main-list');
+DOM.$headerCount = $('header-count');
+DOM.$gfBadge     = $('gf-badge');
+DOM.$gfDropdown  = $('gf-dropdown');
+DOM.$tfBadge     = $('tf-badge');     /* v1.1 */
+DOM.$tfDropdown  = $('tf-dropdown');  /* v1.1 */
+DOM.$picker      = $('group-picker');
+DOM.$gpList      = $('gp-list');
+DOM.$pinBtn      = $('pin-btn');      /* v1.1 */
+DOM.$clBtn       = $('color-label-btn'); /* v1.1 */
 /* v1.6 */
-const $tocToggleBtn   = $('toc-toggle-btn');
-const $editorToc      = $('editor-toc');
-const $editorTocList  = $('editor-toc-list');
-const $reminderBtn    = $('reminder-btn');
-const $reminderPopup  = $('reminder-popup');
-const $reminderDate   = $('reminder-date');
-const $reminderTime   = $('reminder-time');
-const $exportMdBtn    = $('export-md-btn');
-const $reminderToastOverlay = $('reminder-toast-overlay');
+DOM.$tocToggleBtn   = $('toc-toggle-btn');
+DOM.$editorToc      = $('editor-toc');
+DOM.$editorTocList  = $('editor-toc-list');
+DOM.$reminderBtn    = $('reminder-btn');
+DOM.$reminderPopup  = $('reminder-popup');
+DOM.$reminderDate   = $('reminder-date');
+DOM.$reminderTime   = $('reminder-time');
+DOM.$exportMdBtn    = $('export-md-btn');
+DOM.$reminderToastOverlay = $('reminder-toast-overlay');
 /* v1.3 */
-const $wlAutocomplete = $('wl-autocomplete');
-const $wlAcList       = $('wl-ac-list');
-const $wlPreview      = $('wl-preview'); /* v1.3.1: hover önizleme paneli */
+DOM.$wlAutocomplete = $('wl-autocomplete');
+DOM.$wlAcList       = $('wl-ac-list');
+DOM.$wlPreview      = $('wl-preview'); /* v1.3.1: hover önizleme paneli */
 
 /* daily-note-btn kaldırıldı — Şablonlar > Günlük Not ile aynı işlev */
-const $searchOpBtn    = $('search-op-btn');
-const $searchOpHint   = $('search-op-hint');
+DOM.$searchOpBtn    = $('search-op-btn');
+DOM.$searchOpHint   = $('search-op-hint');
 
 /* ══ MULTI-EDITOR INSTANCE MANAGER ══ */
 let activeInstance = null;
@@ -191,7 +192,7 @@ function activateInstance(inst) {
     if (!inst || inst === activeInstance) return;
     if (activeInstance) saveContext(activeInstance);
     activeInstance = inst;
-    $content = inst.$el;
+    DOM.$content = inst.$el;
     if (typeof window._undoSwitchTarget === 'function') window._undoSwitchTarget(inst.$el);
 }
 
@@ -200,7 +201,7 @@ function saveContext(inst) {
 }
 
 /* Ana editör instance'ı — _undoSwitchTarget henüz tanımlı değil, doğrudan set */
-window._mainEditorInstance = createInstance($content, '');
+window._mainEditorInstance = createInstance(DOM.$content, '');
 activeInstance = window._mainEditorInstance;
 
 /* ══ HELPERS ══ */
@@ -310,7 +311,7 @@ function noteNeedsExpand(n) {
 function parseTagsFromContent(html) {
     /* HTML etiketlerini boşlukla değiştir — #tag ile hemen ardındaki wikilink veya
        başka inline element birleşmesin; etiket yalnızca boşluk/satır sonu ile biter. */
-    const text = (html || '').replace(/<[^>]+>/g, ' ') + ' ' + ($title.value || '');
+    const text = (html || '').replace(/<[^>]+>/g, ' ') + ' ' + (DOM.$title.value || '');
     const matches = text.matchAll(/#([a-zA-ZğüşıöçĞÜŞİÖÇ][a-zA-ZğüşıöçĞÜŞİÖÇ0-9_]{1,30})/g);
     return [...new Set([...matches].map(m => m[1].toLowerCase()))];
 }
@@ -469,19 +470,19 @@ let wlAcActive = false, wlAcRange = null, wlAcStartOffset = -1, wlAcStartNode = 
 
 function closeWlAutocomplete() {
     wlAcActive = false; wlAcRange = null; wlAcStartNode = null; wlAcStartOffset = -1; wlAcSelIndex = 0;
-    $wlAutocomplete.classList.remove('open');
+    DOM.$wlAutocomplete.classList.remove('open');
 }
 
 function openWlAutocomplete(query, rect) {
     wlAcActive = true;
     const matches = notes.filter(n => n.title.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
-    $wlAcList.innerHTML = '';
+    DOM.$wlAcList.innerHTML = '';
     wlAcSelIndex = 0;
     if (matches.length === 0) {
         const d = document.createElement('div');
         d.className = 'wl-ac-empty';
         d.textContent = query ? `“${query}” ile eşleşen not yok` : 'Yazmaya başlayın…';
-        $wlAcList.appendChild(d);
+        DOM.$wlAcList.appendChild(d);
     } else {
         matches.forEach((n, i) => {
             const d = document.createElement('div');
@@ -489,15 +490,15 @@ function openWlAutocomplete(query, rect) {
             d.dataset.title = n.title;
             d.innerHTML = `<i class="fas fa-file-alt"></i>${esc(n.title)}`;
             d.addEventListener('mousedown', ev => { ev.preventDefault(); insertWikilink(n.title); });
-            $wlAcList.appendChild(d);
+            DOM.$wlAcList.appendChild(d);
         });
     }
     let top = rect.bottom + 4, left = rect.left;
     if (left + 320 > window.innerWidth) left = window.innerWidth - 326;
     if (top + 220 > window.innerHeight) top = rect.top - 224;
-    $wlAutocomplete.style.top = top + 'px';
-    $wlAutocomplete.style.left = left + 'px';
-    $wlAutocomplete.classList.add('open');
+    DOM.$wlAutocomplete.style.top = top + 'px';
+    DOM.$wlAutocomplete.style.left = left + 'px';
+    DOM.$wlAutocomplete.classList.add('open');
 }
 
 function insertWikilink(title) {
@@ -528,7 +529,7 @@ function insertWikilink(title) {
 }
 
 /* [[ yazıldığında otomatik tamamlamayı tetikle */
-$content.addEventListener('input', function wlDetect(e) {
+DOM.$content.addEventListener('input', function wlDetect(e) {
     const _el = e.currentTarget;
     const sel = window.getSelection();
     if (!sel || !sel.isCollapsed || !sel.rangeCount || !_el.contains(sel.anchorNode)) { closeWlAutocomplete(); return; }
@@ -548,9 +549,9 @@ $content.addEventListener('input', function wlDetect(e) {
     openWlAutocomplete(query, rect);
 });
 
-$content.addEventListener('keydown', e => {
-    if (!wlAcActive || !$wlAutocomplete.classList.contains('open')) return;
-    const items = [...$wlAcList.querySelectorAll('.wl-ac-item')];
+DOM.$content.addEventListener('keydown', e => {
+    if (!wlAcActive || !DOM.$wlAutocomplete.classList.contains('open')) return;
+    const items = [...DOM.$wlAcList.querySelectorAll('.wl-ac-item')];
     if (e.key === 'Escape') { e.preventDefault(); closeWlAutocomplete(); return; }
     if (e.key === 'ArrowDown' && items.length) {
         e.preventDefault(); wlAcSelIndex = (wlAcSelIndex + 1) % items.length;
@@ -667,23 +668,23 @@ applyTheme();
 /* ══ RENDER ══ */
 function applyGroupFilterColor() {
     if (filterGroup === 'all') {
-        $gfBadge.style.cssText = '';
+        DOM.$gfBadge.style.cssText = '';
     } else {
         const c = getColor(filterGroup);
-        $gfBadge.style.color = c.main;
-        $gfBadge.style.borderColor = c.main;
-        $gfBadge.style.backgroundColor = c.bg;
+        DOM.$gfBadge.style.color = c.main;
+        DOM.$gfBadge.style.borderColor = c.main;
+        DOM.$gfBadge.style.backgroundColor = c.bg;
     }
 }
 
 function applyTagFilterStyle() {
-    $tfBadge.classList.toggle('active-filter', filterTag !== 'all');
-    $tfBadge.textContent = filterTag !== 'all' ? '#' + filterTag : '#';
+    DOM.$tfBadge.classList.toggle('active-filter', filterTag !== 'all');
+    DOM.$tfBadge.textContent = filterTag !== 'all' ? '#' + filterTag : '#';
 }
 
 function buildGroupDropdown() {
     const gs = [...new Set(notes.map(n => n.group))].sort();
-    $gfDropdown.innerHTML = '';
+    DOM.$gfDropdown.innerHTML = '';
     const mkItem = (value, label) => {
         const d = document.createElement('div');
         d.className = 'gf-item' + (filterGroup === value ? ' active' : '');
@@ -692,13 +693,13 @@ function buildGroupDropdown() {
         d.addEventListener('click', () => setGroupFilter(value));
         return d;
     };
-    $gfDropdown.appendChild(mkItem('all', 'Tüm Gruplar'));
-    gs.forEach(g => $gfDropdown.appendChild(mkItem(g, g)));
+    DOM.$gfDropdown.appendChild(mkItem('all', 'Tüm Gruplar'));
+    gs.forEach(g => DOM.$gfDropdown.appendChild(mkItem(g, g)));
 }
 
 function buildTagDropdown() {
     const tags = getAllTags();
-    $tfDropdown.innerHTML = '';
+    DOM.$tfDropdown.innerHTML = '';
     const mkItem = (value, label) => {
         const d = document.createElement('div');
         d.className = 'tf-item' + (filterTag === value ? ' active' : '');
@@ -708,7 +709,7 @@ function buildTagDropdown() {
     };
     const allItem = mkItem('all', 'Tüm Etiketler');
     allItem.classList.add('tf-item-all');
-    $tfDropdown.appendChild(allItem);
+    DOM.$tfDropdown.appendChild(allItem);
     if (tags.length === 0) {
         const d = document.createElement('div');
         d.className = 'tf-item';
@@ -716,23 +717,23 @@ function buildTagDropdown() {
         d.style.fontStyle = 'italic';
         d.textContent = 'Henüz etiket yok';
         d.style.pointerEvents = 'none';
-        $tfDropdown.appendChild(d);
+        DOM.$tfDropdown.appendChild(d);
     }
-    tags.forEach(t => $tfDropdown.appendChild(mkItem(t, '#' + t)));
+    tags.forEach(t => DOM.$tfDropdown.appendChild(mkItem(t, '#' + t)));
 }
 
 function setGroupFilter(value) {
     filterGroup = value;
-    $gfBadge.classList.remove('open');
-    $gfDropdown.classList.remove('open');
+    DOM.$gfBadge.classList.remove('open');
+    DOM.$gfDropdown.classList.remove('open');
     applyGroupFilterColor();
     render();
 }
 
 function setTagFilter(value) {
     filterTag = value;
-    $tfBadge.classList.remove('open');
-    $tfDropdown.classList.remove('open');
+    DOM.$tfBadge.classList.remove('open');
+    DOM.$tfDropdown.classList.remove('open');
     applyTagFilterStyle();
     render();
 }
@@ -742,9 +743,9 @@ function render() {
     applyTagFilterStyle();
 
     const ec = getColor(editorGroup);
-    $editorBadge.style.color = ec.main;
-    $editorBadge.style.backgroundColor = ec.bg;
-    $badgeText.textContent = editorGroup;
+    DOM.$editorBadge.style.color = ec.main;
+    DOM.$editorBadge.style.backgroundColor = ec.bg;
+    DOM.$badgeText.textContent = editorGroup;
 
     let filtered = notes;
     if (filterGroup !== 'all') filtered = filtered.filter(n => n.group === filterGroup);
@@ -765,11 +766,11 @@ function render() {
             );
         }
     }
-    $headerCount.textContent = `${filtered.length}/${notes.length}`;
+    DOM.$headerCount.textContent = `${filtered.length}/${notes.length}`;
 
-    $mainList.innerHTML = '';
+    DOM.$mainList.innerHTML = '';
     if (filtered.length === 0) {
-        $mainList.innerHTML = `<div class="empty-state"><i class="fas fa-file-alt"></i>
+        DOM.$mainList.innerHTML = `<div class="empty-state"><i class="fas fa-file-alt"></i>
             <p>${searchQuery ? 'Sonuç bulunamadı' : 'Henüz not yok'}</p></div>`;
         return;
     }
@@ -784,13 +785,13 @@ function render() {
         const ph = document.createElement('div');
         ph.className = 'pinned-group-header';
         ph.innerHTML = '<i class="fas fa-thumbtack" style="font-size:.65rem"></i> SABİTLENMİŞ';
-        $mainList.appendChild(ph);
+        DOM.$mainList.appendChild(ph);
 
         const pinnedContainer = document.createElement('div');
         pinnedContainer.className = 'pinned-notes-container';
         pinnedContainer.style.marginBottom = '12px';
         pinnedNotes.forEach(n => pinnedContainer.appendChild(buildNoteItem(n)));
-        $mainList.appendChild(pinnedContainer);
+        DOM.$mainList.appendChild(pinnedContainer);
     }
 
     /* Normal notlar gruplandırılmış */
@@ -820,7 +821,7 @@ function render() {
         box.className = 'group-box';
         box.appendChild(gh);
         box.appendChild(gc);
-        $mainList.appendChild(box);
+        DOM.$mainList.appendChild(box);
     });
     if (typeof window._todoUpdateBadge === 'function') window._todoUpdateBadge();
 }
@@ -834,7 +835,7 @@ function buildNoteItem(n) {
 
     const item = document.createElement('div');
     item.className = 'note-item' + (n.pinned ? ' is-pinned' : '');
-    if ($editId.value && String(n.id) === String($editId.value)) item.classList.add('selected');
+    if (DOM.$editId.value && String(n.id) === String(DOM.$editId.value)) item.classList.add('selected');
     item.dataset.id = String(n.id);
 
     /* v1.1: colorLabel yoksa grup rengini kullan */
@@ -937,7 +938,7 @@ function buildNoteItem(n) {
 }
 
 /* ══ EVENT DELEGATION — note list ══ */
-$mainList.addEventListener('click', e => {
+DOM.$mainList.addEventListener('click', e => {
     const gh = e.target.closest('.group-header');
     if (gh) { toggleAccordion(gh.dataset.group); return; }
 
@@ -985,7 +986,7 @@ $mainList.addEventListener('click', e => {
    Bağlı nota tıklamadan, üzerine gelindiğinde içeriğinin küçültülmüş
    ("zoom-out") bir önizlemesini yüzen bir panelde gösterir. */
 let _wlPreviewShowT = null, _wlPreviewHideT = null, _wlPreviewLink = null;
-const $wlPreviewInner = document.getElementById('wl-preview-inner');
+DOM.$wlPreviewInner = document.getElementById('wl-preview-inner');
 
 /* ── Çoklu dış bağlantı panelleri ── */
 let _extPanelTimer = null, _extPanelZ = 99999;
@@ -1089,12 +1090,12 @@ function buildWlPreviewContent(noteId) {
 function showWlPreview(link) {
     if (!link || !link.isConnected) return;
     _wlPreviewLink = link;
-    $wlPreviewInner.innerHTML = buildWlPreviewContent(link.dataset.noteId);
-    $wlPreview.classList.add('open');
+    DOM.$wlPreviewInner.innerHTML = buildWlPreviewContent(link.dataset.noteId);
+    DOM.$wlPreview.classList.add('open');
 
     const r   = link.getBoundingClientRect();
-    const pw  = $wlPreview.offsetWidth  || 300;
-    const ph  = $wlPreview.offsetHeight || 160;
+    const pw  = DOM.$wlPreview.offsetWidth  || 300;
+    const ph  = DOM.$wlPreview.offsetHeight || 160;
 
     /* Graph modal açıkken gm-body sınırlarına göre konumlandır */
     const graphBody = $('graph-body');
@@ -1112,35 +1113,35 @@ function showWlPreview(link) {
         if (top  + ph > gbr.bottom - 8) top  = Math.max(gbr.top  + 8, r.top - ph - 4);
         if (top  < gbr.top   + 8)       top  = gbr.top  + 8;
 
-        $wlPreview.style.left = left + 'px';
-        $wlPreview.style.top  = top  + 'px';
+        DOM.$wlPreview.style.left = left + 'px';
+        DOM.$wlPreview.style.top  = top  + 'px';
         /* hover'da büyüme için max boyutu modal ile sınırla */
-        $wlPreview.style.maxWidth  = (gbr.width  - 24) + 'px';
-        $wlPreview.style.maxHeight = (gbr.height - 24) + 'px';
-        $wlPreview.style.setProperty('--wl-preview-max-h', (gbr.height - 24) + 'px');
+        DOM.$wlPreview.style.maxWidth  = (gbr.width  - 24) + 'px';
+        DOM.$wlPreview.style.maxHeight = (gbr.height - 24) + 'px';
+        DOM.$wlPreview.style.setProperty('--wl-preview-max-h', (gbr.height - 24) + 'px');
     } else {
         /* Normal mod — viewport sınırları */
         let left = r.left;
         let top  = r.bottom + 4;
         if (left + pw > window.innerWidth  - 12) left = Math.max(12, window.innerWidth  - pw - 12);
         if (top  + ph > window.innerHeight - 12) top  = Math.max(12, r.top - ph - 4);
-        $wlPreview.style.left     = left + 'px';
-        $wlPreview.style.top      = top  + 'px';
-        $wlPreview.style.maxWidth  = '';
-        $wlPreview.style.maxHeight = '';
-        $wlPreview.style.removeProperty('--wl-preview-max-h');
+        DOM.$wlPreview.style.left     = left + 'px';
+        DOM.$wlPreview.style.top      = top  + 'px';
+        DOM.$wlPreview.style.maxWidth  = '';
+        DOM.$wlPreview.style.maxHeight = '';
+        DOM.$wlPreview.style.removeProperty('--wl-preview-max-h');
     }
 }
 
 function hideWlPreview() {
-    $wlPreview.classList.remove('open');
-    $wlPreviewInner.innerHTML = '';
+    DOM.$wlPreview.classList.remove('open');
+    DOM.$wlPreviewInner.innerHTML = '';
     _wlPreviewLink = null;
 }
 
 function scheduleWlPreview(link) {
     clearTimeout(_wlPreviewHideT);
-    if (_wlPreviewLink === link && $wlPreview.classList.contains('open')) return;
+    if (_wlPreviewLink === link && DOM.$wlPreview.classList.contains('open')) return;
     clearTimeout(_wlPreviewShowT);
     _wlPreviewShowT = setTimeout(() => showWlPreview(link), 260);
 }
@@ -1190,34 +1191,34 @@ function buildExtLinkPreview(url, text) {
 
 
 /* mouseover/mouseout ile delegasyon — dinamik olarak eklenen .wikilink öğeleri de yakalanır */
-$mainList.addEventListener('mouseover', e => {
+DOM.$mainList.addEventListener('mouseover', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && wl.dataset.noteId) { scheduleWlPreview(wl); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
     if (a) scheduleExtLinkPreview(a);
 });
-$mainList.addEventListener('mouseout', e => {
+DOM.$mainList.addEventListener('mouseout', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && !wl.contains(e.relatedTarget)) { scheduleHideWlPreview(); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
     if (a && !a.contains(e.relatedTarget)) clearTimeout(_extPanelTimer);
 });
 /* Liste kaydırılırsa veya not daraltılırsa paneli kapat */
-$mainList.addEventListener('scroll', () => { if ($wlPreview.classList.contains('open')) hideWlPreview(); }, { passive:true });
+DOM.$mainList.addEventListener('scroll', () => { if (DOM.$wlPreview.classList.contains('open')) hideWlPreview(); }, { passive:true });
 /* Önizleme panelinin kendisine girilince timer iptal, çıkınca gizle */
-$wlPreview.addEventListener('mouseenter', () => { clearTimeout(_wlPreviewHideT); clearTimeout(_wlPreviewShowT); });
-$wlPreview.addEventListener('mouseleave', () => { scheduleHideWlPreview(); }); /* ext-mode'da no-op */
+DOM.$wlPreview.addEventListener('mouseenter', () => { clearTimeout(_wlPreviewHideT); clearTimeout(_wlPreviewShowT); });
+DOM.$wlPreview.addEventListener('mouseleave', () => { scheduleHideWlPreview(); }); /* ext-mode'da no-op */
 
-/* ══ v1.3.2: EDITOR ($content) içindeki wikilink'ler için hover önizleme + tıklama ══
-   $mainList yalnızca sol panel listesini kapsar; sağ panelde açık notun
+/* ══ v1.3.2: EDITOR (DOM.$content) içindeki wikilink'ler için hover önizleme + tıklama ══
+   DOM.$mainList yalnızca sol panel listesini kapsar; sağ panelde açık notun
    içeriğindeki [[bağlantılar]] için aynı davranışı burada sağlıyoruz.         */
-$content.addEventListener('mouseover', e => {
+DOM.$content.addEventListener('mouseover', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && wl.dataset.noteId) { scheduleWlPreview(wl); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
     if (a) scheduleExtLinkPreview(a);
 });
-$content.addEventListener('mouseout', e => {
+DOM.$content.addEventListener('mouseout', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && !wl.contains(e.relatedTarget)) { scheduleHideWlPreview(); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
@@ -1225,7 +1226,7 @@ $content.addEventListener('mouseout', e => {
 });
 /* Contenteditable içinde <a> tıklaması imleci konumlandırır ama gezinmez;
    biz mousedown'da yakalayıp ilgili nota atlıyoruz.                          */
-$content.addEventListener('mousedown', e => {
+DOM.$content.addEventListener('mousedown', e => {
     const wl = e.target.closest('a.wikilink');
     if (!wl || !wl.dataset.noteId) return;
     e.preventDefault();
@@ -1246,17 +1247,17 @@ function togglePin(id) {
     saveNotes();
     render();
     /* Editörde açık not ise pin butonunu güncelle */
-    if (String($editId.value) === String(id)) updateEditorPinBtn(n.pinned);
+    if (String(DOM.$editId.value) === String(id)) updateEditorPinBtn(n.pinned);
 }
 
 function updateEditorPinBtn(pinned) {
     editorPinned = pinned;
-    $pinBtn.classList.toggle('pinned', pinned);
-    $pinBtn.title = pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle';
+    DOM.$pinBtn.classList.toggle('pinned', pinned);
+    DOM.$pinBtn.title = pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle';
 }
 
-$pinBtn.addEventListener('click', () => {
-    const eId = $editId.value;
+DOM.$pinBtn.addEventListener('click', () => {
+    const eId = DOM.$editId.value;
     if (eId) {
         togglePin(eId);
     } else {
@@ -1291,7 +1292,7 @@ function applyColorLabel(key) {
         $('color-label-popup').classList.remove('open');
         return;
     }
-    const eId = $editId.value;
+    const eId = DOM.$editId.value;
     if (eId) {
         const n = notes.find(x => String(x.id) === String(eId));
         if (n) { n.colorLabel = key; n.updatedAt = Date.now(); saveNotes(); render(); }
@@ -1304,15 +1305,15 @@ function applyColorLabel(key) {
 
 /* ══ v1.6: İÇİNDEKİLER PANELİ ══ */
 function buildTocPanel(noteId) {
-    if (!$editorToc || !$editorTocList) return;
+    if (!DOM.$editorToc || !DOM.$editorTocList) return;
     const n = notes.find(x => String(x.id) === String(noteId));
-    if (!n) { $editorToc.style.display = 'none'; $editorTocList.innerHTML = ''; if($tocToggleBtn) $tocToggleBtn.classList.add('hidden'); return; }
+    if (!n) { DOM.$editorToc.style.display = 'none'; DOM.$editorTocList.innerHTML = ''; if(DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.add('hidden'); return; }
     const tmp = document.createElement('div');
     tmp.innerHTML = sanitize(n.content);
     const heads = Array.from(tmp.querySelectorAll('h2, h3'));
-    if ($tocToggleBtn) $tocToggleBtn.classList.toggle('hidden', heads.length === 0);
-    if (heads.length === 0) { $editorToc.style.display = 'none'; $editorTocList.innerHTML = ''; tocOpen = false; if($tocToggleBtn) $tocToggleBtn.classList.remove('active'); return; }
-    $editorTocList.innerHTML = '';
+    if (DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.toggle('hidden', heads.length === 0);
+    if (heads.length === 0) { DOM.$editorToc.style.display = 'none'; DOM.$editorTocList.innerHTML = ''; tocOpen = false; if(DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.remove('active'); return; }
+    DOM.$editorTocList.innerHTML = '';
     if (tocOpen) positionTocPanel();
     heads.forEach((h, i) => {
         const item = document.createElement('div');
@@ -1321,28 +1322,28 @@ function buildTocPanel(noteId) {
         item.dataset.idx = String(i);
         item.title = item.textContent;
         item.addEventListener('click', () => scrollToTocHeading(i));
-        $editorTocList.appendChild(item);
+        DOM.$editorTocList.appendChild(item);
     });
-    $editorToc.style.display = tocOpen ? '' : 'none';
+    DOM.$editorToc.style.display = tocOpen ? '' : 'none';
 }
 function positionTocPanel() {
     /* v1.10 güncelleme: İçindekiler popup'ı düğmenin üstünde, sağa doğru açılır */
-    if (!$editorToc || !$tocToggleBtn) return;
-    const r = $tocToggleBtn.getBoundingClientRect();
-    $editorToc.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 296)) + 'px';
-    $editorToc.style.top = 'auto';
-    $editorToc.style.bottom = (window.innerHeight - r.top + 6) + 'px';
+    if (!DOM.$editorToc || !DOM.$tocToggleBtn) return;
+    const r = DOM.$tocToggleBtn.getBoundingClientRect();
+    DOM.$editorToc.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 296)) + 'px';
+    DOM.$editorToc.style.top = 'auto';
+    DOM.$editorToc.style.bottom = (window.innerHeight - r.top + 6) + 'px';
 }
 function scrollToTocHeading(idx) {
-    if (!$content) return;
-    const heads = Array.from($content.querySelectorAll('h2, h3'));
+    if (!DOM.$content) return;
+    const heads = Array.from(DOM.$content.querySelectorAll('h2, h3'));
     const target = heads[idx];
     if (target) target.scrollIntoView({ behavior:'smooth', block:'center' });
 }
 function toggleTocPanel() {
     tocOpen = !tocOpen;
-    if ($tocToggleBtn) $tocToggleBtn.classList.toggle('active', tocOpen);
+    if (DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.toggle('active', tocOpen);
     if (tocOpen) positionTocPanel();
-    if ($editorToc) $editorToc.style.display = (tocOpen && $editorTocList && $editorTocList.children.length) ? '' : 'none';
+    if (DOM.$editorToc) DOM.$editorToc.style.display = (tocOpen && DOM.$editorTocList && DOM.$editorTocList.children.length) ? '' : 'none';
 }
 

@@ -1,35 +1,35 @@
 /* ══ BOOKMARK GUTTER ══ */
 let _aiInserting = false; /* AI text eklerken bookmark tetiklenmesin */
 let _bmMousedownInGutter = false; /* mousedown gutter içinde başlamadıysa bookmark koyma */
-$content.addEventListener('mousemove', function(e) {
-    const xInContent = e.clientX - $content.getBoundingClientRect().left;
+DOM.$content.addEventListener('mousemove', function(e) {
+    const xInContent = e.clientX - DOM.$content.getBoundingClientRect().left;
     this.style.cursor = xInContent < 28 ? 'pointer' : '';
 });
-$content.addEventListener('mouseleave', function() { this.style.cursor = ''; });
-$content.addEventListener('mousedown', function(e) {
-    _bmMousedownInGutter = (e.clientX - $content.getBoundingClientRect().left) < 28;
+DOM.$content.addEventListener('mouseleave', function() { this.style.cursor = ''; });
+DOM.$content.addEventListener('mousedown', function(e) {
+    _bmMousedownInGutter = (e.clientX - DOM.$content.getBoundingClientRect().left) < 28;
 });
-$content.addEventListener('click', function(e) {
+DOM.$content.addEventListener('click', function(e) {
     if (_aiInserting) return;
     if (!_bmMousedownInGutter) return;
-    const xInContent = e.clientX - $content.getBoundingClientRect().left;
+    const xInContent = e.clientX - DOM.$content.getBoundingClientRect().left;
     if (xInContent > 28) return;
-    const rect = $content.getBoundingClientRect();
+    const rect = DOM.$content.getBoundingClientRect();
     const el = document.elementFromPoint(rect.left + 36, e.clientY);
     if (!el) return;
 
     /* Tıklanan noktadan yukarı çıkarak en uygun bookmark hedefini bul */
     let block = null;
     let node = el;
-    while (node && node !== $content) {
+    while (node && node !== DOM.$content) {
         /* Tablo satırı */
         if (node.tagName === 'TR') { block = node; break; }
         /* Todo liste öğesi */
         if (node.tagName === 'LI' && node.classList.contains('todo-item')) { block = node; break; }
         const par = node.parentElement;
         if (!par) break;
-        /* $content'in doğrudan çocuğu */
-        if (par === $content) { block = node; break; }
+        /* DOM.$content'in doğrudan çocuğu */
+        if (par === DOM.$content) { block = node; break; }
         /* Panel veya kolon içeriğinin doğrudan çocuğu */
         if (par.classList && (par.classList.contains('col-panel-content') || par.classList.contains('layout-col'))) {
             block = node; break;
@@ -63,7 +63,7 @@ $content.addEventListener('click', function(e) {
 });
 
 /* AI üretilen içerik kullanıcı tarafından düzenlenince işaretle */
-$content.addEventListener('input', () => {
+DOM.$content.addEventListener('input', () => {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
     const node = sel.anchorNode;
@@ -119,7 +119,7 @@ $content.addEventListener('input', () => {
             document.body.appendChild(_ind);
         }
         /* Parent zoom'dan etkilenmez, kararlı konum referansı */
-        const ref = $content.parentElement || $content;
+        const ref = DOM.$content.parentElement || DOM.$content;
         const r = ref.getBoundingClientRect();
         _ind.style.left = Math.round(r.left + r.width / 2) + 'px';
         _ind.style.top  = Math.round(r.bottom - 44) + 'px';
@@ -131,12 +131,12 @@ $content.addEventListener('input', () => {
 
     window._setEditorZoom = function(z) {
         _zoom = Math.max(MIN, Math.min(MAX, Math.round(z * 10) / 10));
-        $content.style.zoom = _zoom;
+        DOM.$content.style.zoom = _zoom;
         showInd(_zoom);
     };
-    window._resetEditorZoom = function() { _zoom = 1; $content.style.zoom = ''; };
+    window._resetEditorZoom = function() { _zoom = 1; DOM.$content.style.zoom = ''; };
 
-    $content.addEventListener('wheel', e => {
+    DOM.$content.addEventListener('wheel', e => {
         if (!e.ctrlKey) return;
         e.preventDefault();
         window._setEditorZoom(_zoom + (e.deltaY < 0 ? STEP : -STEP));
@@ -144,7 +144,7 @@ $content.addEventListener('input', () => {
 
     document.addEventListener('keydown', e => {
         if (!e.ctrlKey || e.key !== '0') return;
-        if (document.activeElement === $content || $content.contains(document.activeElement)) {
+        if (document.activeElement === DOM.$content || DOM.$content.contains(document.activeElement)) {
             e.preventDefault();
             window._setEditorZoom(1);
         }
@@ -1126,10 +1126,10 @@ resetEditor();
 render();
 
 /* Başlık veya içeriğe odaklanınca pristine moddan çık */
-$title.addEventListener('focus',   () => document.body.classList.remove('editor-pristine'));
-$content.addEventListener('focus', () => document.body.classList.remove('editor-pristine'));
+DOM.$title.addEventListener('focus',   () => document.body.classList.remove('editor-pristine'));
+DOM.$content.addEventListener('focus', () => document.body.classList.remove('editor-pristine'));
 /* Giriş yapılınca cf-trigger göster */
-$title.addEventListener('input',   () => document.body.classList.add('cf-ready'));
-$content.addEventListener('input', () => document.body.classList.add('cf-ready'));
+DOM.$title.addEventListener('input',   () => document.body.classList.add('cf-ready'));
+DOM.$content.addEventListener('input', () => document.body.classList.add('cf-ready'));
 
 

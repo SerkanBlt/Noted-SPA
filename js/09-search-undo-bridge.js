@@ -1,6 +1,6 @@
 /* ══ EDİTÖR İÇİ ARAMA ══ */
 (function () {
-    const _mainContent = document.getElementById('content'); /* $content değişmez ref */
+    const _mainContent = document.getElementById('content'); /* DOM.$content değişmez ref */
     const searchBtn    = $('editor-search-btn');
     const wrap         = $('editor-search-wrap');
     const panel        = $('editor-search-panel');
@@ -44,7 +44,7 @@
     /* Ctrl+F arama panelini aç */
     document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
-            const editing = $content && !$content.hasAttribute('disabled');
+            const editing = DOM.$content && !DOM.$content.hasAttribute('disabled');
             if (!editing) return;
             e.preventDefault();
             openPanel();
@@ -182,12 +182,12 @@
 
     function _saveCursor() {
         const sel = window.getSelection();
-        if (!sel || !sel.rangeCount || !$content) return null;
+        if (!sel || !sel.rangeCount || !DOM.$content) return null;
         const r = sel.getRangeAt(0);
-        if (!$content.contains(r.startContainer)) return null;
+        if (!DOM.$content.contains(r.startContainer)) return null;
         function path(n) {
             const p = [];
-            while (n && n !== $content) { p.unshift([...n.parentNode.childNodes].indexOf(n)); n = n.parentNode; }
+            while (n && n !== DOM.$content) { p.unshift([...n.parentNode.childNodes].indexOf(n)); n = n.parentNode; }
             return p;
         }
         return { a: path(r.startContainer), ao: r.startOffset,
@@ -195,21 +195,21 @@
     }
 
     function _restoreCursor(cur) {
-        if (!cur || !$content) return;
+        if (!cur || !DOM.$content) return;
         try {
             function byPath(p) {
-                let n = $content;
+                let n = DOM.$content;
                 for (const i of p) { if (!n.childNodes[i]) return null; n = n.childNodes[i]; }
                 return n;
             }
             const a = byPath(cur.a), f = byPath(cur.f) || a;
-            if (!a) { $content.focus(); return; }
+            if (!a) { DOM.$content.focus(); return; }
             const clamp = (n, v) => Math.min(v, n.nodeType === 3 ? n.length : n.childNodes.length);
             const range = document.createRange();
             range.setStart(a, clamp(a, cur.ao));
             range.setEnd(f, clamp(f, cur.fo));
             const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-        } catch (_) { $content.focus(); }
+        } catch (_) { DOM.$content.focus(); }
     }
 
     function _pushState(html, cursor) {
@@ -225,13 +225,13 @@
 
     function _flushDebounce() {
         if (_debTimer) { clearTimeout(_debTimer); _debTimer = null; }
-        if ($content && !_locked && !_setup) _pushState($content.innerHTML, _saveCursor());
+        if (DOM.$content && !_locked && !_setup) _pushState(DOM.$content.innerHTML, _saveCursor());
     }
 
     function _debouncePush() {
         if (_locked || _setup) return;
         if (_debTimer) clearTimeout(_debTimer);
-        const html = $content?.innerHTML ?? '', cursor = _saveCursor();
+        const html = DOM.$content?.innerHTML ?? '', cursor = _saveCursor();
         _debTimer = setTimeout(() => { _debTimer = null; _pushState(html, cursor); }, 500);
     }
 
@@ -247,7 +247,7 @@
 
     window._undoSetupEnd = function () {
         _setup = false;
-        if ($content) _pushState($content.innerHTML, null);
+        if (DOM.$content) _pushState(DOM.$content.innerHTML, null);
     };
 
     window.editorUndo = function () {
@@ -256,14 +256,14 @@
         inst._idx--;
         const state = inst._stack[inst._idx];
         _locked = true;
-        $content.innerHTML = state.html;
+        DOM.$content.innerHTML = state.html;
         if (typeof _restoreGrids === 'function') _restoreGrids();
         if (typeof initShapeOverlays === 'function') initShapeOverlays();
         /* _locked = true burada kalıyor — MutationObserver microtask'ları RAF'tan önce
            ateşlenir; RAF içinde kilit açılırsa observer redo branch'ini kesmez */
         requestAnimationFrame(() => {
             _locked = false;
-            $content.focus();
+            DOM.$content.focus();
             _restoreCursor(state.cursor);
             if (typeof _markDirty === 'function') _markDirty();
             if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
@@ -277,12 +277,12 @@
         inst._idx++;
         const state = inst._stack[inst._idx];
         _locked = true;
-        $content.innerHTML = state.html;
+        DOM.$content.innerHTML = state.html;
         if (typeof _restoreGrids === 'function') _restoreGrids();
         if (typeof initShapeOverlays === 'function') initShapeOverlays();
         requestAnimationFrame(() => {
             _locked = false;
-            $content.focus();
+            DOM.$content.focus();
             _restoreCursor(state.cursor);
             if (typeof _markDirty === 'function') _markDirty();
             if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
@@ -381,7 +381,7 @@
         if (!el) return;
         if (!_obs) {
             _obs = new MutationObserver(mutations => {
-                if (_locked || _setup || !$content) return;
+                if (_locked || _setup || !DOM.$content) return;
                 const hasChildList = mutations.some(m => m.type === 'childList');
                 if (hasChildList) _flushDebounce(); else _debouncePush();
             });
@@ -417,7 +417,7 @@
         _attach(newEl);
     };
 
-    if ($content) _attach($content);
+    if (DOM.$content) _attach(DOM.$content);
 })();
 
 /* side-toolbar: editor-top altına konumlandır (dinamik height) */
@@ -491,8 +491,8 @@ window._fpWlDetect = function(e) {
     openWlAutocomplete(query, rect);
 };
 window._fpWlKeydown = function(e) {
-    if (!wlAcActive || !$wlAutocomplete.classList.contains('open')) return;
-    const items = [...$wlAcList.querySelectorAll('.wl-ac-item')];
+    if (!wlAcActive || !DOM.$wlAutocomplete.classList.contains('open')) return;
+    const items = [...DOM.$wlAcList.querySelectorAll('.wl-ac-item')];
     if (e.key === 'Escape') { e.preventDefault(); closeWlAutocomplete(); return; }
     if (e.key === 'ArrowDown' && items.length) {
         e.preventDefault(); wlAcSelIndex = (wlAcSelIndex + 1) % items.length;

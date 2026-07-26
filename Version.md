@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.115
+**Modülerleşme Faz 4b — Global Konsolidasyonu: DOM Cache Kümesi**
+- Faz 4'ün ikinci alt-fazı: 38 adet `$xxx` DOM referansı (`$title`, `$content`, `$editor`, `$toolbar`, `$slashMenu`, `$reminderPopup` vb. — `$content` hariç hepsi `const`, `$content` ise editör-instance değiştirme akışında yeniden atanan `let`) `js/01-core-storage-render.js` başındaki tek bir `const DOM = {}` nesnesine taşındı
+- Kapsam ve hacim nedeniyle (toplam ~500 kullanım yeri, `$content` tek başına 170) elle değil, doğrulanabilir bir **Node.js codemod** ile yapıldı: her değişken için önce bildirim satırı (`^(const|let)\s+\$AD` → `DOM.$AD`), sonra `(?<!DOM\.)\$AD\b` negatif-lookbehind'li global regex ile kalan tüm kullanımlar değiştirildi — böylece codemod'un kendi ürettiği `DOM.$AD` metni ikinci kez eşleşip `DOM.DOM.$AD`'ye dönüşmedi
+- **Bir gölgeleme (shadowing) tuzağı bulundu ve bilinçli olarak atlandı:** `js/context-menu.js` kendi yerel (IIFE scope'lu) `const $content = document.getElementById('content')`'ini tanımlıyor — global `$content` ile aynı isim ama kasıtlı olarak ayrı, üstelik global `$content` aktif editör instance'ına göre değişebilen (`let`) bir referans. Bu dosya codemod'dan hariç tutuldu; global'e bağlanması `#content`'in her zaman doğru elemanı göstermesi garantisini bozardı
+- Ölçüm: top-level global-satır sayısı **85 → 48** (Faz 4 başlangıcından beri 105 → 48)
+- Doğrulama: `node --check` 12 dosyada temiz; RKL-1, RKL-2/3, RKL-9, RKL-12, RKL-13 gerçek DOM ölçümleriyle doğrulandı — panel kart boşluğu/radius, odak/blur accent geçişi, kaydet→kapat→yeniden aç sonrası 6 toolbar butonu + 6 hücre + 4 resize handle + doğru `$editId`, `* ` → madde listesi, slash menü açılışı (`$slashMenu`), mobilde tam genişlik + odakta görünen toolbar; konsolda sıfır hata
+- `Comments.json`: `trap-normalizehtml-empty-block-removal` satır numarası (`--fix` ile) tazelendi, anchor değişmedi
+
+---
+
 ## v1.15.114
 **Modülerleşme Faz 4a — Global Konsolidasyonu: Sabitler Kümesi**
 - 105 top-level `let/const/var`'ı birkaç namespace nesnesine toplama işinin (Faz 4) ilk alt-fazı: en düşük riskli küme olan **Sabitler** (23 adet — `PALETTE`, `COLOR_LABELS`, `TEMPLATES_V2`, `SLASH_COMMAND_GROUPS`, `SLASH_COMMANDS`, `SLASH_INLINE_MAP`, `MD_INLINE_TRIGGERS`, `_SHAPES`, `_SHAPE_PATHS`, `WIKILINK_RE`, `SEARCH_OP_RE`, `_THC_*`, `_themeIcons`, `GRAPH_ZOOM_*`, `FOCUS_TIMER_KEY`, `ACTIVITY_LOG_KEY`, `TRASH_GROUP`, `COLOR_LABEL_ALIASES`, `VIEW_ITEMS`) tek bir `const Const = {}` nesnesine (`js/01-core-storage-render.js` başında) taşındı

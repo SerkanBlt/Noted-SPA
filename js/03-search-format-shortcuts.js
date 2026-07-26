@@ -22,24 +22,24 @@ searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearch();
 /* v1.3: arama operatörleri ipucu */
 /* Gelişmiş arama operatörleri — hover ile göster/gizle */
 function positionSearchOpHint() {
-    const rect = $searchOpBtn.getBoundingClientRect();
+    const rect = DOM.$searchOpBtn.getBoundingClientRect();
     let top = rect.bottom + 6, left = rect.left;
     if (left + 250 > window.innerWidth) left = window.innerWidth - 256;
-    $searchOpHint.style.top = top + 'px';
-    $searchOpHint.style.left = left + 'px';
+    DOM.$searchOpHint.style.top = top + 'px';
+    DOM.$searchOpHint.style.left = left + 'px';
 }
 let _searchOpHideT = null;
-$searchOpBtn.addEventListener('mouseenter', () => {
+DOM.$searchOpBtn.addEventListener('mouseenter', () => {
     clearTimeout(_searchOpHideT);
     positionSearchOpHint();
-    $searchOpHint.classList.add('open');
+    DOM.$searchOpHint.classList.add('open');
 });
-$searchOpBtn.addEventListener('mouseleave', () => {
-    _searchOpHideT = setTimeout(() => $searchOpHint.classList.remove('open'), 200);
+DOM.$searchOpBtn.addEventListener('mouseleave', () => {
+    _searchOpHideT = setTimeout(() => DOM.$searchOpHint.classList.remove('open'), 200);
 });
-$searchOpHint.addEventListener('mouseenter', () => { clearTimeout(_searchOpHideT); });
-$searchOpHint.addEventListener('mouseleave', () => {
-    _searchOpHideT = setTimeout(() => $searchOpHint.classList.remove('open'), 200);
+DOM.$searchOpHint.addEventListener('mouseenter', () => { clearTimeout(_searchOpHideT); });
+DOM.$searchOpHint.addEventListener('mouseleave', () => {
+    _searchOpHideT = setTimeout(() => DOM.$searchOpHint.classList.remove('open'), 200);
 });
 
 /* ══ VOICE SEARCH ══ */
@@ -87,32 +87,32 @@ function _positionDropdown(badgeEl, dropEl) {
 }
 
 function _closeHeaderDropdowns(except) {
-    if (except !== 'gf') { $gfBadge.classList.remove('open'); $gfDropdown.classList.remove('open'); }
-    if (except !== 'tf') { $tfBadge.classList.remove('open'); $tfDropdown.classList.remove('open'); }
-    if (except !== 'sort') { $sortBadge.classList.remove('open'); $sortDropdown.classList.remove('open'); }
-    if (except !== 'view' && typeof $viewBadge !== 'undefined' && $viewBadge) { $viewBadge.classList.remove('open'); $viewDropdown.classList.remove('open'); }
+    if (except !== 'gf') { DOM.$gfBadge.classList.remove('open'); DOM.$gfDropdown.classList.remove('open'); }
+    if (except !== 'tf') { DOM.$tfBadge.classList.remove('open'); DOM.$tfDropdown.classList.remove('open'); }
+    if (except !== 'sort') { DOM.$sortBadge.classList.remove('open'); DOM.$sortDropdown.classList.remove('open'); }
+    if (except !== 'view' && typeof DOM.$viewBadge !== 'undefined' && DOM.$viewBadge) { DOM.$viewBadge.classList.remove('open'); DOM.$viewDropdown.classList.remove('open'); }
 }
 
-$gfBadge.addEventListener('click', e => {
+DOM.$gfBadge.addEventListener('click', e => {
     e.stopPropagation();
-    const willOpen = !$gfDropdown.classList.contains('open');
+    const willOpen = !DOM.$gfDropdown.classList.contains('open');
     _closeHeaderDropdowns('gf');
     if (willOpen) {
-        $gfBadge.classList.add('open'); $gfDropdown.classList.add('open');
+        DOM.$gfBadge.classList.add('open'); DOM.$gfDropdown.classList.add('open');
         buildGroupDropdown();
-        _positionDropdown($gfBadge, $gfDropdown);
+        _positionDropdown(DOM.$gfBadge, DOM.$gfDropdown);
     }
 });
 
 /* ══ v1.1: TAG FILTER BADGE ══ */
-$tfBadge.addEventListener('click', e => {
+DOM.$tfBadge.addEventListener('click', e => {
     e.stopPropagation();
-    const willOpen = !$tfDropdown.classList.contains('open');
+    const willOpen = !DOM.$tfDropdown.classList.contains('open');
     _closeHeaderDropdowns('tf');
     if (willOpen) {
-        $tfBadge.classList.add('open'); $tfDropdown.classList.add('open');
+        DOM.$tfBadge.classList.add('open'); DOM.$tfDropdown.classList.add('open');
         buildTagDropdown();
-        _positionDropdown($tfBadge, $tfDropdown);
+        _positionDropdown(DOM.$tfBadge, DOM.$tfDropdown);
     }
 });
 
@@ -145,7 +145,7 @@ $tfBadge.addEventListener('click', e => {
             /* execCommand('foreColor') <font color="..."> üretir — sanitize() allowlist'inde
                'font' tag'ı yok, kayıtta tamamen siliniyordu (renk kayboluyordu). fontFamily'deki
                aynı workaround: <font> -> <span style="color"> dönüşümü. */
-            const et = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget || $content;
+            const et = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget || DOM.$content;
             et.querySelectorAll('font[color]').forEach(font => {
                 const span = document.createElement('span');
                 span.style.color = font.color;
@@ -181,7 +181,7 @@ $tfBadge.addEventListener('click', e => {
         let interimText='';
         for(let i=e.resultIndex;i<e.results.length;i++) {
             const t=e.results[i][0].transcript;
-            if(e.results[i].isFinal) { $content.focus(); document.execCommand('insertText',false,t); interimEl.textContent=''; interimEl.classList.remove('visible'); }
+            if(e.results[i].isFinal) { DOM.$content.focus(); document.execCommand('insertText',false,t); interimEl.textContent=''; interimEl.classList.remove('visible'); }
             else interimText+=t;
         }
         if(interimText) { interimEl.textContent='🎤 '+interimText; interimEl.classList.add('visible'); }
@@ -191,7 +191,7 @@ $tfBadge.addEventListener('click', e => {
     micBtn.addEventListener('click',e=>{
         e.stopPropagation();
         if(micBtn.classList.contains('listening')) { setListening(false); recognition.stop(); }
-        else { $content.focus(); recognition.start(); setListening(true); }
+        else { DOM.$content.focus(); recognition.start(); setListening(true); }
     });
 })();
 
@@ -279,7 +279,7 @@ function applyInlineStyle(prop, value) {
     /* Önce selection'ı restore et */
     _restoreToolbarSel();
     const sel = window.getSelection();
-    const et  = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget || $content;
+    const et  = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget || DOM.$content;
     if (!sel || !sel.rangeCount || !et.contains(sel.anchorNode)) return;
     if (sel.isCollapsed) return;
 
@@ -341,7 +341,7 @@ function getCurrentFontSize() {
 (function() {
     function updateToolbarDisplay() {
         const sel  = window.getSelection();
-        const _etd = _activeEditTarget || $content;
+        const _etd = _activeEditTarget || DOM.$content;
         if (!sel || sel.isCollapsed || !_etd.contains(sel.anchorNode)) return;
         const node = sel.getRangeAt(0).startContainer;
         const el   = node.nodeType === 3 ? (node.parentElement || _etd) : node;
@@ -420,13 +420,13 @@ function getCurrentFontSize() {
         }
     }
     const obs=new MutationObserver(muts=>{ muts.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeName==='LI') upgradeTodoLi(n); })); });
-    obs.observe($content,{childList:true,subtree:true});
+    obs.observe(DOM.$content,{childList:true,subtree:true});
 })();
 
 /* ══ LAYOUT BREAKPOINT ══ */
 (function() {
     const mq=window.matchMedia('(min-width: 900px)');
-    function onBreakpoint(e) { if(e.matches){ $content.style.height=''; $content.style.minHeight=''; $content.style.maxHeight=''; } }
+    function onBreakpoint(e) { if(e.matches){ DOM.$content.style.height=''; DOM.$content.style.minHeight=''; DOM.$content.style.maxHeight=''; } }
     mq.addEventListener('change',onBreakpoint); onBreakpoint(mq);
 })();
 
@@ -449,8 +449,8 @@ function getCurrentFontSize() {
 (function() {
     const handle=$('resize-handle');
     let startY,startH,dragging=false;
-    function startResize(clientY){startY=clientY;startH=$content.offsetHeight;dragging=true;}
-    function doResize(clientY){if(!dragging)return;const newH=Math.max(80,startH+(clientY-startY));$content.style.height=newH+'px';}
+    function startResize(clientY){startY=clientY;startH=DOM.$content.offsetHeight;dragging=true;}
+    function doResize(clientY){if(!dragging)return;const newH=Math.max(80,startH+(clientY-startY));DOM.$content.style.height=newH+'px';}
     function stopResize(){dragging=false;handle.classList.remove('resizing');document.body.style.userSelect='';document.removeEventListener('mousemove',onMouseMove);document.removeEventListener('mouseup',onMouseUp);}
     function onMouseMove(e){doResize(e.clientY);} function onMouseUp(){stopResize();}
     handle.addEventListener('mousedown',e=>{ e.preventDefault(); startResize(e.clientY); handle.classList.add('resizing'); document.body.style.userSelect='none'; document.addEventListener('mousemove',onMouseMove); document.addEventListener('mouseup',onMouseUp); });
@@ -467,10 +467,10 @@ document.addEventListener('keydown',e=>{
     const _mod = _isMac ? e.metaKey : e.ctrlKey;
 
     if(e.key==='Escape'){
-        $picker.classList.remove('open'); $gfBadge.classList.remove('open'); $gfDropdown.classList.remove('open');
-        $tfBadge.classList.remove('open'); $tfDropdown.classList.remove('open');
+        DOM.$picker.classList.remove('open'); DOM.$gfBadge.classList.remove('open'); DOM.$gfDropdown.classList.remove('open');
+        DOM.$tfBadge.classList.remove('open'); DOM.$tfDropdown.classList.remove('open');
         $('color-popup').classList.remove('open'); $('bg-color-popup').classList.remove('open'); $('color-label-popup').classList.remove('open');
-        if (typeof $sortDropdown !== 'undefined' && $sortDropdown) { $sortBadge.classList.remove('open'); $sortDropdown.classList.remove('open'); }
+        if (typeof DOM.$sortDropdown !== 'undefined' && DOM.$sortDropdown) { DOM.$sortBadge.classList.remove('open'); DOM.$sortDropdown.classList.remove('open'); }
         if (typeof slashMenuOpen !== 'undefined' && slashMenuOpen) closeSlashMenu();
         closeQuickCapture();
         closeTemplateDropdown();
@@ -500,17 +500,17 @@ document.addEventListener('keydown',e=>{
 
 /* ══ GLOBAL CLICK ══ */
 document.addEventListener('click',e=>{
-    if (!e.target.closest('.gf-wrap')) { $gfBadge.classList.remove('open'); $gfDropdown.classList.remove('open'); }
-    if (!e.target.closest('.tf-wrap')) { $tfBadge.classList.remove('open'); $tfDropdown.classList.remove('open'); }
-    $picker.classList.remove('open');
-    if (typeof $sortDropdown !== 'undefined' && !e.target.closest('.sort-wrap')) { $sortBadge.classList.remove('open'); $sortDropdown.classList.remove('open'); }
-    if (typeof $viewDropdown !== 'undefined' && $viewDropdown && !e.target.closest('.view-wrap')) { $viewBadge.classList.remove('open'); $viewDropdown.classList.remove('open'); }
+    if (!e.target.closest('.gf-wrap')) { DOM.$gfBadge.classList.remove('open'); DOM.$gfDropdown.classList.remove('open'); }
+    if (!e.target.closest('.tf-wrap')) { DOM.$tfBadge.classList.remove('open'); DOM.$tfDropdown.classList.remove('open'); }
+    DOM.$picker.classList.remove('open');
+    if (typeof DOM.$sortDropdown !== 'undefined' && !e.target.closest('.sort-wrap')) { DOM.$sortBadge.classList.remove('open'); DOM.$sortDropdown.classList.remove('open'); }
+    if (typeof DOM.$viewDropdown !== 'undefined' && DOM.$viewDropdown && !e.target.closest('.view-wrap')) { DOM.$viewBadge.classList.remove('open'); DOM.$viewDropdown.classList.remove('open'); }
     $('color-label-popup').classList.remove('open');
     if (window._fpColorLabelContext) window._fpColorLabelContext = null;
     /* v1.10 güncelleme: İçindekiler artık yüzen bir popup — dışarı tıklanınca kapanır */
-    if ($editorToc && $editorToc.style.display !== 'none' && $tocToggleBtn
-        && !$editorToc.contains(e.target) && e.target !== $tocToggleBtn && !$tocToggleBtn.contains(e.target)) {
-        $editorToc.style.display = 'none'; tocOpen = false; $tocToggleBtn.classList.remove('active');
+    if (DOM.$editorToc && DOM.$editorToc.style.display !== 'none' && DOM.$tocToggleBtn
+        && !DOM.$editorToc.contains(e.target) && e.target !== DOM.$tocToggleBtn && !DOM.$tocToggleBtn.contains(e.target)) {
+        DOM.$editorToc.style.display = 'none'; tocOpen = false; DOM.$tocToggleBtn.classList.remove('active');
     }
     const ci=$('custom-color');
     if(!ci||document.activeElement!==ci){ $('color-popup').classList.remove('open'); $('bg-color-popup').classList.remove('open'); }
@@ -578,9 +578,9 @@ function exportNotes() {
 $('download-btn').addEventListener('click', exportNotes);
 
 /* ══ LİNK TIKLAMA ══ */
-$content.addEventListener('click', e => {
+DOM.$content.addEventListener('click', e => {
     const li = e.target.closest('.todo-item');
-    if (li && li.closest('#content') === $content) {
+    if (li && li.closest('#content') === DOM.$content) {
         /* todo-mark span'a tıklama = checkbox toggle */
         if (e.target.classList.contains('todo-mark') || e.target.closest('.todo-mark')) {
             e.preventDefault();
@@ -591,7 +591,7 @@ $content.addEventListener('click', e => {
             const t = text || li;
             const r = document.createRange(); r.setStart(t, 0); r.collapse(true);
             const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-            (li.closest('.ng-cell') || $content).focus();
+            (li.closest('.ng-cell') || DOM.$content).focus();
             return;
         }
     }
@@ -636,7 +636,7 @@ function editNote(id) {
             return;
         }
     }
-    /* editNote her zaman ana editörü hedeflemeli — $content'i geri al */
+    /* editNote her zaman ana editörü hedeflemeli — DOM.$content'i geri al */
     if (typeof activateInstance === 'function' && window._mainEditorInstance) {
         activateInstance(window._mainEditorInstance);
     }
@@ -644,24 +644,24 @@ function editNote(id) {
     const n=notes.find(x=>String(x.id)===String(id)); if(!n) return;
     document.body.classList.remove('editor-pristine');
     document.body.classList.remove('cf-ready');
-    $title.value=n.title; $editId.value=n.id; editorGroup=n.group;
-    $content.innerHTML=sanitize(n.content);
+    DOM.$title.value=n.title; DOM.$editId.value=n.id; editorGroup=n.group;
+    DOM.$content.innerHTML=sanitize(n.content);
     if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
-    _upgradeGridWraps($content);
-    if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks($content);
+    _upgradeGridWraps(DOM.$content);
+    if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks(DOM.$content);
     if (typeof window._resetEditorZoom === 'function') window._resetEditorZoom();
     initShapeOverlays();
 
     /* Eski formattaki todo kalıntılarını yeni yapıya dönüştür */
-    $content.querySelectorAll('.todo-cb').forEach(cb => cb.remove());
-    $content.querySelectorAll('.todo-item-text').forEach(wrap => {
+    DOM.$content.querySelectorAll('.todo-cb').forEach(cb => cb.remove());
+    DOM.$content.querySelectorAll('.todo-item-text').forEach(wrap => {
         const text = document.createElement('span');
         text.className = 'todo-text';
         while (wrap.firstChild) text.appendChild(wrap.firstChild);
         wrap.parentNode.replaceChild(text, wrap);
     });
     /* todo-mark yoksa ekle */
-    $content.querySelectorAll('.todo-item').forEach(li => {
+    DOM.$content.querySelectorAll('.todo-item').forEach(li => {
         if (!li.querySelector('.todo-mark')) {
             const mark = document.createElement('span');
             mark.className = 'todo-mark'; mark.contentEditable = 'false';
@@ -687,10 +687,10 @@ function editNote(id) {
     const _rems = n.reminders || (n.reminder && n.reminder.at ? [{ at: n.reminder.at, fired: n.reminder.fired || false, title: n.reminder.reminderTitle || '' }] : []);
     updateReminderBtn(_rems, n.reminderNote || (n.reminder && n.reminder.reminderNote) || '');
     tocOpen = false; buildTocPanel(n.id);
-    if ($reminderBtn) $reminderBtn.classList.remove('hidden');
-    if ($exportMdBtn) $exportMdBtn.removeAttribute('disabled');
+    if (DOM.$reminderBtn) DOM.$reminderBtn.classList.remove('hidden');
+    if (DOM.$exportMdBtn) DOM.$exportMdBtn.removeAttribute('disabled');
     const _expHtmlBtn = $('export-html-btn'); if (_expHtmlBtn) _expHtmlBtn.removeAttribute('disabled');
-    $editor.classList.add('editing-active'); $cancelBtn.removeAttribute('disabled'); $('edit-del-btn').classList.remove('hidden');
+    DOM.$editor.classList.add('editing-active'); DOM.$cancelBtn.removeAttribute('disabled'); $('edit-del-btn').classList.remove('hidden');
     updateFooterVisibility();
     window.scrollTo({top:0,behavior:'smooth'});
     const _splitMp = document.querySelector('.main-panel.fp-split-mode');
@@ -702,27 +702,27 @@ function editNote(id) {
 }
 
 function resetEditor() {
-    /* $content'in her zaman ana editörü gösterdiğinden emin ol */
+    /* DOM.$content'in her zaman ana editörü gösterdiğinden emin ol */
     if (typeof activateInstance === 'function' && window._mainEditorInstance) {
         activateInstance(window._mainEditorInstance);
     }
     if (typeof window.clearUndoHistory === 'function') window.clearUndoHistory();
     setEditorLocked(false);
-    $title.value=''; $content.innerHTML=''; $editId.value=''; editorGroup='Genel';
+    DOM.$title.value=''; DOM.$content.innerHTML=''; DOM.$editId.value=''; editorGroup='Genel';
     _snapTitle=''; _editActive=false; _contentDirty=false;
     /* v1.1 */
     editorPinned=false; editorColorLabel=null;
     updateEditorPinBtn(false); updateColorLabelBtn(null);
     /* v1.6 */
     updateReminderBtn([], ''); tocOpen=false;
-    if ($editorToc) $editorToc.style.display='none';
-    if ($editorTocList) $editorTocList.innerHTML='';
-    if ($tocToggleBtn) { $tocToggleBtn.classList.add('hidden'); $tocToggleBtn.classList.remove('active'); }
-    if ($reminderBtn) $reminderBtn.classList.add('hidden');
-    if ($exportMdBtn) $exportMdBtn.setAttribute('disabled', '');
+    if (DOM.$editorToc) DOM.$editorToc.style.display='none';
+    if (DOM.$editorTocList) DOM.$editorTocList.innerHTML='';
+    if (DOM.$tocToggleBtn) { DOM.$tocToggleBtn.classList.add('hidden'); DOM.$tocToggleBtn.classList.remove('active'); }
+    if (DOM.$reminderBtn) DOM.$reminderBtn.classList.add('hidden');
+    if (DOM.$exportMdBtn) DOM.$exportMdBtn.setAttribute('disabled', '');
     const _expHtmlBtn2 = $('export-html-btn'); if (_expHtmlBtn2) _expHtmlBtn2.setAttribute('disabled', '');
     closeReminderPopup();
-    $editor.classList.remove('editing-active'); $cancelBtn.setAttribute('disabled', ''); $('edit-del-btn').classList.add('hidden');
+    DOM.$editor.classList.remove('editing-active'); DOM.$cancelBtn.setAttribute('disabled', ''); $('edit-del-btn').classList.add('hidden');
     updateFooterVisibility();
     document.body.classList.add('editor-pristine');
     document.body.classList.remove('cf-ready');
@@ -742,12 +742,12 @@ function _twNormalizeHTML(html) {
 /* ── Değişiklik tespiti: input-flag ── */
 function _markDirty() { _contentDirty = true; }
 
-/* $content ve panel içerikleri için input listener'ı bağla */
+/* DOM.$content ve panel içerikleri için input listener'ı bağla */
 function _bindDirtyListeners() {
-    $content.addEventListener('input', () => {
+    DOM.$content.addEventListener('input', () => {
         _contentDirty = true;
     });
-    $title.addEventListener('input', () => {
+    DOM.$title.addEventListener('input', () => {
         _contentDirty = true;
         updateFooterVisibility();
     });
@@ -762,12 +762,12 @@ _bindDirtyListeners();
 
 function hasUnsavedChanges() {
     if (!_editActive) return false;
-    if ($title.value.trim() !== _snapTitle) return true;
+    if (DOM.$title.value.trim() !== _snapTitle) return true;
     return _contentDirty;
 }
 
 function handleEditNoteRequest(id) {
-    if(String($editId.value)===String(id)) return;
+    if(String(DOM.$editId.value)===String(id)) return;
     if(hasUnsavedChanges()){ pendingNoteId=id; $('save-confirm-toast-overlay').classList.add('show'); }
     else editNote(id);
 }
@@ -775,7 +775,7 @@ function handleEditNoteRequest(id) {
 /* ══ SAVE-CONFIRM ══ */
 $('toast-save-yes').addEventListener('click',()=>{
     $('save-confirm-toast-overlay').classList.remove('show');
-    const title=$title.value.trim(), rawHtml=$content.innerHTML;
+    const title=DOM.$title.value.trim(), rawHtml=DOM.$content.innerHTML;
     if(title&&stripHtml(rawHtml).trim()) saveNote(); else resetEditor();
     const next=pendingNoteId; pendingNoteId=null; if(next) editNote(next);
 });
@@ -816,11 +816,11 @@ function applyTemplate(tplKey) {
     closeTemplateDropdown();
     if (typeof window._closeEditorMenu === 'function') window._closeEditorMenu();
     if (typeof activateInstance === 'function' && window._mainEditorInstance) activateInstance(window._mainEditorInstance);
-    $title.value = tpl.title();
-    $content.innerHTML = sanitize(tpl.content);
+    DOM.$title.value = tpl.title();
+    DOM.$content.innerHTML = sanitize(tpl.content);
     _snapTitle = '';
     updateFooterVisibility();
-    $title.focus();
+    DOM.$title.focus();
 }
 
 function toggleTemplateDropdown() {
@@ -837,7 +837,7 @@ $('template-btn').addEventListener('click', e => { e.stopPropagation(); toggleTe
     const btn = $('pdf-btn');
     if (!btn) return;
     btn.addEventListener('click', function() {
-        const eId = $editId.value;
+        const eId = DOM.$editId.value;
         const n = eId ? notes.find(x => String(x.id) === String(eId)) : null;
         if (!n) { alert('Yazdırmak için önce bir not açın.'); return; }
         /* Geçici print iframe ile notu izole ederek yazdır */
@@ -921,10 +921,10 @@ function updateFooterVisibility() {
     const cf = document.querySelector('.content-footer');
     if (!cf) return;
     /* Başlık varsa footer görünür — içerik şartı yok */
-    const hasTitle = !!(($title.value || '').trim());
+    const hasTitle = !!((DOM.$title.value || '').trim());
     cf.classList.toggle('cf-empty', !hasTitle);
 }
-$content.addEventListener('input', () => { updateFooterVisibility(); }, { passive: true });
+DOM.$content.addEventListener('input', () => { updateFooterVisibility(); }, { passive: true });
 /* Panel içerikleri değişince footer'ı güncelle */
 document.addEventListener('input', e => {
     if (e.target.classList.contains('col-panel-content') ||
