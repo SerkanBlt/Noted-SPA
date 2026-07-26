@@ -536,7 +536,7 @@ $content.addEventListener('input', () => {
             const badge = document.getElementById('thc-badge');
             if (badge) badge.textContent = isDark ? 'Koyu Tema' : 'Açık Tema';
             const custom = _thcGetCustom();
-            const defs   = isDark ? _THC_DEFS.dark : _THC_DEFS.light;
+            const defs   = isDark ? Const._THC_DEFS.dark : Const._THC_DEFS.light;
             panel.querySelectorAll('.thc-picker').forEach(inp => {
                 const v = inp.dataset.var;
                 const val = custom[v] || defs[v] || '#000000';
@@ -568,7 +568,7 @@ $content.addEventListener('input', () => {
         }
 
         function resetAll() {
-            [..._THC_ALL_VARS, ..._THC_LINKED].forEach(v => document.documentElement.style.removeProperty(v));
+            [...Const._THC_ALL_VARS, ...Const._THC_LINKED].forEach(v => document.documentElement.style.removeProperty(v));
             _thcSaveCustom({});
             refresh();
         }
@@ -771,13 +771,13 @@ $content.addEventListener('input', () => {
 
     /* ── Slash menü: CCB kategorisi ── */
     function _ccbInjectSlash() {
-        if (typeof SLASH_COMMAND_GROUPS === 'undefined') return;
+        if (typeof Const.SLASH_COMMAND_GROUPS === 'undefined') return;
         /* Eski CCB grubunu kaldır */
-        const idx = SLASH_COMMAND_GROUPS.findIndex(g => g._ccbGroup);
-        if (idx >= 0) SLASH_COMMAND_GROUPS.splice(idx, 1);
+        const idx = Const.SLASH_COMMAND_GROUPS.findIndex(g => g._ccbGroup);
+        if (idx >= 0) Const.SLASH_COMMAND_GROUPS.splice(idx, 1);
         const ccbs = ccbGetAll();
         if (!ccbs.length) return;
-        SLASH_COMMAND_GROUPS.push({
+        Const.SLASH_COMMAND_GROUPS.push({
             label: 'CCB',
             _ccbGroup: true,
             items: ccbs.map(c => ({

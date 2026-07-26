@@ -2,6 +2,18 @@
 
 ---
 
+## v1.15.114
+**Modülerleşme Faz 4a — Global Konsolidasyonu: Sabitler Kümesi**
+- 105 top-level `let/const/var`'ı birkaç namespace nesnesine toplama işinin (Faz 4) ilk alt-fazı: en düşük riskli küme olan **Sabitler** (23 adet — `PALETTE`, `COLOR_LABELS`, `TEMPLATES_V2`, `SLASH_COMMAND_GROUPS`, `SLASH_COMMANDS`, `SLASH_INLINE_MAP`, `MD_INLINE_TRIGGERS`, `_SHAPES`, `_SHAPE_PATHS`, `WIKILINK_RE`, `SEARCH_OP_RE`, `_THC_*`, `_themeIcons`, `GRAPH_ZOOM_*`, `FOCUS_TIMER_KEY`, `ACTIVITY_LOG_KEY`, `TRASH_GROUP`, `COLOR_LABEL_ALIASES`, `VIEW_ITEMS`) tek bir `const Const = {}` nesnesine (`js/01-core-storage-render.js` başında) taşındı
+- Kullanım yerleri **gerçekten** `Const.PALETTE` biçimine döndürüldü (bare isimleri yeniden `let`/`const` ile açan bir "köprü" hilesi kullanılmadı) — 9 dosyada (`js/01` … `js/08`, `js/float-panel.js`) toplam ~55 kullanım yeri `grep -n '\bDEĞİŞKEN\b'` ile tek tek bulunup güncellendi
+- **`Object.freeze` bilinçli olarak uygulanmadı:** inceleme sırasında `SLASH_COMMAND_GROUPS`'un CCB (Kod Dışı Komut Bloğu) özelliği tarafından çalışma zamanında `.push()`/`.splice()` ile değiştirildiği tespit edildi — dondurma bu akışı sessizce bozardı. Planın "Object.freeze" önerisi, projenin "sıfır davranış değişikliği" kuralıyla çatıştığı için atlandı
+- `js/float-panel.js`'deki `typeof TEMPLATES_V2 !== 'undefined'` / `typeof _SHAPES !== 'undefined'` savunma kontrolleri `Const.TEMPLATES_V2` / `Const._SHAPES` üzerinden eşdeğer şekilde yeniden kuruldu
+- Ölçüm: top-level global-satır sayısı `grep -chE '^(let|const|var) ' js/*.js` ile **105 → 85**
+- Doğrulama: `node --check` tüm 12 dosyada temiz; tarayıcıda RKL-1, RKL-2/3, RKL-9, RKL-12, RKL-13 gerçek DOM ölçümleriyle (`getBoundingClientRect`/`getComputedStyle`) doğrulandı — panel kart boşluğu 10px, odak/blur accent geçişi, kapat→yeniden aç sonrası 6 toolbar butonu + 6 düzenlenebilir hücre + 4 resize handle korunuyor, `* ` → madde listesi dönüşümü çalışıyor, mobilde tam genişlik eşit kartlar + odakta görünen toolbar; tema geçişinde `--bg`/`--accent` CSS değişkenleri `Const._THC_DEFS`'ten doğru okunuyor; konsolda sıfır hata
+- `Comments.json`: `trap-normalizehtml-empty-block-removal` girdisinin satır numarası (`--fix` ile) tazelendi, anchor değişmedi
+
+---
+
 ## v1.15.113
 **Modülerleşme Faz 3 — JS 12 Dosyaya Bölündü**
 - 10.701 satırlık ana `<script>` bloğu, yalnızca üst düzey `══` bölüm sınırlarında kesilerek 9 dosyaya ayrıldı: `01-core-storage-render.js` … `09-search-undo-bridge.js` (her biri ≤1.636 satır, ortalama ~1.189). Zaten IIFE olan 3 blok (`help-modal.js`, `float-panel.js`, `context-menu.js`) da kendi konumlarında ayrıldı — toplam 12 dosya

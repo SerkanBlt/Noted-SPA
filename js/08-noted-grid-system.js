@@ -683,7 +683,7 @@ function applyBookmark() {
 
 /* ══ ŞEKİL OVERLAY SİSTEMİ ══ */
 
-const _SHAPE_PATHS = {
+Const._SHAPE_PATHS = {
     rect:    (s,f) => `<rect x="2" y="2" width="296" height="196" rx="0" stroke="${s}" fill="${f}" stroke-width="3"/>`,
     rounded: (s,f) => `<rect x="2" y="2" width="296" height="196" rx="24" stroke="${s}" fill="${f}" stroke-width="3"/>`,
     circle:  (s,f) => `<ellipse cx="150" cy="100" rx="148" ry="98" stroke="${s}" fill="${f}" stroke-width="3"/>`,
@@ -699,7 +699,7 @@ function _shapeCalcFill(stroke, fillMode) {
 }
 
 function _buildShapeSvg(shapeId, stroke, fillMode) {
-    const fn = _SHAPE_PATHS[shapeId] || _SHAPE_PATHS.rect;
+    const fn = Const._SHAPE_PATHS[shapeId] || Const._SHAPE_PATHS.rect;
     const fill = _shapeCalcFill(stroke, fillMode);
     return `<svg viewBox="0 0 300 200" width="100%" height="100%" preserveAspectRatio="none">${fn(stroke, fill)}</svg>`;
 }

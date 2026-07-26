@@ -127,7 +127,7 @@ $tfBadge.addEventListener('click', e => {
     const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title='Rengi kaldır';
     rm.addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); applyColor(null); });
     grid.appendChild(rm);
-    PALETTE.forEach(c => {
+    Const.PALETTE.forEach(c => {
         const s=document.createElement('div'); s.className='cswatch'; s.style.background=c; s.title=c;
         s.addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); applyColor(c); });
         grid.appendChild(s);
@@ -206,7 +206,7 @@ $tfBadge.addEventListener('click', e => {
     const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title='Arka planı kaldır';
     rm.addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); applyBgColor(null); });
     grid.appendChild(rm);
-    PALETTE.forEach(c=>{
+    Const.PALETTE.forEach(c=>{
         const s=document.createElement('div'); s.className='cswatch'; s.style.background=c; s.title=c;
         s.addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); applyBgColor(c); });
         grid.appendChild(s);
@@ -789,7 +789,7 @@ $('save-confirm-toast-overlay').addEventListener('click',e=>{ if(e.target!==$('s
 
 
 /* ══ v1.2: ŞABLON ══ */
-const TEMPLATES_V2 = {
+Const.TEMPLATES_V2 = {
     daily: {
         title: () => {
             const d = new Date();
@@ -811,7 +811,7 @@ const TEMPLATES_V2 = {
 };
 
 function applyTemplate(tplKey) {
-    const tpl = TEMPLATES_V2[tplKey];
+    const tpl = Const.TEMPLATES_V2[tplKey];
     if (!tpl) return;
     closeTemplateDropdown();
     if (typeof window._closeEditorMenu === 'function') window._closeEditorMenu();

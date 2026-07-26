@@ -28,14 +28,14 @@ function initSpherePositions() {
     nodeData.forEach(nd => { nd.x = nd.ox; nd.y = nd.oy; nd.z = nd.oz; });
     rotateSphere(-0.3, 0);
 }
-const GRAPH_ZOOM_MIN = 0.5, GRAPH_ZOOM_MAX = 2.5, GRAPH_ZOOM_STEP = 0.15;
+Const.GRAPH_ZOOM_MIN = 0.5; Const.GRAPH_ZOOM_MAX = 2.5; Const.GRAPH_ZOOM_STEP = 0.15;
 
 function gm_applyZoom() {
     const val = $('gm-zoom-val');
     if (val) val.textContent = Math.round(graphZoom * 100) + '%';
 }
 function gm_setZoom(z) {
-    graphZoom = Math.max(GRAPH_ZOOM_MIN, Math.min(GRAPH_ZOOM_MAX, z));
+    graphZoom = Math.max(Const.GRAPH_ZOOM_MIN, Math.min(Const.GRAPH_ZOOM_MAX, z));
     gm_applyZoom();
 }
 function gm_resetView() {
@@ -46,13 +46,13 @@ function buildLinkGraphData() {
     const nodesMap = new Map();
     const edgeMap = new Map();
     notes.forEach(n => {
-        if (!n || n.group === TRASH_GROUP) return;
+        if (!n || n.group === Const.TRASH_GROUP) return;
         const wrap = document.createElement('div');
         wrap.innerHTML = n.content || '';
         const links = [...wrap.querySelectorAll('a.wikilink[data-note-id]')];
         links.forEach(a => {
             const targetId = a.dataset.noteId;
-            const target = notes.find(t => String(t.id) === String(targetId) && t.group !== TRASH_GROUP);
+            const target = notes.find(t => String(t.id) === String(targetId) && t.group !== Const.TRASH_GROUP);
             if (!target) return;
             if (String(n.id) === String(target.id)) return;
             const idA = String(n.id), idB = String(target.id);
@@ -442,15 +442,15 @@ function renderLinkGraph() {
 
 (function initGraphZoomAndRotateControls() {
     const zin = $('gm-zoom-in'), zout = $('gm-zoom-out'), zreset = $('gm-zoom-reset'), body = $('graph-body');
-    if (zin) zin.addEventListener('click', () => gm_setZoom(graphZoom + GRAPH_ZOOM_STEP));
-    if (zout) zout.addEventListener('click', () => gm_setZoom(graphZoom - GRAPH_ZOOM_STEP));
+    if (zin) zin.addEventListener('click', () => gm_setZoom(graphZoom + Const.GRAPH_ZOOM_STEP));
+    if (zout) zout.addEventListener('click', () => gm_setZoom(graphZoom - Const.GRAPH_ZOOM_STEP));
     if (zreset) zreset.addEventListener('click', () => { gm_resetView(); });
     
     if (body) {
         /* Tekerlek ile zoom */
         body.addEventListener('wheel', e => {
             e.preventDefault();
-            gm_setZoom(graphZoom + (e.deltaY < 0 ? GRAPH_ZOOM_STEP : -GRAPH_ZOOM_STEP));
+            gm_setZoom(graphZoom + (e.deltaY < 0 ? Const.GRAPH_ZOOM_STEP : -Const.GRAPH_ZOOM_STEP));
         }, { passive: false });
 
         body.style.cursor = 'grab';
@@ -562,14 +562,14 @@ function closeLinkGraph() {
 
 
 /* ── 3) ODAK OTURUMU SAYACI ────────────────────────────────────────────── */
-const FOCUS_TIMER_KEY = 'noted_focus_timer_v1';
+Const.FOCUS_TIMER_KEY = 'noted_focus_timer_v1';
 function todayKey() {
     const d = new Date();
     return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 }
 let focusTimerState = (function loadFocusTimer() {
     const def = { duration: 25, remaining: 25 * 60, running: false, dateKey: todayKey(), sessionsToday: 0 };
-    const saved = safeLoadJSON(FOCUS_TIMER_KEY, null);
+    const saved = safeLoadJSON(Const.FOCUS_TIMER_KEY, null);
     if (!saved || typeof saved !== 'object') return def;
     const st = Object.assign({}, def, saved);
     if (st.dateKey !== todayKey()) { st.dateKey = todayKey(); st.sessionsToday = 0; }
@@ -579,7 +579,7 @@ let focusTimerState = (function loadFocusTimer() {
 let _focusTimerInterval = null;
 
 function saveFocusTimer() {
-    try { localStorage.setItem(FOCUS_TIMER_KEY, JSON.stringify(focusTimerState)); } catch (e) {}
+    try { localStorage.setItem(Const.FOCUS_TIMER_KEY, JSON.stringify(focusTimerState)); } catch (e) {}
 }
 function fmtMMSS(sec) {
     sec = Math.max(0, sec | 0);
@@ -751,7 +751,7 @@ function toggleTypewriterMode() { setTypewriterMode(!typewriterActive); }
 /* ---------------------------------------------------------------------
    2) YAZMA SERISI & ISTATISTIK PANELI
    --------------------------------------------------------------------- */
-const ACTIVITY_LOG_KEY = 'noted_activity_log_v1';
+Const.ACTIVITY_LOG_KEY = 'noted_activity_log_v1';
 
 function _todayISO(d) {
     d = d || new Date();
@@ -761,19 +761,19 @@ function _todayISO(d) {
 
 function recordActivityToday() {
     let log = [];
-    try { log = JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY) || '[]'); } catch (_e) { log = []; }
+    try { log = JSON.parse(localStorage.getItem(Const.ACTIVITY_LOG_KEY) || '[]'); } catch (_e) { log = []; }
     if (!Array.isArray(log)) log = [];
     const today = _todayISO();
     if (log[log.length - 1] !== today) {
         log.push(today);
         if (log.length > 400) log = log.slice(log.length - 400);
-        try { localStorage.setItem(ACTIVITY_LOG_KEY, JSON.stringify(log)); } catch (_e) {}
+        try { localStorage.setItem(Const.ACTIVITY_LOG_KEY, JSON.stringify(log)); } catch (_e) {}
     }
 }
 
 function computeStreak() {
     let log = [];
-    try { log = JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY) || '[]'); } catch (_e) { log = []; }
+    try { log = JSON.parse(localStorage.getItem(Const.ACTIVITY_LOG_KEY) || '[]'); } catch (_e) { log = []; }
     if (!Array.isArray(log) || !log.length) return 0;
     const set = new Set(log);
     let streak = 0;

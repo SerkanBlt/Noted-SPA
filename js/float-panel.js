@@ -485,8 +485,8 @@
                 const item = e.target.closest('.tpl-item[data-fp-tpl]');
                 if (!item) return;
                 const key = item.dataset.fpTpl;
-                if (typeof TEMPLATES_V2 !== 'undefined' && TEMPLATES_V2[key]) {
-                    const tpl = TEMPLATES_V2[key];
+                if (typeof Const !== 'undefined' && Const.TEMPLATES_V2 && Const.TEMPLATES_V2[key]) {
+                    const tpl = Const.TEMPLATES_V2[key];
                     fpContent.innerHTML = typeof sanitize === 'function' ? sanitize(tpl.content || '') : (tpl.content || '');
                     fpTitle.value = tpl.title || fpTitle.value;
                     fpContent.focus();
@@ -1250,10 +1250,10 @@
 
     /* Şekil flyout */
     const shapeBtn = tb.querySelector('[data-stb="shape-menu"]');
-    if (shapeBtn && typeof _SHAPES !== 'undefined') {
+    if (shapeBtn && typeof Const !== 'undefined' && Const._SHAPES) {
         const shDD = document.createElement('div');
         shDD.style.cssText = 'position:fixed;z-index:9300;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px 0;box-shadow:0 4px 16px var(--shadow);min-width:160px;display:none';
-        _SHAPES.forEach(sh => {
+        Const._SHAPES.forEach(sh => {
             const item = document.createElement('div');
             item.style.cssText = 'padding:7px 14px;cursor:pointer;font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:9px;transition:background .1s';
             item.innerHTML = `<i class="fas ${sh.icon}" style="width:14px;text-align:center"></i>${sh.label}`;

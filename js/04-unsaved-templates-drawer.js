@@ -276,7 +276,7 @@ let listView = getUiCfg().listView || 'standard';
 const $viewBadge    = $('view-badge');
 const $viewDropdown = $('view-dropdown');
 
-const VIEW_ITEMS = [
+Const.VIEW_ITEMS = [
     { value:'standard', label:'Standart', icon:'fa-list' },
     { value:'wide',     label:'Geniş',    icon:'fa-align-justify' },
     { value:'compact',  label:'Kompakt',  icon:'fa-bars' },
@@ -302,7 +302,7 @@ function setListView(value) {
 function buildViewDropdown() {
     if (!$viewDropdown) return;
     $viewDropdown.innerHTML = '';
-    VIEW_ITEMS.forEach(it => {
+    Const.VIEW_ITEMS.forEach(it => {
         const d = document.createElement('div');
         d.className = 'view-item' + (listView === it.value ? ' active' : '');
         d.innerHTML = `<i class="fas ${it.icon}"></i>${esc(it.label)}`;
@@ -368,7 +368,7 @@ function insertTimestamp() {
 /* Ctrl+Shift+T */
 
 /* v1.5: SLASH KOMUTLARI — gruplandırılmış */
-const SLASH_COMMAND_GROUPS = [
+Const.SLASH_COMMAND_GROUPS = [
     {
         label: 'Başlık',
         items: [
@@ -416,10 +416,10 @@ const SLASH_COMMAND_GROUPS = [
     },
 ];
 /* Düz liste (klavye navigasyonu için) */
-const SLASH_COMMANDS = SLASH_COMMAND_GROUPS.flatMap(g => g.items);
+Const.SLASH_COMMANDS = Const.SLASH_COMMAND_GROUPS.flatMap(g => g.items);
 
 /* Satır-başı /komut<SPACE> inline kısayol haritası */
-const SLASH_INLINE_MAP = {
+Const.SLASH_INLINE_MAP = {
     'ul':'ul', 'ol':'ol', 'todo':'todo',
     'h1':'h2', 'h2':'h2', 'h3':'h3', 'h4':'h4',
     'code':'cblock', 'cblock':'cblock', 'icode':'icode',
@@ -466,7 +466,7 @@ function buildSlashMenuItems(filter) {
     if (filter) {
         /* Filtre varsa düz liste */
         let first = true;
-        SLASH_COMMAND_GROUPS.forEach(grp => {
+        Const.SLASH_COMMAND_GROUPS.forEach(grp => {
             grp.items.filter(c => c.label.toLowerCase().includes(filter.toLowerCase()))
             .forEach(cmd => {
                 const d = document.createElement('div');
@@ -484,7 +484,7 @@ function buildSlashMenuItems(filter) {
     /* Kategori listesi + JS-yönetimli sub-panel */
     const CAT_ICONS = { 'Başlık':'fa-heading', 'Liste':'fa-list-ul', 'Kod':'fa-code', 'Blok':'fa-th-large', 'Düzen':'fa-table-columns' };
 
-    SLASH_COMMAND_GROUPS.forEach((grp, gi) => {
+    Const.SLASH_COMMAND_GROUPS.forEach((grp, gi) => {
         const cat = document.createElement('div');
         cat.className = 'slash-cat';
         cat.dataset.gi = String(gi);
@@ -911,7 +911,7 @@ document.addEventListener('keydown', function inlineSlashShortcut(e) {
     /* Sadece satır başında: başında yalnızca boşluk var */
     const m = before.match(/^[\s ]*\/([a-z0-9-]+)$/i);
     if (!m) return;
-    const cmdType = SLASH_INLINE_MAP[m[1].toLowerCase()];
+    const cmdType = Const.SLASH_INLINE_MAP[m[1].toLowerCase()];
     if (!cmdType) return;
     e.preventDefault();
     /* "keyword" kısmını sil, "/" bırak — applySlashCommand "/" yi silecek */
@@ -932,8 +932,8 @@ document.addEventListener('keydown', function inlineSlashShortcut(e) {
 /* ── Markdown-tarzı satır-başı kısayollar (karakter + boşluk) ──
    "* "/"- " madde listesi, "[] " görev listesi, "|| " tablo (/t ile aynı),
    ayrıca "# "/"## "/"### " başlık, "> " alıntı, "1. " sıralı liste — hepsi
-   applySlashCommand ile aynı işlemi (SLASH_INLINE_MAP'teki type'lar) tetikler. */
-const MD_INLINE_TRIGGERS = [
+   applySlashCommand ile aynı işlemi (Const.SLASH_INLINE_MAP'teki type'lar) tetikler. */
+Const.MD_INLINE_TRIGGERS = [
     { re: /^\*$/,   type: 'ul' },
     { re: /^-$/,    type: 'ul' },
     { re: /^\[\]$/, type: 'todo' },
@@ -963,7 +963,7 @@ document.addEventListener('keydown', function inlineMdShortcut(e) {
     const trimmed = before.replace(/^[\s ]*/, '');
     const leadingWs = before.length - trimmed.length;
     let matchType = null;
-    for (const t of MD_INLINE_TRIGGERS) {
+    for (const t of Const.MD_INLINE_TRIGGERS) {
         if (t.re.test(trimmed)) { matchType = t.type; break; }
     }
     if (!matchType) return;
@@ -982,7 +982,7 @@ document.addEventListener('keydown', function inlineMdShortcut(e) {
 }, true);
 
 /* ── Şekil tanımları (STB IIFE'den önce olmalı) ── */
-const _SHAPES = [
+Const._SHAPES = [
     { id:'rect',    label:'Dikdörtgen',    icon:'fa-square',      vb:'0 0 300 120', d:'<rect x="6" y="6" width="288" height="108" fill="none" stroke="currentColor" stroke-width="3"/>' },
     { id:'rounded', label:'Yuvarlatılmış', icon:'fa-square',      vb:'0 0 300 120', d:'<rect x="6" y="6" width="288" height="108" rx="22" fill="none" stroke="currentColor" stroke-width="3"/>' },
     { id:'circle',  label:'Daire',         icon:'fa-circle',      vb:'0 0 300 120', d:'<ellipse cx="150" cy="60" rx="136" ry="54" fill="none" stroke="currentColor" stroke-width="3"/>' },
@@ -1211,7 +1211,7 @@ const _SHAPES = [
         const shDD = document.createElement('div');
         shDD.id = 'stb-shape-dd';
         shDD.style.cssText = 'position:fixed;z-index:9300;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px 0;box-shadow:0 4px 16px var(--shadow);min-width:160px;display:none';
-        _SHAPES.forEach(sh => {
+        Const._SHAPES.forEach(sh => {
             const item = document.createElement('div');
             item.style.cssText = 'padding:7px 14px;cursor:pointer;font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:9px;transition:background .1s';
             item.innerHTML = `<i class="fas ${sh.icon}" style="width:14px;text-align:center"></i>${sh.label}`;

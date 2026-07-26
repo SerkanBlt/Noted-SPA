@@ -87,7 +87,9 @@ if (!Array.isArray(notes)) notes = []; if (!Array.isArray(openGroups)) openGroup
     });
     if (dirty) try { localStorage.setItem('noted_v1', JSON.stringify(notes)); } catch(_) {}
 })();
-const TRASH_GROUP = 'Çöp Kutusu';
+/* ══ SABİTLER (Faz 4 — Global Konsolidasyonu) ══ */
+const Const = {};
+Const.TRASH_GROUP = 'Çöp Kutusu';
 let expandedNotes=new Set(), searchQuery='', filterGroup='all', filterTag='all';
 const _themeSaved = getUiCfg().theme || 'system';
 let themeMode = (_themeSaved==='dark'||_themeSaved==='light'||_themeSaved==='system') ? _themeSaved : 'system';
@@ -96,7 +98,7 @@ let editorGroup='Genel', editorColorLabel=null, editorPinned=false, editorRemind
 let activePickerId=null, deleteTargetId=null, deletePermanent=false, pendingNoteId=null;
 
 /* ══ RENK PALETİ ══ */
-const PALETTE = [
+Const.PALETTE = [
     '#000000','#434343','#666666','#999999','#b7b7b7','#ffffff',
     '#e53935','#f4511e','#fb8c00','#f9a825','#43a047','#00897b',
     '#039be5','#1e88e5','#3949ab','#8e24aa','#d81b60','#546e7a',
@@ -111,7 +113,7 @@ const PALETTE = [
 ];
 
 /* v1.1: Renk etiketi seçenekleri */
-const COLOR_LABELS = [
+Const.COLOR_LABELS = [
     { key:'red',    hex:'#ef4444', label:'Acil' },
     { key:'orange', hex:'#f97316', label:'Önemli' },
     { key:'yellow', hex:'#eab308', label:'Bekliyor' },
@@ -414,7 +416,7 @@ function htmlToMd(html) {
 }
 
 /* ══ v1.3: WİKİ-BAĞLANTILAR ══ */
-const WIKILINK_RE = /\[\[([^\[\]]{1,120})\]\]/g;
+Const.WIKILINK_RE = /\[\[([^\[\]]{1,120})\]\]/g;
 
 function findNoteByTitle(title) {
     if (!title) return null;
@@ -438,12 +440,12 @@ function convertWikiSyntax(html) {
     }
     targets.forEach(textNode => {
         const text = textNode.nodeValue;
-        WIKILINK_RE.lastIndex = 0;
-        if (!WIKILINK_RE.test(text)) return;
-        WIKILINK_RE.lastIndex = 0;
+        Const.WIKILINK_RE.lastIndex = 0;
+        if (!Const.WIKILINK_RE.test(text)) return;
+        Const.WIKILINK_RE.lastIndex = 0;
         const frag = document.createDocumentFragment();
         let last = 0, m;
-        while ((m = WIKILINK_RE.exec(text))) {
+        while ((m = Const.WIKILINK_RE.exec(text))) {
             if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
             const title = m[1].trim();
             const target = findNoteByTitle(title);
@@ -586,7 +588,7 @@ function openOrCreateDailyNote() {
 /* $dailyNoteBtn listener kaldırıldı */
 
 /* ══ v1.3: GELİŞMİŞ ARAMA OPERATÖRLERİ ══ */
-const COLOR_LABEL_ALIASES = {
+Const.COLOR_LABEL_ALIASES = {
     'kırmızı':'red','red':'red','acil':'red',
     'turuncu':'orange','orange':'orange','önemli':'orange',
     'sarı':'yellow','yellow':'yellow','bekliyor':'yellow',
@@ -594,16 +596,16 @@ const COLOR_LABEL_ALIASES = {
     'mavi':'blue','blue':'blue','bilgi':'blue',
     'mor':'purple','purple':'purple','fikir':'purple'
 };
-const SEARCH_OP_RE = /\b(grup|etiket|renk|sabit):(\S+)/gi;
+Const.SEARCH_OP_RE = /\b(grup|etiket|renk|sabit):(\S+)/gi;
 
 function parseSearchQuery(q) {
     const ops = { group:null, tag:null, colorLabel:null, pinned:null };
     let free = q;
-    free = free.replace(SEARCH_OP_RE, (_, key, val) => {
+    free = free.replace(Const.SEARCH_OP_RE, (_, key, val) => {
         const k = key.toLowerCase(), v = val.toLocaleLowerCase('tr');
         if (k === 'grup')   ops.group = v;
         if (k === 'etiket') ops.tag = v.replace(/^#/, '');
-        if (k === 'renk')   ops.colorLabel = COLOR_LABEL_ALIASES[v] || v;
+        if (k === 'renk')   ops.colorLabel = Const.COLOR_LABEL_ALIASES[v] || v;
         if (k === 'sabit')  ops.pinned = (v === 'evet' || v === 'true' || v === 'yes');
         return ' ';
     }).trim();
@@ -611,7 +613,7 @@ function parseSearchQuery(q) {
 }
 
 /* ══ THEME ══ */
-const _themeIcons = { system:'fa-desktop', light:'fa-sun', dark:'fa-moon' };
+Const._themeIcons = { system:'fa-desktop', light:'fa-sun', dark:'fa-moon' };
 
 function applyTheme() {
     isDark = themeMode === 'dark' || (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -620,7 +622,7 @@ function applyTheme() {
     const hmBtn = $('hm-theme-btn');
     if (hmBtn) {
         const ico = hmBtn.querySelector('i:first-child');
-        if (ico) ico.className = 'fas ' + _themeIcons[themeMode];
+        if (ico) ico.className = 'fas ' + Const._themeIcons[themeMode];
     }
     document.querySelectorAll('.hm-theme-option').forEach(el =>
         el.classList.toggle('hm-theme-active', el.dataset.theme === themeMode));
@@ -628,9 +630,9 @@ function applyTheme() {
 }
 
 /* ── Tema Özelleştirici ── */
-const _THC_ALL_VARS = ['--accent','--bg','--surface','--surface-2','--border','--text','--text-muted','--tbl-header-bg','--tbl-border','--pnl-header-bg','--pnl-border','--col-sep'];
-const _THC_LINKED  = ['--accent-dim','--edit-glow'];
-const _THC_DEFS = {
+Const._THC_ALL_VARS = ['--accent','--bg','--surface','--surface-2','--border','--text','--text-muted','--tbl-header-bg','--tbl-border','--pnl-header-bg','--pnl-border','--col-sep'];
+Const._THC_LINKED  = ['--accent-dim','--edit-glow'];
+Const._THC_DEFS = {
     light: { '--accent':'#3b82f6','--bg':'#f8f9fa','--surface':'#ffffff','--surface-2':'#f1f3f5','--border':'#e5e7eb','--text':'#212529','--text-muted':'#6c757d','--tbl-header-bg':'#f1f3f5','--tbl-border':'#e5e7eb','--pnl-header-bg':'#f1f3f5','--pnl-border':'#e5e7eb','--col-sep':'#e5e7eb' },
     dark:  { '--accent':'#5b9df9','--bg':'#16181d','--surface':'#1e2127','--surface-2':'#262a31','--border':'#383d46','--text':'#e6e8eb','--text-muted':'#9aa3ad','--tbl-header-bg':'#262a31','--tbl-border':'#383d46','--pnl-header-bg':'#262a31','--pnl-border':'#383d46','--col-sep':'#383d46' },
 };
@@ -642,7 +644,7 @@ function _thcHexToRgba(hex, a) {
 }
 function _applyThemeCustom() {
     /* Önceki özel değerleri temizle */
-    [..._THC_ALL_VARS, ..._THC_LINKED].forEach(v => document.documentElement.style.removeProperty(v));
+    [...Const._THC_ALL_VARS, ...Const._THC_LINKED].forEach(v => document.documentElement.style.removeProperty(v));
     /* Kayıtlı özel değerleri uygula */
     const custom = _thcGetCustom();
     for (const [v, val] of Object.entries(custom)) {
@@ -908,7 +910,7 @@ function buildNoteItem(n) {
 
     /* Renk etiketi rozeti — titleRow'da group badge ile aynı satırda, sağda */
     if (n.colorLabel) {
-        const cl = COLOR_LABELS.find(c => c.key === n.colorLabel);
+        const cl = Const.COLOR_LABELS.find(c => c.key === n.colorLabel);
         if (cl) {
             const clBadge = document.createElement('span');
             clBadge.className = 'note-cl-badge';

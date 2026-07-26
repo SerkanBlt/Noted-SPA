@@ -248,7 +248,7 @@ function exportNoteAsMarkdown(noteId) {
 
 function updateColorLabelBtn(key) {
     editorColorLabel = key;
-    const cl = COLOR_LABELS.find(c => c.key === key);
+    const cl = Const.COLOR_LABELS.find(c => c.key === key);
     $clBtn.style.color = cl ? cl.hex : 'var(--text-muted)';
     $clBtn.style.borderColor = cl ? cl.hex : 'var(--border)';
     /* Rozet satırlarını aktif olarak işaretle */
@@ -1435,7 +1435,7 @@ $('edit-del-btn').addEventListener('click', () => { const eId=$editId.value; if(
 
 function delNote(id) {
     const note=notes.find(x=>String(x.id)===String(id)); if (!note) return;
-    deleteTargetId=String(note.id); deletePermanent=(note.group===TRASH_GROUP);
+    deleteTargetId=String(note.id); deletePermanent=(note.group===Const.TRASH_GROUP);
     $('delete-toast').querySelector('.toast-text').textContent=deletePermanent
         ?'Not kalıcı olarak silinsin mi?':'Not çöp kutusuna taşınsın mı?';
     $('delete-toast-overlay').classList.add('show');
@@ -1449,9 +1449,9 @@ $('toast-yes').addEventListener('click', () => {
     if (idx!==-1) {
         if (deletePermanent) { notes.splice(idx,1); }
         else {
-            notes[idx].group=TRASH_GROUP; notes[idx].updatedAt=Date.now();
-            if (!openGroups.includes(TRASH_GROUP)) {
-                openGroups.push(TRASH_GROUP);
+            notes[idx].group=Const.TRASH_GROUP; notes[idx].updatedAt=Date.now();
+            if (!openGroups.includes(Const.TRASH_GROUP)) {
+                openGroups.push(Const.TRASH_GROUP);
                 patchContentCfg({groups: openGroups});
             }
         }
