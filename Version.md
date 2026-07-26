@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.111
+**Modülerleşme Faz 1 — Yetim CSS Selektörünün Kökten Temizlenmesi**
+- `#content table, .col-panel-content table, ...` listesi sonu virgülle bitip araya yalnızca yorum girdiği için tarayıcı bunu `.noted-grid` kuralıyla **tek kural** olarak ayrıştırıyordu. Sonuç: `#content table td` (ID → specificity 1,0,2) grid hücrelerine `margin:0`/`border-collapse:collapse` dayatıp class tabanlı grid kurallarını eziyordu — panel `border-collapse` (v1.15.103), panel mobil `margin` (v1.15.110), kolon mobil `margin` (v1.15.110) bug'larının **ortak kök nedeni** buydu
+- Selektörler `:not(.noted-grid)` ile grid tablolarından tamamen ayrıldı; ID specificity artık zararsız. Yapıştırılan ham tablolar için eski (kazara) davranış birebir korundu
+- Kökü yenmek için eklenen 5 adet `#content .noted-grid...` özel-durum satırı (panel ana kural, panel/kolon mobil margin + last-child) artık gereksiz olduğu için kaldırıldı — bunların kaldırılabilmesi kök nedenin gerçekten gittiğinin kanıtı
+- `REFACTOR_PLAN.md` Faz 1 uygulandı; `Comments.json`'daki `trap-orphan-selector-list-id-specificity` girdisi düzeltilmiş duruma güncellendi (tip: `history`, uyarı olarak kalıcı)
+- Doğrulama: RKL-1…RKL-15 baseline ile birebir eşleşti (panel/tablo/kolon/mobil/ham-tablo-yapıştırma), konsolda sıfır hata
+
+---
+
 ## v1.15.110
 **Markdown Satır-Başı Kısayolları + Mobil Grid Düzeltmeleri**
 - **Markdown kısayolları:** Satır başında karakter + boşluk yazınca otomatik dönüşüm — `* ` / `- ` madde listesi, `[] ` görev listesi, `|| ` tablo (`/t` ile aynı). Ek olarak mantıklı görülen kısayollar da eklendi: `# `/`## `/`### ` başlık, `> ` alıntı, `1. ` sıralı liste. Mevcut `/xxx ` sistemiyle aynı alt yapıyı (`applySlashCommand`) kullanıyor; liste öğesi içindeyken tekrar tetiklenmiyor (yanlışlıkla listeyi kaldırmasın diye)

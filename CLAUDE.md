@@ -45,7 +45,6 @@ Tek satırlık mekanik notlar ve `/* ══ bölüm başlıkları ══ */` kod
 Her davranış değişikliğinde sürüm artırılır ve **5 yerde** güncellenir (`Noted.html`):
 
 1. Satır 2'deki HTML yorumu — **açıklama metnini de güncelle**, sadece numarayı değil
-   (şu an bayat: v1.15.103'ten kalma bir açıklama taşıyor)
 2. `<title>`
 3. `.hm-app-ver`
 4. `.hm-ver`
