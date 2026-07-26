@@ -16,6 +16,20 @@
   },
   "entries": [
     {
+      "id": "trap-sw-cached-redirect-breaks-navigation",
+      "level": "critical",
+      "type": "trap",
+      "file": "sw.js",
+      "line": 50,
+      "anchor": "async function _temizYanit(res) {",
+      "symbol": "sw.js — install / _temizYanit",
+      "title": "cache.add() yonlendirilmis yaniti saklar; tarayici gezinmede REDDEDER, uygulama hic acilmaz",
+      "body": "Bir URL 301/302 donuyorsa cache.add() yaniti 'redirected' bayragiyla saklar. Tarayici, redirected bayrakli bir yaniti GEZINME (navigate) istegi icin kabul etmez; sonuc cevrimdisi acilista bos hata sayfasidir — konsolda anlamli hata da cikmaz. Bu gercekten yasandi: dev sunucusu /Noted.html -> /Noted yonlendirmesi yapiyor. Cozum: install sirasinda fetch + yaniti _temizYanit() ile YENIDEN INSA et (status 200, bayrak dusuk), sonra cache.put. cache.add()'e geri donme. Ayrica SW SURUMU (VERSION sabiti) her uygulama surumunde artirilmali — cache-first strateji nedeniyle artirilmazsa kullanici eski dosyalara takili kalir. fetch handler yalnizca ayni origin'deki GET'lere dokunur; AI saglayicilarina giden capraz-origin POST'lar es gecilir, bu kural kaldirilirsa sohbet bozulur.",
+      "refs": [
+        "v1.15.127"
+      ]
+    },
+    {
       "id": "why-storagehealth-warns-before-write-fails",
       "level": "important",
       "type": "why",

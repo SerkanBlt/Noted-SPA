@@ -2,6 +2,18 @@
 
 ---
 
+## v1.15.127
+**PWA temeli — manifest + ikonlar + çevrimdışı service worker (Play Store hazırlığı 1/2)**
+- `manifest.json` eklendi: `display: standalone` (TWA'nın şartı), `start_url`/`scope` **göreli** (`./`) — böylece hem GitHub Pages alt dizininde hem başka bir yolda çalışır
+- **4 PNG ikon üretildi** (`icons/`): 192 + 512 `any`, 192 + 512 `maskable`. Mevcut SVG favicon tarayıcı canvas'ıyla rasterize edildi; maskable sürümlerde logo Android'in güvenli bölgesine sığması için %62'ye küçültülüp tam kanama arka plana yerleştirildi. 512'lik ikon Play Store liste görseli olarak da kullanılabilir
+- **`sw.js` — çevrimdışı kabuk:** 36 dosya (uygulama + vendor fontlar + ikonlar) ön-belleğe alınıyor. `fetch` yalnızca **aynı origin'deki GET** isteklerine dokunuyor; AI sağlayıcılarına giden çapraz-origin POST'lar es geçiliyor (aksi hâlde sohbet bozulurdu)
+- **`file://` korundu:** service worker yalnızca `http:`/`https:` altında kaydoluyor. `file://` altında `navigator.serviceWorker` tanımsızdır; koşulsuz çağırmak "tek dosyayı indir, çalıştır" senaryosunu hataya düşürürdü
+- **Süreçte bulunan gerçek bug:** İlk denemede çevrimdışı açılış **boş hata sayfası** verdi. Sebep: dev sunucusu `/Noted.html` → `/Noted` yönlendirmesi yapıyor; `cache.add()` yanıtı `redirected` bayrağıyla saklıyor ve tarayıcı böyle bir yanıtı **gezinme isteği için reddediyor** — konsolda anlamlı hata da vermiyor. Çözüm: kurulumda yanıt `_temizYanit()` ile yeniden inşa ediliyor (status 200, bayrak düşük). `Comments.json` → `trap-sw-cached-redirect-breaks-navigation`
+- **Not:** `sw.js` içindeki `VERSION` sabiti her uygulama sürümünde artırılmalı; cache-first strateji nedeniyle artırılmazsa kullanıcı eski dosyalara takılı kalır
+- Doğrulama: SW kaydı + `controller` kontrolü; önbellekteki 36 dosyanın disk içeriğiyle **birebir eşleştiği** betikle karşılaştırıldı (ilk üretimde `pwa-register.js` listede eksikti, yakalandı); önbelleklenen kabuğun `redirected:false` / `status:200` olduğu doğrulandı; **dev sunucusu tamamen durdurulup sayfa yenilendi — uygulama 8 notuyla, fontlarıyla, ikonlarıyla ve DOMPurify'ıyla tam açıldı** (ekran görüntüsüyle); tam RKL-1…RKL-15 + dokunmatik regresyonu; konsolda sıfır hata
+
+---
+
 ## v1.15.126
 **Faz 5 adım 1 — Depolama dayanıklılığı (persist + erken kota uyarısı)**
 - **`navigator.storage.persist()` isteniyor.** İzin verilirse tarayıcı, cihaz depolaması azaldığında bu origin'in verisini **tahliye etmez**. Kritik nokta: bu koruma IndexedDB'ye değil **tüm origin'e** (localStorage dahil) uygulanır — yani Android'deki asıl veri kaybı riskini kapatan şey budur, IndexedDB'nin kendisi değil. Chrome izni etkileşim ölçütlerine göre verir (yer imi, ana ekrana ekleme, PWA kurulumu); localhost'ta `false` dönmesi normaldir ve hata değildir
