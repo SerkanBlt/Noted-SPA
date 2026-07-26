@@ -219,7 +219,7 @@ function applyCustomTemplate(tpl) {
     if (typeof activateInstance === 'function' && window._mainEditorInstance) activateInstance(window._mainEditorInstance);
     DOM.$title.value = tpl.title || '';
     DOM.$content.innerHTML = sanitize(tpl.content || '');
-    _snapTitle = '';
+    EditorState._snapTitle = '';
     updateFooterVisibility();
     DOM.$title.focus();
 }
@@ -361,7 +361,7 @@ function insertTimestamp() {
     const dateStr = now.toLocaleDateString('tr-TR', { day:'numeric', month:'long', year:'numeric' });
     const timeStr = now.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
     const text = '📅 ' + dateStr + ', ' + timeStr;
-    (_activeEditTarget||DOM.$content).focus();
+    (EditorState._activeEditTarget||DOM.$content).focus();
     document.execCommand('insertText', false, text);
 }
 
@@ -566,7 +566,7 @@ function openSlashMenu(rect) {
         const vW  = window.innerWidth;
         const vH  = window.innerHeight;
 
-        const editorEl = (_activeEditTarget || DOM.$content).closest('.editor-card') || document.body;
+        const editorEl = (EditorState._activeEditTarget || DOM.$content).closest('.editor-card') || document.body;
         const eR = editorEl.getBoundingClientRect();
 
         /* Yatay: slash'ın hemen solundan başla, sığmazsa sola kaydır */
@@ -607,7 +607,7 @@ document.addEventListener('mousedown', e => {
 }, true);
 
 function applySlashCommand(type) {
-    (_activeEditTarget||DOM.$content).focus();
+    (EditorState._activeEditTarget||DOM.$content).focus();
     /* '/' karakterini tarayıcı selection API ile sil
        (deleteData() paragrafı boşaltınca formatBlock yanlış bloğu hedef alıyor → cursor kayıyor) */
     if (slashTextNode && slashTextNode.isConnected) {
@@ -619,7 +619,7 @@ function applySlashCommand(type) {
             r.setStart(slashTextNode, idx);
             r.setEnd(slashTextNode, idx + 1); /* '/' karakterini seç */
             sel.removeAllRanges(); sel.addRange(r);
-            (_activeEditTarget||DOM.$content).focus(); document.execCommand('delete', false, null); /* seçili '/' sil */
+            (EditorState._activeEditTarget||DOM.$content).focus(); document.execCommand('delete', false, null); /* seçili '/' sil */
         }
     }
     closeSlashMenu();
@@ -657,10 +657,10 @@ function applySlashCommand(type) {
             'success': { icon:'fa-circle-check',          label:'Başarı',  ph:'Başarı mesajı ekleyin…' },
         };
         const cfg = cfgs[variant] || cfgs['info'];
-        /* _savedToolbarSel kullan — STB/klavye tıklamasında focus kaybolmuş olabilir */
+        /* EditorState._savedToolbarSel kullan — STB/klavye tıklamasında focus kaybolmuş olabilir */
         _restoreToolbarSel();
         const sel = window.getSelection();
-        const savedRange = _savedToolbarSel ? _savedToolbarSel.range : (sel && sel.rangeCount ? sel.getRangeAt(0) : null);
+        const savedRange = EditorState._savedToolbarSel ? EditorState._savedToolbarSel.range : (sel && sel.rangeCount ? sel.getRangeAt(0) : null);
         if (savedRange) {
             /* İmlecin bulunduğu block'tan sonrasına ekle (satır doluysa), boşsa yerine */
             let insertAfterNode = null;
@@ -921,7 +921,7 @@ document.addEventListener('keydown', function inlineSlashShortcut(e) {
         r.setStart(node, slashPos + 1);
         r.setEnd(node, offset);
         sel.removeAllRanges(); sel.addRange(r);
-        (_activeEditTarget || DOM.$content).focus();
+        (EditorState._activeEditTarget || DOM.$content).focus();
         document.execCommand('delete', false, null);
     }
     slashTextNode = node;
@@ -974,7 +974,7 @@ document.addEventListener('keydown', function inlineMdShortcut(e) {
         r.setStart(node, leadingWs);
         r.setEnd(node, offset);
         sel.removeAllRanges(); sel.addRange(r);
-        (_activeEditTarget || DOM.$content).focus();
+        (EditorState._activeEditTarget || DOM.$content).focus();
         document.execCommand('delete', false, null);
     }
     slashTextNode = null; /* applySlashCommand'ın '/' silme adımı atlansın — zaten sildik */
@@ -1053,7 +1053,7 @@ Const._SHAPES = [
             item.addEventListener('mouseleave', () => item.style.background = '');
             item.addEventListener('mousedown', ev => {
                 ev.preventDefault(); ev.stopPropagation();
-                (_activeEditTarget || DOM.$content).focus();
+                (EditorState._activeEditTarget || DOM.$content).focus();
                 applyFn(n);
                 dd.style.display = 'none';
             });
@@ -1092,7 +1092,7 @@ Const._SHAPES = [
         /* Cursor konumunu restore et — focus() değil, selection korunsun */
         _restoreToolbarSel();
 
-        if      (type === 'timestamp')  { if (_editActive) insertTimestamp(); }
+        if      (type === 'timestamp')  { if (EditorState._editActive) insertTimestamp(); }
         else if (type === 'ul')         { document.execCommand('insertUnorderedList', false, null); }
         else if (type === 'ol')         { document.execCommand('insertOrderedList', false, null); }
         else if (type === 'todo')       { runSpecial('todo'); }
@@ -1138,7 +1138,7 @@ Const._SHAPES = [
             item.addEventListener('mouseleave', () => item.style.background = '');
             item.addEventListener('mousedown', ev => {
                 ev.preventDefault(); ev.stopPropagation();
-                (_activeEditTarget || DOM.$content).focus();
+                (EditorState._activeEditTarget || DOM.$content).focus();
                 applySlashCommand(co.type);
                 dd.style.display = 'none';
             });
@@ -1183,7 +1183,7 @@ Const._SHAPES = [
                     catch { const frag = range.extractContents(); span.appendChild(frag); range.insertNode(span); }
                     _markDirty();
                 } else {
-                    const target = _activeEditTarget || DOM.$content;
+                    const target = EditorState._activeEditTarget || DOM.$content;
                     target.style.lineHeight = v;
                 }
                 lhDD.style.display = 'none';
@@ -1219,7 +1219,7 @@ Const._SHAPES = [
             item.addEventListener('mouseleave', () => item.style.background = '');
             item.addEventListener('mousedown', ev => {
                 ev.preventDefault(); ev.stopPropagation();
-                (_activeEditTarget || DOM.$content).focus();
+                (EditorState._activeEditTarget || DOM.$content).focus();
                 insertShapeOverlay(sh.id);
                 shDD.style.display = 'none';
             });

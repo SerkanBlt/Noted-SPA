@@ -48,7 +48,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/02-toolbar-panel-column.js",
-      "line": 329,
+      "line": 331,
       "anchor": "function _restoreToolbarSel() {",
       "symbol": "_restoreToolbarSel",
       "title": "_savedToolbarSel debounce'ludur; restore oncesi senkron tazeleme sart",

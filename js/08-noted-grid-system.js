@@ -101,7 +101,7 @@ function createGrid(type, cols, rows, colWidths) {
             title.dataset.ph = type === 'table' ? 'Başlık ' + (c+1) : 'Panel ' + (c+1);
             title.addEventListener('keydown', e => { if (e.key==='Enter'){e.preventDefault();title.blur();} });
             title.addEventListener('mousedown', e => e.stopPropagation());
-            title.addEventListener('focus', () => { _activeEditTarget = title; _saveToolbarSel(); if (type === 'panel') _setPanelColumnActive(table, c); });
+            title.addEventListener('focus', () => { EditorState._activeEditTarget = title; _saveToolbarSel(); if (type === 'panel') _setPanelColumnActive(table, c); });
             if (type === 'panel') th.dataset.col = String(c);
             const thWrap = document.createElement('div');
             thWrap.className = 'ng-v-wrap';
@@ -119,7 +119,7 @@ function createGrid(type, cols, rows, colWidths) {
             lbl.dataset.ph = 'Sütun ' + (c+1);
             lbl.style.minHeight = '0';
             lbl.addEventListener('mousedown', e => e.stopPropagation());
-            lbl.addEventListener('focus', () => { _activeEditTarget = lbl; });
+            lbl.addEventListener('focus', () => { EditorState._activeEditTarget = lbl; });
             th.appendChild(lbl);
         }
         /* Resize handle son sütun hariç tüm tiplerde */
@@ -143,7 +143,7 @@ function createGrid(type, cols, rows, colWidths) {
             cell.contentEditable = 'true';
             cell.spellcheck = false;
             cell.dataset.ph = type === 'column' ? ('Sütun ' + (c+1) + '…') : '…';
-            cell.addEventListener('focus', () => { _activeEditTarget = cell; setTimeout(_saveToolbarSel, 0); if (type === 'panel') _setPanelColumnActive(table, c); });
+            cell.addEventListener('focus', () => { EditorState._activeEditTarget = cell; setTimeout(_saveToolbarSel, 0); if (type === 'panel') _setPanelColumnActive(table, c); });
             if (type === 'panel') td.dataset.col = String(c);
             const vWrap = document.createElement('div');
             vWrap.className = 'ng-v-wrap';
@@ -271,7 +271,7 @@ function _createGridToolbar(wrap, table) {
 function _gridDeleteRow(table) {
     let td = window._lastGridCell || null;
     if (!td || !table.contains(td)) {
-        const checkEl = (_savedToolbarSel && _savedToolbarSel.et) || document.activeElement;
+        const checkEl = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || document.activeElement;
         td = checkEl ? checkEl.closest('td, th') : null;
     }
     if (!td || !table.contains(td)) {
@@ -291,7 +291,7 @@ function _gridDeleteRow(table) {
 function _gridDeleteCol(table) {
     let td = window._lastGridCell || null;
     if (!td || !table.contains(td)) {
-        const checkEl = (_savedToolbarSel && _savedToolbarSel.et) || document.activeElement;
+        const checkEl = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || document.activeElement;
         td = checkEl ? checkEl.closest('td, th') : null;
     }
     if (!td || !table.contains(td)) {
@@ -326,7 +326,7 @@ function _gridAddRow(table) {
         const div = document.createElement('div');
         div.className = 'ng-cell'; div.contentEditable = 'true';
         div.spellcheck = false; div.dataset.ph = '…';
-        div.addEventListener('focus', () => { _activeEditTarget = div; setTimeout(_saveToolbarSel, 0); if (isPanel) _setPanelColumnActive(table, c); });
+        div.addEventListener('focus', () => { EditorState._activeEditTarget = div; setTimeout(_saveToolbarSel, 0); if (isPanel) _setPanelColumnActive(table, c); });
         const rWrap = document.createElement('div'); rWrap.className = 'ng-v-wrap'; rWrap.appendChild(div);
         rWrap.addEventListener('click', e => { if (!div.contains(e.target) && e.target !== div) div.focus(); });
         td.appendChild(rWrap);
@@ -441,7 +441,7 @@ function _gridAddCol(table) {
             title.dataset.ph = table.dataset.gridType === 'table' ? 'Başlık ' + (colIdx+1) : 'Panel ' + (colIdx+1);
             title.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();title.blur();} });
             title.addEventListener('mousedown', e => e.stopPropagation());
-            title.addEventListener('focus', () => { _activeEditTarget = title; _saveToolbarSel(); });
+            title.addEventListener('focus', () => { EditorState._activeEditTarget = title; _saveToolbarSel(); });
             const acWrap = document.createElement('div'); acWrap.className = 'ng-v-wrap'; acWrap.appendChild(title);
             cell.appendChild(acWrap);
             /* önceki son hücreye resize handle ekle */
@@ -453,7 +453,7 @@ function _gridAddCol(table) {
             div.contentEditable = 'true';
             div.spellcheck = false;
             div.dataset.ph = table.dataset.gridType === 'column' ? 'Sütun '+(colIdx+1)+'…' : '…';
-            div.addEventListener('focus', () => { _activeEditTarget = div; setTimeout(_saveToolbarSel, 0); });
+            div.addEventListener('focus', () => { EditorState._activeEditTarget = div; setTimeout(_saveToolbarSel, 0); });
             const acWrap2 = document.createElement('div'); acWrap2.className = 'ng-v-wrap'; acWrap2.appendChild(div);
             cell.appendChild(acWrap2);
             const prevCell = tr.lastElementChild;
@@ -581,7 +581,7 @@ function _updateAlignActive() {
     if (!_ngAlignPopup || !_ngAlignTable) return;
     let cell = window._lastGridCell || null;
     if (!cell || !_ngAlignTable.contains(cell)) {
-        const et = (_savedToolbarSel && _savedToolbarSel.et) || document.activeElement;
+        const et = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || document.activeElement;
         cell = et ? et.closest('td, th') : null;
     }
     const tr      = cell && _ngAlignTable.contains(cell) ? cell.closest('tr') : null;
@@ -599,7 +599,7 @@ function _updateAlignActive() {
 function _gridSetColAlign(table, valign, halign) {
     let cell = window._lastGridCell || null;
     if (!cell || !table.contains(cell)) {
-        const et = (_savedToolbarSel && _savedToolbarSel.et) || document.activeElement;
+        const et = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || document.activeElement;
         cell = et ? et.closest('td, th') : null;
     }
     if (!cell || !table.contains(cell)) {
@@ -630,7 +630,7 @@ function _gridSetColAlign(table, valign, halign) {
 
 /* ── Cursor'un olduğu DOM.$content satırından sonrasına grid ekle ── */
 function _insertGridAfterCursor(wrap) {
-    const sr  = _savedToolbarSel ? _savedToolbarSel.range : null;
+    const sr  = EditorState._savedToolbarSel ? EditorState._savedToolbarSel.range : null;
     const sel = window.getSelection();
     let node  = sr ? sr.startContainer : (sel&&sel.rangeCount ? sel.getRangeAt(0).startContainer : null);
     if (node && node.nodeType === 3) node = node.parentElement;
@@ -652,7 +652,7 @@ function applyGridTable(cols, rows) { const t = createGrid('table', cols||3, row
 
 /* ── Satır Bookmark ── */
 function applyBookmark() {
-    const sr  = _savedToolbarSel ? _savedToolbarSel.range : null;
+    const sr  = EditorState._savedToolbarSel ? EditorState._savedToolbarSel.range : null;
     const sel = window.getSelection();
     let node  = sr ? sr.startContainer : (sel && sel.rangeCount ? sel.getRangeAt(0).startContainer : null);
     if (!node) return;
@@ -1052,7 +1052,7 @@ function _restoreGrids() {
             fresh.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();fresh.blur();} });
             fresh.addEventListener('mousedown', e => e.stopPropagation());
             fresh.addEventListener('focus', () => {
-                _activeEditTarget = fresh; _saveToolbarSel();
+                EditorState._activeEditTarget = fresh; _saveToolbarSel();
                 if (isPanelType) { const th = fresh.closest('th'); if (th) _setPanelColumnActive(table, parseInt(th.dataset.col || '0')); }
             });
             title.parentNode.replaceChild(fresh, title);
@@ -1062,7 +1062,7 @@ function _restoreGrids() {
             cell.contentEditable = 'true';
             const fresh = cell.cloneNode(true);
             fresh.addEventListener('focus', () => {
-                _activeEditTarget = fresh; setTimeout(_saveToolbarSel, 0);
+                EditorState._activeEditTarget = fresh; setTimeout(_saveToolbarSel, 0);
                 if (isPanelType) { const td = fresh.closest('td'); if (td) _setPanelColumnActive(table, parseInt(td.dataset.col || '0')); }
             });
             cell.parentNode.replaceChild(fresh, cell);
@@ -1196,7 +1196,7 @@ document.addEventListener('keydown', function clearRowSelKey(e) {
         e.stopPropagation();
         /* Seçim yoksa çık */
         const sel = window.getSelection();
-        const savedRange = _savedToolbarSel ? _savedToolbarSel.range : null;
+        const savedRange = EditorState._savedToolbarSel ? EditorState._savedToolbarSel.range : null;
         if (!savedRange && (!sel || sel.isCollapsed)) return;
 
         /* Anchor element'i bul */

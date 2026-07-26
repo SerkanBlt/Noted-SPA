@@ -2,6 +2,18 @@
 
 ---
 
+## v1.15.118
+**Modülerleşme Faz 4e — Global Konsolidasyonu: Editör Oturum Durumu (en hassas küme)**
+- Faz 4'ün planın açıkça "en son taşınsın" dediği son alt-fazı: `_activeEditTarget`, `_savedToolbarSel`, `_selChangePending`, `_editorLocked` (`js/02`) ve `_snapTitle`, `_editActive`, `_contentDirty` (`js/03`) — bu iki değişken (`_activeEditTarget`/`_savedToolbarSel`) v1.15.109'da bir yarış durumu (race condition) bug'ına yol açmıştı (bkz. `Comments.json` → `trap-savedtoolbarsel-debounce-race`), bu yüzden plan bunları en sona bırakmayı ve sonrasında RKL-11'i özellikle tekrar koşmayı şart koşuyor
+- `js/02` başında tek bir `const EditorState = {}` tanımlandı (dosya yükleme sırasında `js/01`'den sonra ilk kez ihtiyaç duyulduğu yer); ~123 kullanım yeri (5 dosya) codemod ile güncellendi
+- **RKL-11 özel olarak, tam da tarihi hatayı tetikleyen senaryoyla test edildi:** panel içinde bir `<li>` öğesine metin seçilip `EditorState._savedToolbarSel` bilinçli olarak `null`'a set edilerek (debounce henüz çalışmamış gibi) toolbar'ın gerçek `mousedown`→`change` event zinciri tetiklendi — hem yazı tipi ailesi hem boyutu **ilk denemede** uygulandı, `_saveToolbarSel()`'in senkron tazelemesi doğru çalışıyor
+- Ölçüm: top-level global-satır sayısı **27 → 23** (başlangıçtan beri 105 → 23)
+- Doğrulama: `node --check` temiz; global scope sızıntısı yok; RKL-9 (kaydet→kapat→aç), RKL-11 (font ailesi/boyutu ilk denemede, yarış senaryosuyla), RKL-12 (markdown kısayolu), RKL-13 (mobil) doğrulandı; konsolda sıfır hata
+- `Comments.json`: `trap-savedtoolbarsel-debounce-race` satır numarası (`--fix` ile) tazelendi, anchor değişmedi
+- **Not:** Faz 4'ün "≤15" çıkış koşuluna henüz ulaşılmadı (23 kaldı) — geri kalanlar (`wlAc*`, `_extPanel*`, `_thcRefreshUI`, `toolbarHideTimer` grubu, `slashMenu*` grubu, `_ngAlignPopup/_ngAlignTable`, `_idSeed`, `activeInstance`, `_themeSaved` vb.) planın 5 kümesine bilinçli olarak dahil edilmemişti; bunlar ayrı bir temizlik alt-adımında ele alınacak
+
+---
+
 ## v1.15.117
 **Modülerleşme Faz 4d — Global Konsolidasyonu: Uygulama Durumu**
 - Faz 4'ün dördüncü ve en büyük alt-fazı: 22 uygulama-durumu değişkeni (`notes`, `openGroups`, `expandedNotes`, `searchQuery`, `filterGroup`, `filterTag`, `themeMode`, `isDark`, `editorGroup`, `editorColorLabel`, `editorPinned`, `editorReminders`, `editorReminderNote`, `tocOpen`, `activePickerId`, `deleteTargetId`, `deletePermanent`, `pendingNoteId`, `sortOrder`, `listView`, `customTemplates`, `focusModeActive`) tek bir `const State = {}` nesnesine taşındı — hepsi `let`/`var` (Sabitler/DOM cache'in aksine sürekli yeniden atanıyor), bu yüzden destructuring köprüsü değil gerçek `State.notes` dot-notation'ı kullanıldı

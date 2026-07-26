@@ -198,7 +198,7 @@ function activateInstance(inst) {
 }
 
 function saveContext(inst) {
-    inst.dirty = _contentDirty;
+    inst.dirty = EditorState._contentDirty;
 }
 
 /* Ana editör instance'ı — _undoSwitchTarget henüz tanımlı değil, doğrudan set */

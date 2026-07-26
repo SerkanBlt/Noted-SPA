@@ -1161,7 +1161,7 @@
         e.preventDefault();
         if (type === 'callout-menu' || type === 'line-height' || type === 'shape-menu') return;
         if (typeof _restoreToolbarSel === 'function') _restoreToolbarSel();
-        if      (type === 'timestamp')  { if ((typeof _editActive !== 'undefined' && _editActive) || (typeof _fpFocused === 'function' && _fpFocused())) insertTimestamp(); }
+        if      (type === 'timestamp')  { if ((typeof EditorState._editActive !== 'undefined' && EditorState._editActive) || (typeof _fpFocused === 'function' && _fpFocused())) insertTimestamp(); }
         else if (type === 'ul')         { document.execCommand('insertUnorderedList', false, null); }
         else if (type === 'ol')         { document.execCommand('insertOrderedList', false, null); }
         else if (type === 'todo')       { runSpecial('todo'); }

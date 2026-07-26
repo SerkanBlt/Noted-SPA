@@ -700,7 +700,7 @@ DOM.$content.addEventListener('input', () => {
 
     /* ── Nota CCB ekle ── */
     function insertCcb(id) {
-        const target = (typeof _activeEditTarget !== 'undefined' && _activeEditTarget) || document.getElementById('content');
+        const target = (typeof EditorState._activeEditTarget !== 'undefined' && EditorState._activeEditTarget) || document.getElementById('content');
         if (!target) return;
         target.focus();
 
@@ -763,7 +763,7 @@ DOM.$content.addEventListener('input', () => {
         sel.addRange(r2);
         target.focus();
 
-        /* Programatik DOM değişikliği _contentDirty'yi tetiklemez; input event dispatch ederek
+        /* Programatik DOM değişikliği EditorState._contentDirty'yi tetiklemez; input event dispatch ederek
            otomatik kaydı zorla (aksi hâlde not anahtarlanmadan önce kaydedilmez) */
         target.dispatchEvent(new Event('input', { bubbles: true }));
     }
@@ -1041,7 +1041,7 @@ DOM.$content.addEventListener('input', () => {
         if (!titleVal && !bodyVal) return;
 
         /* Değişiklik yoksa dur */
-        if (!_contentDirty && titleVal === _snapTitle) return;
+        if (!EditorState._contentDirty && titleVal === EditorState._snapTitle) return;
 
         /* save-btn'i göster */
         if (_saveBtn) {
@@ -1075,12 +1075,12 @@ DOM.$content.addEventListener('input', () => {
                 createdAt: Date.now(), updatedAt: Date.now()
             });
             if (eId) eId.value = newId;
-            _editActive = true;
+            EditorState._editActive = true;
         }
 
         /* Snapshot güncelle */
-        _snapTitle    = titleVal;
-        _contentDirty = false;
+        EditorState._snapTitle    = titleVal;
+        EditorState._contentDirty = false;
 
         saveNotes();
 

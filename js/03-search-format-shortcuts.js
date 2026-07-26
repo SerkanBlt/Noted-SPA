@@ -148,7 +148,7 @@ DOM.$tfBadge.addEventListener('click', e => {
             /* execCommand('foreColor') <font color="..."> üretir — sanitize() allowlist'inde
                'font' tag'ı yok, kayıtta tamamen siliniyordu (renk kayboluyordu). fontFamily'deki
                aynı workaround: <font> -> <span style="color"> dönüşümü. */
-            const et = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget || DOM.$content;
+            const et = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || EditorState._activeEditTarget || DOM.$content;
             et.querySelectorAll('font[color]').forEach(font => {
                 const span = document.createElement('span');
                 span.style.color = font.color;
@@ -223,9 +223,9 @@ DOM.$tfBadge.addEventListener('click', e => {
     function closeColorPopup() { const p=$('bg-color-popup'); if(p) p.classList.remove('open'); }
 function applyBgColor(color,close=true) {
         _restoreToolbarSel();
-        /* Grid hücresi: imlecin olduğu hücre — _activeEditTarget ile bul */
-        const activeCell = _activeEditTarget && _activeEditTarget.closest('.ng-cell, .ng-title')
-                           ? _activeEditTarget
+        /* Grid hücresi: imlecin olduğu hücre — EditorState._activeEditTarget ile bul */
+        const activeCell = EditorState._activeEditTarget && EditorState._activeEditTarget.closest('.ng-cell, .ng-title')
+                           ? EditorState._activeEditTarget
                            : (document.activeElement && document.activeElement.closest('.ng-cell, .ng-title')
                               ? document.activeElement : null);
         if (activeCell) {
@@ -261,7 +261,7 @@ function applyBgColor(color,close=true) {
         if(color) { if(!document.execCommand('hiliteColor',false,color)) document.execCommand('backColor',false,color); lastBgColor=color; bar.style.background=color; }
         else { document.execCommand('hiliteColor',false,'transparent'); document.execCommand('backColor',false,'transparent'); bar.style.background='transparent'; }
         /* Panel başlığı seçiliyse header arka planını da değiştir */
-        const et = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget;
+        const et = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || EditorState._activeEditTarget;
         if (et && et.classList && et.classList.contains('col-panel-title')) {
             const hdr = et.closest('.col-panel-header');
             if (hdr) hdr.style.backgroundColor = color || '';
@@ -282,7 +282,7 @@ function applyInlineStyle(prop, value) {
     /* Önce selection'ı restore et */
     _restoreToolbarSel();
     const sel = window.getSelection();
-    const et  = (_savedToolbarSel && _savedToolbarSel.et) || _activeEditTarget || DOM.$content;
+    const et  = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || EditorState._activeEditTarget || DOM.$content;
     if (!sel || !sel.rangeCount || !et.contains(sel.anchorNode)) return;
     if (sel.isCollapsed) return;
 
@@ -297,7 +297,7 @@ function applyInlineStyle(prop, value) {
             span.innerHTML = font.innerHTML;
             font.parentNode.replaceChild(span, font);
         });
-        _savedToolbarSel = null;
+        EditorState._savedToolbarSel = null;
         return;
     }
 
@@ -320,7 +320,7 @@ function applyInlineStyle(prop, value) {
         newRange.selectNodeContents(span);
         sel.removeAllRanges();
         sel.addRange(newRange);
-        _savedToolbarSel = { et, range: newRange.cloneRange() };
+        EditorState._savedToolbarSel = { et, range: newRange.cloneRange() };
         return;
     }
 
@@ -330,7 +330,7 @@ function applyInlineStyle(prop, value) {
     span.style[prop] = value;
     try { range.surroundContents(span); }
     catch { const frag = range.extractContents(); span.appendChild(frag); range.insertNode(span); }
-    _savedToolbarSel = null;
+    EditorState._savedToolbarSel = null;
 }
 
 function getCurrentFontSize() {
@@ -344,7 +344,7 @@ function getCurrentFontSize() {
 (function() {
     function updateToolbarDisplay() {
         const sel  = window.getSelection();
-        const _etd = _activeEditTarget || DOM.$content;
+        const _etd = EditorState._activeEditTarget || DOM.$content;
         if (!sel || sel.isCollapsed || !_etd.contains(sel.anchorNode)) return;
         const node = sel.getRangeAt(0).startContainer;
         const el   = node.nodeType === 3 ? (node.parentElement || _etd) : node;
@@ -361,20 +361,20 @@ function getCurrentFontSize() {
     }
 
     /* Font seçici: select açılırken selection kaybolur — mousedown'da snapshot al.
-       _savedToolbarSel debounce'lu (RAF/setTimeout) güncellendiğinden seçimden hemen
+       EditorState._savedToolbarSel debounce'lu (RAF/setTimeout) güncellendiğinden seçimden hemen
        sonra mousedown olursa eski/boş kalabilir — snapshot almadan önce senkron
        _saveToolbarSel() ile tazelenir (bkz. _restoreToolbarSel aynı sorun). */
     let _fontSelSnapshot = null;
     $('tb-font-select').addEventListener('mousedown', () => {
         _saveToolbarSel();
-        _fontSelSnapshot = _savedToolbarSel
-            ? { et: _savedToolbarSel.et, range: _savedToolbarSel.range.cloneRange() }
+        _fontSelSnapshot = EditorState._savedToolbarSel
+            ? { et: EditorState._savedToolbarSel.et, range: EditorState._savedToolbarSel.range.cloneRange() }
             : null;
     });
     $('tb-font-select').addEventListener('change', function() {
         if (!this.value) return;
         if (_fontSelSnapshot) {
-            _savedToolbarSel = _fontSelSnapshot;
+            EditorState._savedToolbarSel = _fontSelSnapshot;
             _fontSelSnapshot = null;
         }
         applyInlineStyle('fontFamily', this.value);
@@ -488,13 +488,13 @@ document.addEventListener('keydown',e=>{
     /* Ctrl+Shift+F — odaklanma modu */
     if (_ctrl && _shift && _key === 'f') { e.preventDefault(); toggleFocusMode(); }
     /* Ctrl+Shift+T — zaman damgası */
-    if (_ctrl && _shift && _key === 't') { e.preventDefault(); if (_editActive || _fpFocused()) { _restoreToolbarSel(); insertTimestamp(); } }
+    if (_ctrl && _shift && _key === 't') { e.preventDefault(); if (EditorState._editActive || _fpFocused()) { _restoreToolbarSel(); insertTimestamp(); } }
     /* Ctrl+Shift+U — madde listesi */
-    if (_ctrl && _shift && _key === 'u') { e.preventDefault(); if (_editActive || _fpFocused()) { _restoreToolbarSel(); document.execCommand('insertUnorderedList', false, null); } }
+    if (_ctrl && _shift && _key === 'u') { e.preventDefault(); if (EditorState._editActive || _fpFocused()) { _restoreToolbarSel(); document.execCommand('insertUnorderedList', false, null); } }
     /* Ctrl+Shift+O — sıralı liste */
-    if (_ctrl && _shift && _key === 'o') { e.preventDefault(); if (_editActive || _fpFocused()) { _restoreToolbarSel(); document.execCommand('insertOrderedList', false, null); } }
+    if (_ctrl && _shift && _key === 'o') { e.preventDefault(); if (EditorState._editActive || _fpFocused()) { _restoreToolbarSel(); document.execCommand('insertOrderedList', false, null); } }
     /* Ctrl+Shift+K — görev listesi (Ctrl+K Quick Switcher'dan ayrı: Shift gerekli) */
-    if (_ctrl && _shift && _key === 'k') { e.preventDefault(); if (_editActive || _fpFocused()) { _restoreToolbarSel(); runSpecial('todo'); } }
+    if (_ctrl && _shift && _key === 'k') { e.preventDefault(); if (EditorState._editActive || _fpFocused()) { _restoreToolbarSel(); runSpecial('todo'); } }
     /* Ctrl+Shift+W — daktilo modu */
     if (_ctrl && _shift && _key === 'w') { e.preventDefault(); toggleTypewriterMode(); }
     /* Ctrl/Cmd+K — hızlı geçiş (Shift olmadan) */
@@ -589,7 +589,7 @@ DOM.$content.addEventListener('click', e => {
             e.preventDefault();
             const checked = li.dataset.checked !== 'true';
             li.dataset.checked = String(checked);
-            if (_editActive) _contentDirty = true;
+            if (EditorState._editActive) EditorState._contentDirty = true;
             const text = li.querySelector('.todo-text');
             const t = text || li;
             const r = document.createRange(); r.setStart(t, 0); r.collapse(true);
@@ -623,12 +623,12 @@ document.addEventListener('click', e => {
     if (ce.id === 'fp-content') {
         ce.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
-        if (_editActive) _contentDirty = true;
+        if (EditorState._editActive) EditorState._contentDirty = true;
     }
 });
 
 /* ══ UNSAVED CHANGES ══ */
-let _snapTitle='', _editActive=false, _contentDirty=false;
+EditorState._snapTitle=''; EditorState._editActive=false; EditorState._contentDirty=false;
 
 function editNote(id) {
     /* Aynı notu hem float editörde hem ana editörde aç engeli */
@@ -681,7 +681,7 @@ function editNote(id) {
 
     _restoreGrids();
         setEditorLocked(n.locked || false);
-    _snapTitle=n.title; _editActive=true; _contentDirty=false;
+    EditorState._snapTitle=n.title; EditorState._editActive=true; EditorState._contentDirty=false;
     /* v1.1 */
     State.editorPinned=n.pinned||false; State.editorColorLabel=n.colorLabel||null;
     updateEditorPinBtn(State.editorPinned); updateColorLabelBtn(State.editorColorLabel);
@@ -701,7 +701,7 @@ function editNote(id) {
     render();
     /* render() ve DOM manipülasyonları bittikten sonra flag'i sıfırla —
        ara adımlarda tetiklenmiş olabilecek sahte input eventlerini temizle */
-    requestAnimationFrame(() => { _contentDirty = false; if (typeof window._undoSetupEnd === 'function') window._undoSetupEnd(); });
+    requestAnimationFrame(() => { EditorState._contentDirty = false; if (typeof window._undoSetupEnd === 'function') window._undoSetupEnd(); });
 }
 
 function resetEditor() {
@@ -712,7 +712,7 @@ function resetEditor() {
     if (typeof window.clearUndoHistory === 'function') window.clearUndoHistory();
     setEditorLocked(false);
     DOM.$title.value=''; DOM.$content.innerHTML=''; DOM.$editId.value=''; State.editorGroup='Genel';
-    _snapTitle=''; _editActive=false; _contentDirty=false;
+    EditorState._snapTitle=''; EditorState._editActive=false; EditorState._contentDirty=false;
     /* v1.1 */
     State.editorPinned=false; State.editorColorLabel=null;
     updateEditorPinBtn(false); updateColorLabelBtn(null);
@@ -743,30 +743,30 @@ function _twNormalizeHTML(html) {
 }
 
 /* ── Değişiklik tespiti: input-flag ── */
-function _markDirty() { _contentDirty = true; }
+function _markDirty() { EditorState._contentDirty = true; }
 
 /* DOM.$content ve panel içerikleri için input listener'ı bağla */
 function _bindDirtyListeners() {
     DOM.$content.addEventListener('input', () => {
-        _contentDirty = true;
+        EditorState._contentDirty = true;
     });
     DOM.$title.addEventListener('input', () => {
-        _contentDirty = true;
+        EditorState._contentDirty = true;
         updateFooterVisibility();
     });
     document.addEventListener('input', e => {
         if (e.target.classList.contains('col-panel-content') ||
             e.target.classList.contains('col-panel-title') ||
             e.target.classList.contains('layout-col'))
-            _contentDirty = true;
+            EditorState._contentDirty = true;
     });
 }
 _bindDirtyListeners();
 
 function hasUnsavedChanges() {
-    if (!_editActive) return false;
-    if (DOM.$title.value.trim() !== _snapTitle) return true;
-    return _contentDirty;
+    if (!EditorState._editActive) return false;
+    if (DOM.$title.value.trim() !== EditorState._snapTitle) return true;
+    return EditorState._contentDirty;
 }
 
 function handleEditNoteRequest(id) {
@@ -821,7 +821,7 @@ function applyTemplate(tplKey) {
     if (typeof activateInstance === 'function' && window._mainEditorInstance) activateInstance(window._mainEditorInstance);
     DOM.$title.value = tpl.title();
     DOM.$content.innerHTML = sanitize(tpl.content);
-    _snapTitle = '';
+    EditorState._snapTitle = '';
     updateFooterVisibility();
     DOM.$title.focus();
 }

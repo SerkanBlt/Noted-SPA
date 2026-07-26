@@ -299,43 +299,45 @@ function insertEmptyParaBefore(el) {
     el.parentNode.insertBefore(p, el);
 }
 
+/* ══ EDİTÖR OTURUM DURUMU (Faz 4e — Global Konsolidasyonu, en son taşınan küme) ══ */
+const EditorState = {};
 /* Aktif editör alanını takip et — panel içi formatlamada doğru alana uygulansın */
-let _activeEditTarget = DOM.$content;
-DOM.$content.addEventListener('focus', () => { _activeEditTarget = DOM.$content; });
+EditorState._activeEditTarget = DOM.$content;
+DOM.$content.addEventListener('focus', () => { EditorState._activeEditTarget = DOM.$content; });
 document.addEventListener('focusin', e => {
     if (e.target.classList.contains('col-panel-content') ||
         e.target.classList.contains('layout-col') ||
         e.target.id === 'fp-content') {
-        _activeEditTarget = e.target;
-        _savedToolbarSel = null;
+        EditorState._activeEditTarget = e.target;
+        EditorState._savedToolbarSel = null;
     }
 }, true);
 /* Float panel'de imleç var mı — kısayol / toolbar guard'ları için */
-function _fpFocused() { return _activeEditTarget && _activeEditTarget.id === 'fp-content'; }
+function _fpFocused() { return EditorState._activeEditTarget && EditorState._activeEditTarget.id === 'fp-content'; }
 
 /* Toolbar tıklanmadan önce aktif selection'ı kaydet */
-let _savedToolbarSel = null;
+EditorState._savedToolbarSel = null;
 
 function _saveToolbarSel() {
     const sel = window.getSelection();
     if (!sel || !sel.rangeCount) return;
-    const et = _activeEditTarget || DOM.$content;
+    const et = EditorState._activeEditTarget || DOM.$content;
     /* Seçimin gerçekten title veya editable alandan geldiğini doğrula */
     if (et.contains(sel.anchorNode)) {
-        _savedToolbarSel = { et, range: sel.getRangeAt(0).cloneRange() };
+        EditorState._savedToolbarSel = { et, range: sel.getRangeAt(0).cloneRange() };
     }
 }
 
 function _restoreToolbarSel() {
-    /* _savedToolbarSel selectionchange'te debounce'lu (RAF/setTimeout) güncelleniyor.
+    /* EditorState._savedToolbarSel selectionchange'te debounce'lu (RAF/setTimeout) güncelleniyor.
        Toolbar butonuna seçimden hemen sonra tıklanırsa debounce henüz çalışmamış olabilir —
-       _savedToolbarSel eski/boş kalır, restore de o eski range'i uygulayıp canlı seçimi
+       EditorState._savedToolbarSel eski/boş kalır, restore de o eski range'i uygulayıp canlı seçimi
        (asıl doğru olanı) ezer, format komutu hiçbir şeye uygulanmamış gibi olur.
        Restore etmeden önce senkron bir _saveToolbarSel() çağrısı, mousedown anındaki
        canlı seçim hâlâ geçerliyse onu hemen yakalayıp bu yarışı ortadan kaldırır. */
     _saveToolbarSel();
-    if (!_savedToolbarSel) return;
-    const { et, range } = _savedToolbarSel;
+    if (!EditorState._savedToolbarSel) return;
+    const { et, range } = EditorState._savedToolbarSel;
     et.focus();
     const sel = window.getSelection();
     sel.removeAllRanges();
@@ -343,17 +345,17 @@ function _restoreToolbarSel() {
 }
 
 /* Seçim veya cursor değiştiğinde kaydet — throttled */
-let _selChangePending = false;
+EditorState._selChangePending = false;
 document.addEventListener('selectionchange', () => {
-    if (_selChangePending) return;
-    _selChangePending = true;
+    if (EditorState._selChangePending) return;
+    EditorState._selChangePending = true;
     requestAnimationFrame(() => {
-        _selChangePending = false;
+        EditorState._selChangePending = false;
         const sel = window.getSelection();
         if (!sel || !sel.rangeCount) return;
-        const et = _activeEditTarget || DOM.$content;
+        const et = EditorState._activeEditTarget || DOM.$content;
         if (et && sel.anchorNode && et.contains(sel.anchorNode)) {
-            _savedToolbarSel = { et, range: sel.getRangeAt(0).cloneRange() };
+            EditorState._savedToolbarSel = { et, range: sel.getRangeAt(0).cloneRange() };
         }
     });
 });
@@ -382,7 +384,7 @@ $('toolbar').addEventListener('mousedown', e => {
             const s = window.getSelection();
             if (s && s.rangeCount) {
                 let node = s.getRangeAt(0).startContainer;
-                while (node && node !== _activeEditTarget && node !== DOM.$content) {
+                while (node && node !== EditorState._activeEditTarget && node !== DOM.$content) {
                     if (node.nodeName === 'BLOCKQUOTE') { insertEmptyParaAfter(node); break; }
                     node = node.parentNode;
                 }
@@ -624,7 +626,7 @@ function _showAiGutterInd(savedRange) {
         const selectedText = sel ? sel.toString().trim() : '';
         if (!selectedText) return;
         const savedRange = sel.getRangeAt(0).cloneRange();
-        const savedEt    = _activeEditTarget || DOM.$content;
+        const savedEt    = EditorState._activeEditTarget || DOM.$content;
         _runAiFlow(action, selectedText, savedRange, savedEt);
     }
     window._execInlineAI = _execAiAction;
@@ -890,7 +892,7 @@ function focusTodoLi(li) {
 }
 
 function runSpecial(type) {
-    const _et = _activeEditTarget || DOM.$content;
+    const _et = EditorState._activeEditTarget || DOM.$content;
     const sel = window.getSelection();
     const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
     if (type === 'icode') {
@@ -996,7 +998,7 @@ function runSpecial(type) {
             const has = SCHEMES.some(s => raw.startsWith(s));
             const url = has ? raw : schemeEl.value + raw;
             if (savedRange2) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange2); }
-            (_activeEditTarget || DOM.$content).focus();
+            (EditorState._activeEditTarget || DOM.$content).focus();
             document.execCommand('createLink', false, url);
             document.querySelectorAll(`a[href="${url}"]`).forEach(a => { a.target='_blank'; a.rel='noopener noreferrer'; });
             closeDialog();
@@ -1321,10 +1323,10 @@ DOM.$picker.addEventListener('click', e => e.stopPropagation());
 /* ══ CRUD ══ */
 
 /* ══ NOT KİLİTLEME ══ */
-let _editorLocked = false;
+EditorState._editorLocked = false;
 
 function setEditorLocked(locked) {
-    _editorLocked = locked;
+    EditorState._editorLocked = locked;
     const btn = $('lock-btn');
     const editor = DOM.$editor;
     if (locked) {
@@ -1348,10 +1350,10 @@ function setEditorLocked(locked) {
     btn.addEventListener('click', function() {
         /* Kilitleme editörde aktif not varsa çalışır */
         if (!DOM.$editId.value) return;
-        setEditorLocked(!_editorLocked);
+        setEditorLocked(!EditorState._editorLocked);
         /* Kilit durumunu not verisine kaydet */
         const idx = State.notes.findIndex(n => String(n.id) === String(DOM.$editId.value));
-        if (idx !== -1) { State.notes[idx].locked = _editorLocked; saveNotes(); }
+        if (idx !== -1) { State.notes[idx].locked = EditorState._editorLocked; saveNotes(); }
     });
 })();
 
