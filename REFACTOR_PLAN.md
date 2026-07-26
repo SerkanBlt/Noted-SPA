@@ -40,10 +40,129 @@
 7. **Sürüm numarası her fazda 5 yerde artırılır:** satır 2 HTML yorumu, `<title>`, `.hm-app-ver`, `.hm-ver`, yardım `<h2>`. `Version.md`'ye giriş eklenir.
 8. **Commit mesajı Bash heredoc ile yazılır**, PowerShell here-string ile değil (bu projede bir kez karakter bozulmasına yol açtı). Commit sonrası `git log -1 --format=%B` ile karakter bütünlüğü doğrulanır.
 9. **`git push` her fazın sonunda yapılır** (proje GitHub Pages'e deploy oluyor).
+10. **Kod değiştirmeden ÖNCE `Comments.json` okunur, sonra güncellenir.** Bkz. bölüm 2.
 
 ---
 
-## 2. Regresyon Kontrol Listesi (RKL)
+## 2. `Comments.json` — Kod Dışı Yorum Sistemi
+
+### Gerekçe
+
+Tasarım aşamasına ait açıklamalar (tuzaklar, "bu neden böyle", tarihçe) kod dosyasının içine
+inline yorum olarak yazılmaz; `Comments.json` dosyasına yazılır.
+
+- Üretimdeki kullanıcının bu açıklamalara ihtiyacı yok → sevk edilen dosya küçülür.
+- Ajan, 18.5k satır taramak yerine ~200 satırlık küratörlü bir indeks okur → **keşif** maliyeti düşer.
+- Girdi doğrudan satır numarası verdiği için müdahale noktasına tek adımda gidilir.
+
+### Kritik tasarım kararı: `anchor` otoritedir, `line` ipucudur
+
+> **Satır numaraları kayar.** Üstteki her ekleme/silme alttaki tüm numaraları geçersiz kılar.
+> Bu refactor sırasında 4.650 satır CSS taşınacak, 10.701 satır JS bölünecek — yani
+> **her satır numarası en az bir kez bayatlayacak.** Saf satır-numarası tabanlı bir sistem
+> ilk fazda çöker ve bayat yorum, hiç yorum olmamasından **daha kötüdür** (aktif olarak yanıltır).
+
+Bu yüzden her girdi iki konum bilgisi taşır:
+
+| Alan | Rol |
+|---|---|
+| `anchor` | **Otorite.** Kodda birebir geçen, dosya içinde **benzersiz** metin. Konum bununla bulunur. |
+| `line` | **Yalnızca ipucu.** Bayat olabilir. Doğrulayıcı tarafından otomatik onarılır. |
+
+### Şema
+
+```jsonc
+{
+  "id":     "trap-normalizehtml-empty-block-removal",  // kalıcı, kebab-case, asla değişmez
+  "level":  "critical",          // critical | important | info
+  "type":   "trap",              // trap | why | history | todo | perf
+  "file":   "Noted.html",
+  "line":   5750,                // ipucu — doğrulayıcı günceller
+  "anchor": "if (/(^|\\s)ng-/.test(el.className)) return;",  // BENZERSIZ olmalı
+  "symbol": "normalizeHtml",     // kapsayan fonksiyon/selektör (opsiyonel)
+  "title":  "Tek satır özet",
+  "body":   "Asıl açıklama.",
+  "refs":   ["v1.15.106"]        // sürüm etiketi / belge referansı
+}
+```
+
+**Seviyeler:**
+
+| Seviye | Anlamı |
+|---|---|
+| `critical` | Bu koda dokunmadan **önce** okunmalı. İhlali **sessiz veri kaybı / bozulma** üretir. |
+| `important` | Değiştirmeden önce anlaşılmalı. İhlali **görünür bug** üretir. |
+| `info` | Bağlam / gerekçe. Okunmaması zarar vermez. |
+
+### Doğrulayıcı: `tools/comments-check.js`
+
+Sistemi kırılgan olmaktan çıkaran parça budur. Üç arıza modunu yakalar:
+
+```bash
+node tools/comments-check.js            # doğrula (hata varsa çıkış kodu 1)
+node tools/comments-check.js --fix      # kaymış 'line' değerlerini onar
+node tools/comments-check.js --list critical   # seviyeye göre listele
+node tools/comments-check.js --for Noted.html  # dosyanın girdileri
+```
+
+| Arıza | Tespit | Sonuç |
+|---|---|---|
+| **Kayma** — anchor bulundu ama farklı satırda | Otomatik | `--fix` ile onarılır |
+| **Yetim** — anchor artık kodda yok | Otomatik | **HATA** — kod silinmiş/değişmiş, girdi güncellenmeli |
+| **Belirsiz** — anchor birden çok yerde | Otomatik | **HATA** — anchor uzatılmalı |
+
+> Doğrulanmış: üç arıza modu da test edildi, `--fix` kaymayı onarıyor, çıkış kodu doğru.
+
+### Çalışma kuralları
+
+1. **Kod değiştirmeden ÖNCE:** `node tools/comments-check.js --for <dosya>` çalıştır.
+   `critical` girdileri **oku**. Bunlar bu kod tabanında tekrar tekrar bug üretmiş noktalardır.
+2. **Kod değiştirdikten SONRA:** `node tools/comments-check.js` çalıştır. Temiz olmalı.
+   Kayma varsa `--fix`. Yetim/belirsiz varsa **elle düzelt** — otomatik düzeltme yok, çünkü
+   kararı insan/ajan vermelidir (girdi hâlâ geçerli mi, yoksa kod mu ortadan kalktı?).
+3. **Yeni açıklama yazarken:** koda inline yorum ekleme, `Comments.json`'a girdi ekle.
+   İstisna: **tek satırlık, yerel, mekanik** açıklamalar (`/* px → rem */` gibi) kodda kalabilir.
+   Kural şu: *"Bunu bilmeyen biri buraya dokunursa bir şey bozulur mu?"* → evet ise `Comments.json`.
+4. **`anchor` seçimi:** mümkün olan en kısa **benzersiz** metin. Değişme ihtimali düşük olanı seç
+   (fonksiyon imzası > gövde satırı; CSS selektörü > bildirim değeri).
+5. **Girdi silme:** kodun kendisi kalktıysa girdiyi sil. Kod duruyor ama açıklama eskidiyse
+   `body`'yi güncelle, `id`'yi **değiştirme**.
+
+### Her fazın çıkış koşuluna eklenir
+
+Bu belgedeki **her fazın** çıkış koşuluna şu madde dâhildir:
+
+> `node tools/comments-check.js` **temiz** dönüyor ve o fazda değişen/taşınan kodun
+> girdileri (`file` alanı dâhil) güncellenmiş.
+
+Özellikle **Faz 2** (CSS → `noted.css`) ve **Faz 3** (JS → ayrı dosyalar) sırasında
+girdilerin `file` alanı **toplu olarak** güncellenmelidir; anchor'lar taşımayı sağ atlatır
+ama dosya adı değişir.
+
+### Ajanın bunu gerçekten okumasını sağlamak
+
+Bu kuralın bağlayıcı olması için **proje kökünde bir `CLAUDE.md`** bulunmalı ve şu maddeyi
+içermelidir:
+
+```markdown
+- Herhangi bir kod dosyasını değiştirmeden önce `node tools/comments-check.js --for <dosya>`
+  çalıştır ve `critical` girdileri oku. Değişiklikten sonra `node tools/comments-check.js`
+  temiz dönmeli. Yeni açıklamaları koda değil `Comments.json`'a yaz.
+```
+
+`REFACTOR_PLAN.md`'ye yazmak yeterli değildir — ajan bu belgeyi yalnızca refactor işi için okur,
+`CLAUDE.md`'yi ise her oturumda okur.
+
+### Dürüst uyarı — takas
+
+Bu sistemin bir maliyeti var: `Noted.html:5750`'ye bakan bir **insan**, artık oradaki tuzağı
+göremez; `Comments.json`'a bakmak zorundadır. Bu kabul edilebilir bir takas, **ancak**
+`Comments.json` güncel kalırsa. Bayat bir `Comments.json`, inline yorumdan kesinlikle
+daha kötüdür. Doğrulayıcının her fazda çalıştırılması bu yüzden pazarlık konusu değildir.
+
+---
+
+## 3. Regresyon Kontrol Listesi (RKL)
 
 Bu liste **her fazın öncesinde ve sonrasında** çalıştırılır. Sonuçlar aynı olmalıdır.
 
@@ -392,7 +511,50 @@ Notlar IndexedDB'de, `localStorage` yedeği duruyor, geri dönüş yolu açık.
 
 ---
 
-## 3. Kapsam Dışı (bu iş emrinde YAPMA)
+## FAZ 6 — Inline Yorumları `Comments.json`'a Taşı
+
+**Amaç:** Tasarım aşamasına ait açıklamaları koddan çıkarıp tek kaynağa toplamak.
+
+### Adım 6.1 — Envanter
+
+```bash
+# Cok satirli aciklama bloklari (tasima adayi)
+grep -n '/\*' Noted.html js/*.js noted.css | wc -l
+```
+
+Her yorumu üç kovadan birine ayır:
+
+| Kova | Ne yapılır |
+|---|---|
+| **Taşınacak** | "Bunu bilmeyen biri dokunursa bir şey bozulur" tipi: tuzak, gerekçe, tarihçe, sürüm notu | 
+| **Kalacak** | Tek satırlık, yerel, mekanik (`/* px → rem */`, bölüm başlığı `/* ══ ... ══ */`) |
+| **Silinecek** | Ölü/yanlış/kodu tekrarlayan yorumlar (`/* i'yi artir */`) |
+
+> **Bölüm başlıklarını (`/* ══ ... ══ */`) SİLME.** Faz 3'ün bölme haritası onlara dayanıyor
+> ve navigasyon değeri yüksek.
+
+### Adım 6.2 — Taşı
+
+Her taşınan yorum için `Comments.json`'a girdi ekle (şema: bölüm 2), sonra koddan sil.
+`anchor` olarak **yorumun kendisini değil**, açıkladığı **kod satırını** seç — yorum silinince
+anchor da kaybolurdu.
+
+### Adım 6.3 — Doğrulama
+
+1. `node tools/comments-check.js` → temiz.
+2. Taşınan her açıklama için `--list` çıktısında karşılığı var mı gözle doğrula.
+3. Tam **RKL-1 … RKL-15** (yorum silme kod davranışını değiştirmemeli — değiştirdiyse
+   yanlışlıkla kod silinmiştir, **DUR**).
+4. `git diff --stat` → yalnızca yorum satırları silinmiş olmalı, kod satırı **sıfır** değişmeli.
+   Bunu kanıtla: `git diff -U0 | grep '^[+-]' | grep -v '^[+-][+-]' | grep -v '^\s*[+-]\s*\(/\*\|\*\|//\)'`
+   çıktısı **boş** olmalı.
+
+### Çıkış koşulu
+Sürüm artırılmış, `Comments.json` genişletilmiş, doğrulayıcı temiz, commit + push.
+
+---
+
+## 4. Kapsam Dışı (bu iş emrinde YAPMA)
 
 Bunlar bilinçli olarak ertelenmiştir. Bir sonraki iş emrinin konusudur:
 
@@ -407,7 +569,7 @@ Bunlar bilinçli olarak ertelenmiştir. Bir sonraki iş emrinin konusudur:
 
 ---
 
-## 4. Rollback
+## 5. Rollback
 
 Her faz tek commit olduğu için:
 
@@ -423,21 +585,26 @@ Faz 5.2'de (IndexedDB) veri kaybı şüphesi varsa: `noted_backup_pre_idb` anaht
 
 ---
 
-## 5. Bu Kod Tabanına Özgü Tuzaklar
+## 6. Bu Kod Tabanına Özgü Tuzaklar
 
-Bu oturumda pahalıya öğrenilen şeyler. Uygulayan ajan bunları bilmeli:
+Bu tuzaklar **`Comments.json` içinde yaşar** — burada tekrarlanmaz.
+(Bu belge kendi kuralına uyar: tek kaynak, kopya yok.)
 
-1. **`normalizeHtml()` boş blokları siler.** `data-ph` attribute'lu veya `ng-` prefixli class'lar muaf tutuldu (v1.15.106). Bu muafiyeti bozarsan **boş grid hücreleri kayıtta sessizce yok olur.**
-2. **`_restoreGrids()` DOM yapısına bağımlıdır.** Panel'de `<table>` artık `.ng-panel-frame` içindedir, `.ng-wrap`'ın doğrudan çocuğu değildir. Yapı varsayan `insertBefore` çağrıları `editNote()`'un tamamını sessizce yarıda keser (v1.15.106).
-3. **`_savedToolbarSel` debounce'ludur** (RAF/`setTimeout`). Seçimden hemen sonra okuyan her kod senkron `_saveToolbarSel()` ile tazelemelidir, yoksa eski/boş range canlı seçimi ezer (v1.15.109).
-4. **`execCommand('foreColor')` `<font>` üretir**, `sanitize()` allowlist'inde `font` yoktur → kayıtta silinir. `<span style="color">` dönüşümü zorunludur (v1.15.109).
-5. **ID tabanlı selektörler bu dosyada mayındır.** Faz 1 en büyüğünü temizliyor; yenisini **ekleme**.
-6. **`.ng-toolbar` negatif `top` ile konumlanır.** Ata elemana `overflow-x: auto` vermek `overflow-y`'yi de `auto` yapar ve toolbar'ı kırpar (v1.15.110).
-7. **Grid kart görseli `th`/`td`'de değil `.ng-v-wrap`'tedir.** `th`/`td`'ye padding/border eklemek `table-layout: fixed` genişlik hesabını bozar ve panelin sayfa dışına taşmasına yol açar (v1.15.105).
+```bash
+node tools/comments-check.js --list critical
+```
+
+Şu an 7 girdi var; hepsi bu projede en az bir kez gerçek bug üretmiş noktalardır:
+`normalizeHtml` boş blok silme · `_restoreGrids` DOM yapısı varsayımı ·
+`_savedToolbarSel` debounce yarışı · `foreColor` → `<font>` kaybı ·
+yetim CSS selektörü / ID specificity · `.ng-v-wrap` kart görseli ·
+`.ng-toolbar` overflow kırpması.
+
+**Kod değiştirmeden önce bunları okumak zorunludur** (bölüm 2, çalışma kuralı 1).
 
 ---
 
-## 6. Faz Özeti
+## 7. Faz Özeti
 
 | Faz | İş | Risk | Beklenen sonuç |
 |---|---|---|---|
@@ -447,3 +614,9 @@ Bu oturumda pahalıya öğrenilen şeyler. Uygulayan ajan bunları bilmeli:
 | 3 | JS → klasik script dosyaları | Düşük-Orta | `Noted.html` ≈ 1.400 satır |
 | 4 | Global konsolidasyonu | Orta | 105 → ≤ 15 global |
 | 5 | Storage arayüzü + IndexedDB | **Yüksek** | Veri katmanı modern |
+| 6 | Inline yorumları `Comments.json`'a taşı | Düşük | Kod satırı azalır, açıklama tek kaynakta |
+
+> **Faz 6 neden en sonda?** Inline yorumların toplu taşınması ancak dosya yapısı
+> nihai hâlini aldıktan (Faz 3) ve kod stabilize olduktan sonra anlamlıdır; aksi hâlde
+> `file` alanları iki kez güncellenir. Ancak `Comments.json` **Faz 0'dan itibaren
+> mevcuttur** ve tuzak girdileriyle doludur — yani faydası ilk fazdan itibaren alınır.
