@@ -21,26 +21,29 @@ searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearch();
 
 /* v1.3: arama operatörleri ipucu */
 /* Gelişmiş arama operatörleri — hover ile göster/gizle */
-function positionSearchOpHint() {
-    const rect = DOM.$searchOpBtn.getBoundingClientRect();
-    let top = rect.bottom + 6, left = rect.left;
-    if (left + 250 > window.innerWidth) left = window.innerWidth - 256;
-    DOM.$searchOpHint.style.top = top + 'px';
-    DOM.$searchOpHint.style.left = left + 'px';
-}
-let _searchOpHideT = null;
-DOM.$searchOpBtn.addEventListener('mouseenter', () => {
-    clearTimeout(_searchOpHideT);
-    positionSearchOpHint();
-    DOM.$searchOpHint.classList.add('open');
-});
-DOM.$searchOpBtn.addEventListener('mouseleave', () => {
-    _searchOpHideT = setTimeout(() => DOM.$searchOpHint.classList.remove('open'), 200);
-});
-DOM.$searchOpHint.addEventListener('mouseenter', () => { clearTimeout(_searchOpHideT); });
-DOM.$searchOpHint.addEventListener('mouseleave', () => {
-    _searchOpHideT = setTimeout(() => DOM.$searchOpHint.classList.remove('open'), 200);
-});
+/* Faz 4c: sadece bu blok içinde kullanılan durum IIFE'ye kapatıldı */
+(function() {
+    function positionSearchOpHint() {
+        const rect = DOM.$searchOpBtn.getBoundingClientRect();
+        let top = rect.bottom + 6, left = rect.left;
+        if (left + 250 > window.innerWidth) left = window.innerWidth - 256;
+        DOM.$searchOpHint.style.top = top + 'px';
+        DOM.$searchOpHint.style.left = left + 'px';
+    }
+    let _searchOpHideT = null;
+    DOM.$searchOpBtn.addEventListener('mouseenter', () => {
+        clearTimeout(_searchOpHideT);
+        positionSearchOpHint();
+        DOM.$searchOpHint.classList.add('open');
+    });
+    DOM.$searchOpBtn.addEventListener('mouseleave', () => {
+        _searchOpHideT = setTimeout(() => DOM.$searchOpHint.classList.remove('open'), 200);
+    });
+    DOM.$searchOpHint.addEventListener('mouseenter', () => { clearTimeout(_searchOpHideT); });
+    DOM.$searchOpHint.addEventListener('mouseleave', () => {
+        _searchOpHideT = setTimeout(() => DOM.$searchOpHint.classList.remove('open'), 200);
+    });
+})();
 
 /* ══ VOICE SEARCH ══ */
 (function() {

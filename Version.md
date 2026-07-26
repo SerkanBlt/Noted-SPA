@@ -2,6 +2,19 @@
 
 ---
 
+## v1.15.116
+**Modülerleşme Faz 4c — Global Konsolidasyonu: Özellik-Yerel Durum**
+- Faz 4'ün üçüncü alt-fazı: plan "kendi dosyasında IIFE'ye kapat" diyor — bu, önceki iki alt-fazdaki (Sabitler/DOM cache) namespace-nesnesi tekniğinden farklı, gerçek scope kapsülleme gerektiriyordu
+- **`js/07-link-graph-focus-timer.js` tamamen tek bir IIFE'ye alındı** (11 değişken: `graphZoom`, `isDraggingSphere`, `isHoveringNode`, `graphHoveredNodeId`, `graphRafId`, `nodeData`, `focusTimerState`, `_focusTimerInterval`, `typewriterActive`, `qsActiveIndex`, `qsResultsCache`) — bu dosyanın TÜM state'i ve 37 fonksiyonu yalnızca bu dosya içinde kullanılıyor (önce grep ile doğrulandı). Dışarıdan (js/03, js/06) çağrılan 6 fonksiyon (`openLinkGraph`, `closeLinkGraph`, `toggleTypewriterMode`, `recordActivityToday`, `openQuickSwitcher`, `closeQuickSwitcher`) dosya sonunda `window.*` ile açıldı — çağıran taraflarda hiçbir değişiklik gerekmedi (bare global çağrı zaten `window` nesnesine düşer)
+- **`js/03-search-format-shortcuts.js`'te "arama ipucu" bloğu** (`_searchOpHideT` + `positionSearchOpHint`) kendi küçük IIFE'sine kapatıldı — yalnızca 4 event listener içinde kullanılıyor, dış bağımlılığı yok
+- **Bilinçli olarak ATLANDI:** `js/02`'deki toolbar-sürükleme durumu (`toolbarHideTimer`, `toolbarDragged`, `_fsizeApplying`) ve `js/08`'deki hizalama popup durumu (`_ngAlignPopup`, `_ngAlignTable`) — bu değişkenlerin kullanım yerleri dosya genelinde diğer (ilgisiz) kodla iç içe geçmiş durumda, temiz bir IIFE sınırı yok. Bunları sarmalamak kod taşımayı (restructure) gerektirirdi, salt "kapsülleme" değil — en kırılgan dosyalarda (özellikle js/08, Noted Grid Sistemi) bu riski almamayı tercih ettim
+- Girinti: IIFE'ye alınan gövdeler 4 boşlukla yeniden girintilendi (plan'ın ölçüm komutu `^(let|const|var)` sütun-0 eşleşmesi kullandığı için gerçek kapsülleme ancak girintiyle ölçüme yansıyor)
+- Ölçüm: top-level global-satır sayısı **48 → 36** (başlangıçtan beri 105 → 36)
+- Doğrulama: `node --check` 12 dosyada temiz; global scope sızıntısı yok (`typeof graphZoom === 'undefined'`, `typeof _searchOpHideT === 'undefined'` pencerede), bağlantı haritası aç/kapat, daktilo modu, hızlı geçiş aç/kapat, aktivite kaydı, arama ipucu hover — hepsi çalışıyor; RKL-9/RKL-12 (kaydet/kapat/yeniden aç, markdown kısayolu) tekrar doğrulandı; konsolda sıfır hata
+- `Comments.json`: `trap-forecolor-produces-font-tag` satır numarası (`--fix` ile) tazelendi, anchor değişmedi
+
+---
+
 ## v1.15.115
 **Modülerleşme Faz 4b — Global Konsolidasyonu: DOM Cache Kümesi**
 - Faz 4'ün ikinci alt-fazı: 38 adet `$xxx` DOM referansı (`$title`, `$content`, `$editor`, `$toolbar`, `$slashMenu`, `$reminderPopup` vb. — `$content` hariç hepsi `const`, `$content` ise editör-instance değiştirme akışında yeniden atanan `let`) `js/01-core-storage-render.js` başındaki tek bir `const DOM = {}` nesnesine taşındı

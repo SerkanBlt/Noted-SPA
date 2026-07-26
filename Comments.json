@@ -62,7 +62,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/03-search-format-shortcuts.js",
-      "line": 149,
+      "line": 152,
       "anchor": "font[color]",
       "symbol": "applyColor",
       "title": "execCommand('foreColor') <font> uretir, sanitize() onu siler",
