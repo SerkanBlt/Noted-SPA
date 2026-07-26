@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.117
+**Modülerleşme Faz 4d — Global Konsolidasyonu: Uygulama Durumu**
+- Faz 4'ün dördüncü ve en büyük alt-fazı: 22 uygulama-durumu değişkeni (`notes`, `openGroups`, `expandedNotes`, `searchQuery`, `filterGroup`, `filterTag`, `themeMode`, `isDark`, `editorGroup`, `editorColorLabel`, `editorPinned`, `editorReminders`, `editorReminderNote`, `tocOpen`, `activePickerId`, `deleteTargetId`, `deletePermanent`, `pendingNoteId`, `sortOrder`, `listView`, `customTemplates`, `focusModeActive`) tek bir `const State = {}` nesnesine taşındı — hepsi `let`/`var` (Sabitler/DOM cache'in aksine sürekli yeniden atanıyor), bu yüzden destructuring köprüsü değil gerçek `State.notes` dot-notation'ı kullanıldı
+- **~284 kullanım yeri** (`notes` tek başına 89) bir Node.js codemod ile değiştirildi. **Tek satırda çoklu değişken tanımlayan 4 satır** (`let notes = ...; let openGroups = ...;` gibi) codemod'un basit "satır başı let/const" deseniyle doğru işlenemeyeceği için **elle** ayrı `State.x = ...;` ifadelerine bölündü — aksi halde 2., 3., 4. değişken `let State.x = ...` gibi geçersiz sözdizimine dönüşürdü
+- **İkinci bir gölgeleme tuzağı bulundu:** `listView` hem global durum değişkeni hem de config şemasının KENDİ anahtar adı (`getUiCfg().listView`, `patchUiCfg({listView: value})`, ve config varsayılanları migrasyonundaki `listView: _ls(...)` satırı) olarak kullanılıyordu. Bu üç yer codemod'dan placeholder ile korundu; yine de biri (varsayılan migrasyon satırı, çok-boşluklu hizalama yüzünden ilk taramada gözden kaçtı) `State.listView   : ...` olarak bozulup `node --check` tarafından yakalandı ve elle düzeltildi
+- Ölçüm: top-level global-satır sayısı **36 → 27** (başlangıçtan beri 105 → 27)
+- Doğrulama: `node --check` 12 dosyada temiz; global scope sızıntısı yok (`typeof notes/themeMode === 'undefined'`); not kaydet (pin/renk-etiketi/grup dahil) → kapat → yeniden aç, arama, tema (dark/light `--bg` farkı), markdown kısayolu, mobilde tam genişlik + odakta görünen toolbar hepsi doğrulandı; konsolda sıfır hata
+- `Comments.json`: `trap-normalizehtml-empty-block-removal` satır numarası (`--fix` ile) tazelendi, anchor değişmedi
+
+---
+
 ## v1.15.116
 **Modülerleşme Faz 4c — Global Konsolidasyonu: Özellik-Yerel Durum**
 - Faz 4'ün üçüncü alt-fazı: plan "kendi dosyasında IIFE'ye kapat" diyor — bu, önceki iki alt-fazdaki (Sabitler/DOM cache) namespace-nesnesi tekniğinden farklı, gerçek scope kapsülleme gerektiriyordu

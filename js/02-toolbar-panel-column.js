@@ -1,10 +1,10 @@
 /* ══ v1.6: HATIRLATICI ══ */
 function updateReminderBtn(reminders, reminderNote) {
-    editorReminders    = Array.isArray(reminders) ? reminders : [];
-    editorReminderNote = reminderNote || '';
+    State.editorReminders    = Array.isArray(reminders) ? reminders : [];
+    State.editorReminderNote = reminderNote || '';
     if (!DOM.$reminderBtn) return;
     DOM.$reminderBtn.classList.remove('has-reminder', 'overdue');
-    const active = editorReminders.filter(r => r && r.at && !r.fired);
+    const active = State.editorReminders.filter(r => r && r.at && !r.fired);
     if (active.length > 0) {
         const overdue = active.some(r => r.at <= Date.now());
         DOM.$reminderBtn.classList.add(overdue ? 'overdue' : 'has-reminder');
@@ -50,7 +50,7 @@ function openReminderPopup() {
     const list = $('reminder-list');
     if (list) {
         list.innerHTML = '';
-        const rows = editorReminders.length > 0 ? editorReminders : [null];
+        const rows = State.editorReminders.length > 0 ? State.editorReminders : [null];
         rows.forEach(r => list.appendChild(_buildRpItem(r)));
     }
     DOM.$reminderPopup.classList.add('show');
@@ -71,15 +71,15 @@ function closeReminderPopup() {
 }
 window._fpOpenReminderForNote = function(noteId, anchorEl) {
     if (!DOM.$reminderPopup || !anchorEl) return;
-    const n = notes.find(x => String(x.id) === String(noteId));
+    const n = State.notes.find(x => String(x.id) === String(noteId));
     const _rems = n ? (n.reminders || (n.reminder ? [n.reminder] : [])) : [];
-    editorReminders    = _rems.slice();
-    editorReminderNote = n ? (n.reminderNote || '') : '';
+    State.editorReminders    = _rems.slice();
+    State.editorReminderNote = n ? (n.reminderNote || '') : '';
     window._fpReminderContext = noteId;
     const list = $('reminder-list');
     if (list) {
         list.innerHTML = '';
-        const rows = editorReminders.length > 0 ? editorReminders : [null];
+        const rows = State.editorReminders.length > 0 ? State.editorReminders : [null];
         rows.forEach(r => list.appendChild(_buildRpItem(r)));
     }
     DOM.$reminderPopup.classList.add('show');
@@ -122,9 +122,9 @@ function persistReminderIfEditing() {
     if (fpCtx) window._fpReminderContext = null;
     const eId = fpCtx || DOM.$editId.value;
     if (!eId) return;
-    const idx = notes.findIndex(n => String(n.id) === String(eId));
+    const idx = State.notes.findIndex(n => String(n.id) === String(eId));
     if (idx === -1) return;
-    notes[idx] = { ...notes[idx], reminders: editorReminders, reminderNote: editorReminderNote, reminder: null, updatedAt: notes[idx].updatedAt };
+    State.notes[idx] = { ...State.notes[idx], reminders: State.editorReminders, reminderNote: State.editorReminderNote, reminder: null, updatedAt: State.notes[idx].updatedAt };
     saveNotes();
     if (!fpCtx) render();
     if (typeof window._fpSyncFooter === 'function') window._fpSyncFooter();
@@ -163,10 +163,10 @@ function showReminderToast(note, reminder) {
     setTimeout(_dismiss, 8000);
 }
 function checkReminders() {
-    if (!Array.isArray(notes)) return;
+    if (!Array.isArray(State.notes)) return;
     const now = Date.now();
     let changed = false;
-    notes.forEach(n => {
+    State.notes.forEach(n => {
         /* New multi-reminder array */
         const rems = n.reminders || [];
         rems.forEach(r => {
@@ -227,7 +227,7 @@ function htmlToMarkdown(html) {
     return lines.join('\n\n');
 }
 function exportNoteAsMarkdown(noteId) {
-    const n = notes.find(x => String(x.id) === String(noteId));
+    const n = State.notes.find(x => String(x.id) === String(noteId));
     if (!n) return;
     const dateStr = n.updatedAt ? new Date(n.updatedAt).toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'}) : '';
     const tags = (n.tags && n.tags.length) ? n.tags.map(t => '#'+t).join(' ') : '';
@@ -247,7 +247,7 @@ function exportNoteAsMarkdown(noteId) {
 }
 
 function updateColorLabelBtn(key) {
-    editorColorLabel = key;
+    State.editorColorLabel = key;
     const cl = Const.COLOR_LABELS.find(c => c.key === key);
     DOM.$clBtn.style.color = cl ? cl.hex : 'var(--text-muted)';
     DOM.$clBtn.style.borderColor = cl ? cl.hex : 'var(--border)';
@@ -1261,7 +1261,7 @@ DOM.$toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
 
 /* ══ GROUP PICKER ══ */
 function openPicker(targetEl, noteId) {
-    activePickerId = noteId;
+    State.activePickerId = noteId;
     const rect=targetEl.getBoundingClientRect();
     let top=rect.bottom+5, left=rect.left;
     if (left+234>window.innerWidth) left=window.innerWidth-238;
@@ -1272,7 +1272,7 @@ function openPicker(targetEl, noteId) {
 }
 DOM.$editorBadge.addEventListener('click', e => { e.stopPropagation(); openPicker(e.currentTarget, null); });
 function buildPickerList() {
-    const gs=[...(new Set(notes.map(n=>n.group)))].sort();
+    const gs=[...(new Set(State.notes.map(n=>n.group)))].sort();
     if (!gs.includes('Genel')) gs.unshift('Genel');
     DOM.$gpList.innerHTML='';
     gs.forEach(g => {
@@ -1283,29 +1283,29 @@ function buildPickerList() {
 }
 function applyGroup(gName) {
     DOM.$picker.classList.remove('open');
-    if (activePickerId !== null) {
-        const n=notes.find(x=>String(x.id)===String(activePickerId));
+    if (State.activePickerId !== null) {
+        const n=State.notes.find(x=>String(x.id)===String(State.activePickerId));
         if (n) { n.group=gName; saveNotes(); }
         /* Float editör rozeti güncelle */
         const _fpBadge = document.getElementById('fp-badge-text');
         if (_fpBadge && typeof window._fpGetCurrentNoteId === 'function' &&
-            String(window._fpGetCurrentNoteId()) === String(activePickerId)) {
+            String(window._fpGetCurrentNoteId()) === String(State.activePickerId)) {
             _fpBadge.textContent = gName;
             const _fpBadgeEl = document.getElementById('fp-editor-badge');
             if (_fpBadgeEl) { const c = getColor(gName); _fpBadgeEl.style.color = c.main; _fpBadgeEl.style.backgroundColor = c.bg; }
         }
-        activePickerId=null;
+        State.activePickerId=null;
     } else {
-        editorGroup=gName;
+        State.editorGroup=gName;
         /* Not açıksa grubu hemen kaydet (float editördeki gibi anlık) */
         const _editId = DOM.$editId.value;
         if (_editId) {
-            const _n = notes.find(x => String(x.id) === String(_editId));
+            const _n = State.notes.find(x => String(x.id) === String(_editId));
             if (_n) { _n.group = gName; saveNotes(); }
         }
     }
     /* Ana editör badge'ini güncelle */
-    DOM.$badgeText.textContent = editorGroup;
+    DOM.$badgeText.textContent = State.editorGroup;
     render();
 }
 $('ng-btn').addEventListener('mousedown', e => {
@@ -1350,8 +1350,8 @@ function setEditorLocked(locked) {
         if (!DOM.$editId.value) return;
         setEditorLocked(!_editorLocked);
         /* Kilit durumunu not verisine kaydet */
-        const idx = notes.findIndex(n => String(n.id) === String(DOM.$editId.value));
-        if (idx !== -1) { notes[idx].locked = _editorLocked; saveNotes(); }
+        const idx = State.notes.findIndex(n => String(n.id) === String(DOM.$editId.value));
+        if (idx !== -1) { State.notes[idx].locked = _editorLocked; saveNotes(); }
     });
 })();
 
@@ -1385,22 +1385,22 @@ function saveNote() {
     /* v1.1: etiketleri parse et */
     const tags = parseTagsFromContent(rawHtml);
     if (eId) {
-        const idx=notes.findIndex(n=>n.id==eId);
-        if (idx!==-1) notes[idx]={
-            ...notes[idx], title, content, contentMd: htmlToMd(content), group:editorGroup,
-            pinned: editorPinned,
-            colorLabel: editorColorLabel,
+        const idx=State.notes.findIndex(n=>n.id==eId);
+        if (idx!==-1) State.notes[idx]={
+            ...State.notes[idx], title, content, contentMd: htmlToMd(content), group:State.editorGroup,
+            pinned: State.editorPinned,
+            colorLabel: State.editorColorLabel,
             tags,
-            reminders: editorReminders, reminderNote: editorReminderNote, reminder: null,
+            reminders: State.editorReminders, reminderNote: State.editorReminderNote, reminder: null,
             updatedAt:Date.now()
         };
     } else {
-        notes.push({
-            id:genId(), title, content, contentMd: htmlToMd(content), group:editorGroup,
-            pinned: editorPinned,
-            colorLabel: editorColorLabel,
+        State.notes.push({
+            id:genId(), title, content, contentMd: htmlToMd(content), group:State.editorGroup,
+            pinned: State.editorPinned,
+            colorLabel: State.editorColorLabel,
             tags,
-            reminders: editorReminders, reminderNote: editorReminderNote, reminder: null,
+            reminders: State.editorReminders, reminderNote: State.editorReminderNote, reminder: null,
             createdAt:Date.now(), updatedAt:Date.now()
         });
     }
@@ -1434,34 +1434,34 @@ $('editor-to-fp-btn') && $('editor-to-fp-btn').addEventListener('click', () => {
 $('edit-del-btn').addEventListener('click', () => { const eId=DOM.$editId.value; if(!eId) return; delNote(eId); });
 
 function delNote(id) {
-    const note=notes.find(x=>String(x.id)===String(id)); if (!note) return;
-    deleteTargetId=String(note.id); deletePermanent=(note.group===Const.TRASH_GROUP);
-    $('delete-toast').querySelector('.toast-text').textContent=deletePermanent
+    const note=State.notes.find(x=>String(x.id)===String(id)); if (!note) return;
+    State.deleteTargetId=String(note.id); State.deletePermanent=(note.group===Const.TRASH_GROUP);
+    $('delete-toast').querySelector('.toast-text').textContent=State.deletePermanent
         ?'Not kalıcı olarak silinsin mi?':'Not çöp kutusuna taşınsın mı?';
     $('delete-toast-overlay').classList.add('show');
 }
 $('toast-no').addEventListener('click', () => {
-    deleteTargetId=null; deletePermanent=false; $('delete-toast-overlay').classList.remove('show');
+    State.deleteTargetId=null; State.deletePermanent=false; $('delete-toast-overlay').classList.remove('show');
 });
 $('toast-yes').addEventListener('click', () => {
-    if (!deleteTargetId) return;
-    const idx=notes.findIndex(x=>String(x.id)===deleteTargetId);
+    if (!State.deleteTargetId) return;
+    const idx=State.notes.findIndex(x=>String(x.id)===State.deleteTargetId);
     if (idx!==-1) {
-        if (deletePermanent) { notes.splice(idx,1); }
+        if (State.deletePermanent) { State.notes.splice(idx,1); }
         else {
-            notes[idx].group=Const.TRASH_GROUP; notes[idx].updatedAt=Date.now();
-            if (!openGroups.includes(Const.TRASH_GROUP)) {
-                openGroups.push(Const.TRASH_GROUP);
-                patchContentCfg({groups: openGroups});
+            State.notes[idx].group=Const.TRASH_GROUP; State.notes[idx].updatedAt=Date.now();
+            if (!State.openGroups.includes(Const.TRASH_GROUP)) {
+                State.openGroups.push(Const.TRASH_GROUP);
+                patchContentCfg({groups: State.openGroups});
             }
         }
-        if (String(DOM.$editId.value)===deleteTargetId) resetEditor();
-        if (typeof window._fpGetCurrentNoteId === 'function' && String(window._fpGetCurrentNoteId()) === deleteTargetId && typeof window._fpClose === 'function') window._fpClose();
+        if (String(DOM.$editId.value)===State.deleteTargetId) resetEditor();
+        if (typeof window._fpGetCurrentNoteId === 'function' && String(window._fpGetCurrentNoteId()) === State.deleteTargetId && typeof window._fpClose === 'function') window._fpClose();
     }
-    deleteTargetId=null; deletePermanent=false; $('delete-toast-overlay').classList.remove('show');
+    State.deleteTargetId=null; State.deletePermanent=false; $('delete-toast-overlay').classList.remove('show');
     saveNotes();
-    if (filterGroup!=='all' && !notes.some(x=>x.group===filterGroup)) { filterGroup='all'; applyGroupFilterColor(); }
-    if (filterTag  !=='all' && !notes.some(x=>(x.tags||[]).includes(filterTag))) { filterTag='all'; applyTagFilterStyle(); }
+    if (State.filterGroup!=='all' && !State.notes.some(x=>x.group===State.filterGroup)) { State.filterGroup='all'; applyGroupFilterColor(); }
+    if (State.filterTag  !=='all' && !State.notes.some(x=>(x.tags||[]).includes(State.filterTag))) { State.filterTag='all'; applyTagFilterStyle(); }
     render();
 });
 

@@ -187,7 +187,7 @@ DOM.$content.addEventListener('input', () => {
     /* Tüm notlardaki todo'ları topla */
     function collectTodos() {
         const items = [];
-        notes.forEach(note => {
+        State.notes.forEach(note => {
             if (!note.content) return;
             const tmp = document.createElement('div');
             tmp.innerHTML = note.content;
@@ -452,7 +452,7 @@ DOM.$content.addEventListener('input', () => {
     if (hmGraph)    hmGraph.addEventListener('click',    () => { closeHM(); openLinkGraph(); });
     /* Tema submenu seçenekleri */
     document.querySelectorAll('.hm-theme-option').forEach(btn => {
-        btn.addEventListener('click', () => { themeMode = btn.dataset.theme; applyTheme(); closeHM(); });
+        btn.addEventListener('click', () => { State.themeMode = btn.dataset.theme; applyTheme(); closeHM(); });
     });
     /* hm-theme-btn: hover submenu yeterli, tıklama kapatmasın */
     if (hmTheme) hmTheme.addEventListener('click', e => e.stopPropagation());
@@ -534,9 +534,9 @@ DOM.$content.addEventListener('input', () => {
 
         function refresh() {
             const badge = document.getElementById('thc-badge');
-            if (badge) badge.textContent = isDark ? 'Koyu Tema' : 'Açık Tema';
+            if (badge) badge.textContent = State.isDark ? 'Koyu Tema' : 'Açık Tema';
             const custom = _thcGetCustom();
-            const defs   = isDark ? Const._THC_DEFS.dark : Const._THC_DEFS.light;
+            const defs   = State.isDark ? Const._THC_DEFS.dark : Const._THC_DEFS.light;
             panel.querySelectorAll('.thc-picker').forEach(inp => {
                 const v = inp.dataset.var;
                 const val = custom[v] || defs[v] || '#000000';
@@ -547,7 +547,7 @@ DOM.$content.addEventListener('input', () => {
         function applyVar(v, hex) {
             document.documentElement.style.setProperty(v, hex);
             if (v === '--accent') {
-                document.documentElement.style.setProperty('--accent-dim', _thcHexToRgba(hex, isDark ? 0.16 : 0.12));
+                document.documentElement.style.setProperty('--accent-dim', _thcHexToRgba(hex, State.isDark ? 0.16 : 0.12));
                 document.documentElement.style.setProperty('--edit-glow', hex);
             }
             const custom = _thcGetCustom();
@@ -1058,20 +1058,20 @@ DOM.$content.addEventListener('input', () => {
         var tags = parseTagsFromContent(rawHtml);
 
         if (eIdVal) {
-            var idx = notes.findIndex(function(n) { return String(n.id) === String(eIdVal); });
+            var idx = State.notes.findIndex(function(n) { return String(n.id) === String(eIdVal); });
             if (idx !== -1) {
-                notes[idx].title     = titleVal;
-                notes[idx].content   = sanitized;
-                notes[idx].contentMd = htmlToMd(sanitized);
-                notes[idx].tags      = tags;
-                notes[idx].updatedAt = Date.now();
+                State.notes[idx].title     = titleVal;
+                State.notes[idx].content   = sanitized;
+                State.notes[idx].contentMd = htmlToMd(sanitized);
+                State.notes[idx].tags      = tags;
+                State.notes[idx].updatedAt = Date.now();
             }
         } else {
             var newId = genId();
-            notes.push({
+            State.notes.push({
                 id: newId, title: titleVal, content: sanitized, contentMd: htmlToMd(sanitized),
-                group: editorGroup, pinned: editorPinned,
-                colorLabel: editorColorLabel, tags: tags,
+                group: State.editorGroup, pinned: State.editorPinned,
+                colorLabel: State.editorColorLabel, tags: tags,
                 createdAt: Date.now(), updatedAt: Date.now()
             });
             if (eId) eId.value = newId;

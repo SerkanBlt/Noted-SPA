@@ -202,8 +202,8 @@
         t = t.replace(/\r\n?/g, '\n');
 
         /* Pre-pass: Otomatik Not Bağlantıları (Auto-linking) */
-        if (applyMd && typeof notes !== 'undefined' && Array.isArray(notes) && notes.length > 0) {
-            const validTitles = [...notes].filter(n => n.title && n.title.length > 2).sort((a, b) => b.title.length - a.title.length);
+        if (applyMd && typeof State.notes !== 'undefined' && Array.isArray(State.notes) && State.notes.length > 0) {
+            const validTitles = [...State.notes].filter(n => n.title && n.title.length > 2).sort((a, b) => b.title.length - a.title.length);
             if (validTitles.length > 0) {
                 const escapedTitles = validTitles.map(n => n.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
                 /* Word boundary benzeri kontrol: Başında ve sonunda kelime ayırıcıları veya dize sonu olmalı */
@@ -410,8 +410,8 @@
 
     /* ── Koleksiyon meta özeti (her sorguda gönderilir, küçük ve sabit) ── */
     function _buildMeta() {
-        if (typeof notes === 'undefined' || !notes.length) return '';
-        const pool = notes.filter(n => n.group !== 'Çöp Kutusu');
+        if (typeof State.notes === 'undefined' || !State.notes.length) return '';
+        const pool = State.notes.filter(n => n.group !== 'Çöp Kutusu');
         if (!pool.length) return '';
 
         const groupMap = {};
@@ -457,7 +457,7 @@
          [[Başlık]]  → her sorguda dahil (her zaman)
          [[?Başlık]] → yalnızca sorguyla eşleşince dahil (koşullu)   */
     function _buildPinnedContext(sysText, query) {
-        if (!sysText || typeof notes === 'undefined' || !notes.length)
+        if (!sysText || typeof State.notes === 'undefined' || !State.notes.length)
             return { ctx: '', ids: new Set() };
 
         /* Her zaman pinler */
@@ -514,13 +514,13 @@
 
     /* ── Not bağlamı oluştur (keyword skorlama + metadata) ── */
     function _buildContext(query, maxNotes, excludeIds = new Set()) {
-        if (typeof notes === 'undefined' || !notes.length) return '';
+        if (typeof State.notes === 'undefined' || !State.notes.length) return '';
 
         const raw   = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
         /* Her kelime için orijinal + gövde → tekil küme */
         const words = [...new Set(raw.flatMap(w => [w, _trNorm(w)]))];
 
-        const pool  = notes.filter(n => n.group !== 'Çöp Kutusu' && !excludeIds.has(n.id));
+        const pool  = State.notes.filter(n => n.group !== 'Çöp Kutusu' && !excludeIds.has(n.id));
 
         const scored = pool.map(n => {
             const title = (n.title  || '').toLowerCase();

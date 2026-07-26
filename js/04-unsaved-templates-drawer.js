@@ -4,7 +4,7 @@
    ══════════════════════════════════════ */
 
 /* ── v1.4: ODAKLANMA MODU ── */
-let focusModeActive = false;
+State.focusModeActive = false;
 
 function toggleFocusMode(forceOff) {
     const $mp   = document.querySelector('.main-panel');
@@ -14,14 +14,14 @@ function toggleFocusMode(forceOff) {
     const ctSc  = $ct ? $ct.scrollTop : 0;
 
     if (forceOff === true) {
-        focusModeActive = false;
+        State.focusModeActive = false;
     } else {
         /* body class ile senkronize et — desync durumunu düzelt */
         const bodyHas = document.body.classList.contains('focus-mode');
-        if (bodyHas !== focusModeActive) focusModeActive = bodyHas;
-        focusModeActive = !focusModeActive;
+        if (bodyHas !== State.focusModeActive) State.focusModeActive = bodyHas;
+        State.focusModeActive = !State.focusModeActive;
     }
-    document.body.classList.toggle('focus-mode', focusModeActive);
+    document.body.classList.toggle('focus-mode', State.focusModeActive);
     requestAnimationFrame(() => requestAnimationFrame(() => {
         if ($card && $mp) {
             const cardTopAfter = $card.getBoundingClientRect().top;
@@ -31,11 +31,11 @@ function toggleFocusMode(forceOff) {
     }));
     const btn = $('focus-btn');
     if (btn) {
-        btn.classList.toggle('active', focusModeActive);
-        btn.title = focusModeActive
+        btn.classList.toggle('active', State.focusModeActive);
+        btn.title = State.focusModeActive
             ? 'Odaklanma Modundan Çık (Esc veya Ctrl+Shift+F)'
             : 'Odaklanma Modu (Ctrl+Shift+F)';
-        btn.innerHTML = '<i class="fas fa-' + (focusModeActive ? 'compress-alt' : 'expand-alt') + '"></i><span>' + (focusModeActive ? 'Odaklanmadan Çık' : 'Odaklanma Modu') + '</span>';
+        btn.innerHTML = '<i class="fas fa-' + (State.focusModeActive ? 'compress-alt' : 'expand-alt') + '"></i><span>' + (State.focusModeActive ? 'Odaklanmadan Çık' : 'Odaklanma Modu') + '</span>';
     }
 }
 
@@ -43,7 +43,7 @@ $('focus-btn').addEventListener('click', function() { toggleFocusMode(); });
 
 /* ── v1.4: HTML DIŞA AKTARMA ── */
 function exportNoteAsHtml(noteId) {
-    var n = notes.find(function(x) { return String(x.id) === String(noteId); });
+    var n = State.notes.find(function(x) { return String(x.id) === String(noteId); });
     if (!n) return;
     var safeContent = sanitize(convertWikiSyntax(n.content));
     var dateStr = n.updatedAt
@@ -137,11 +137,11 @@ if (DOM.$exportMdBtn) DOM.$exportMdBtn.addEventListener('click', function() {
 });
 
 /* ── v1.4: ÖZEL ŞABLONLAR ── */
-var customTemplates = getContentCfg().templates || [];
-if (!Array.isArray(customTemplates)) customTemplates = [];
+State.customTemplates = getContentCfg().templates || [];
+if (!Array.isArray(State.customTemplates)) State.customTemplates = [];
 
 function saveCustomTemplates() {
-    patchContentCfg({templates: customTemplates});
+    patchContentCfg({templates: State.customTemplates});
 }
 
 function buildTemplateDropdownContent() {
@@ -167,11 +167,11 @@ function buildTemplateDropdownContent() {
     saveBtn.innerHTML = '<i class="fas fa-plus-circle"></i><span>Bu Notu Şablon Kaydet</span>';
     saveBtn.addEventListener('click', function(e) { e.stopPropagation(); saveCurrentNoteAsTemplate(); });
     dropdown.appendChild(saveBtn);
-    if (customTemplates.length > 0) {
+    if (State.customTemplates.length > 0) {
         var sep = document.createElement('div');
         sep.className = 'tpl-header'; sep.textContent = 'Özel Şablonlar'; sep.style.marginTop = '4px';
         dropdown.appendChild(sep);
-        customTemplates.forEach(function(tpl) {
+        State.customTemplates.forEach(function(tpl) {
             var row = document.createElement('div');
             row.className = 'tpl-item tpl-item-custom';
             var nameSpan = document.createElement('span');
@@ -202,14 +202,14 @@ function saveCurrentNoteAsTemplate() {
     }
     var name = prompt('Şablon adı:', title || 'Özel Şablon');
     if (!name || !name.trim()) return;
-    customTemplates.push({ id: genId(), name: name.trim(), title: title, content: content });
+    State.customTemplates.push({ id: genId(), name: name.trim(), title: title, content: content });
     saveCustomTemplates();
     buildTemplateDropdownContent();
     closeTemplateDropdown();
 }
 
 function deleteCustomTemplate(id) {
-    customTemplates = customTemplates.filter(function(t) { return String(t.id) !== id; });
+    State.customTemplates = State.customTemplates.filter(function(t) { return String(t.id) !== id; });
     saveCustomTemplates();
     buildTemplateDropdownContent();
 }
@@ -237,13 +237,13 @@ buildTemplateDropdownContent();
    ============================================================================== */
 
 /* v1.5: NOT SIRALAMA */
-let sortOrder = getUiCfg().sort || 'newest';
+State.sortOrder = getUiCfg().sort || 'newest';
 
 DOM.$sortBadge    = $('sort-badge');
 DOM.$sortDropdown = $('sort-dropdown');
 
 function setSortOrder(value) {
-    sortOrder = value;
+    State.sortOrder = value;
     patchUiCfg({sort: value});
     DOM.$sortBadge.classList.toggle('active-sort', value !== 'newest');
     DOM.$sortDropdown.classList.remove('open');
@@ -263,7 +263,7 @@ function buildSortDropdown() {
     ];
     SORT_ITEMS.forEach(it => {
         const d = document.createElement('div');
-        d.className = 'sort-item' + (sortOrder === it.value ? ' active' : '');
+        d.className = 'sort-item' + (State.sortOrder === it.value ? ' active' : '');
         d.textContent = it.label;
         d.addEventListener('click', () => setSortOrder(it.value));
         DOM.$sortDropdown.appendChild(d);
@@ -271,7 +271,7 @@ function buildSortDropdown() {
 }
 
 /* ── Liste Görünüm Modu ── */
-let listView = getUiCfg().listView || 'standard';
+State.listView = getUiCfg().listView || 'standard';
 
 DOM.$viewBadge    = $('view-badge');
 DOM.$viewDropdown = $('view-dropdown');
@@ -291,7 +291,7 @@ function applyListView(v) {
 }
 
 function setListView(value) {
-    listView = value;
+    State.listView = value;
     patchUiCfg({listView: value});
     applyListView(value);
     if (DOM.$viewDropdown) DOM.$viewDropdown.classList.remove('open');
@@ -304,7 +304,7 @@ function buildViewDropdown() {
     DOM.$viewDropdown.innerHTML = '';
     Const.VIEW_ITEMS.forEach(it => {
         const d = document.createElement('div');
-        d.className = 'view-item' + (listView === it.value ? ' active' : '');
+        d.className = 'view-item' + (State.listView === it.value ? ' active' : '');
         d.innerHTML = `<i class="fas ${it.icon}"></i>${esc(it.label)}`;
         d.addEventListener('click', () => setListView(it.value));
         DOM.$viewDropdown.appendChild(d);
@@ -326,11 +326,11 @@ if (DOM.$viewBadge) {
 }
 
 buildViewDropdown();
-applyListView(listView);
+applyListView(State.listView);
 
 function applySort(arr) {
     const a = [...arr];
-    switch (sortOrder) {
+    switch (State.sortOrder) {
         case 'newest': return a.sort((x, y) => ((y.updatedAt||y.id||0) - (x.updatedAt||x.id||0)));
         case 'oldest': return a.sort((x, y) => ((x.updatedAt||x.id||0) - (y.updatedAt||y.id||0)));
         case 'az':     return a.sort((x, y) => (x.title||'').localeCompare(y.title||'', 'tr'));
@@ -352,7 +352,7 @@ DOM.$sortBadge.addEventListener('click', e => {
 });
 
 /* Ilk yukleme aktif gosterge */
-if (sortOrder !== 'newest') DOM.$sortBadge.classList.add('active-sort');
+if (State.sortOrder !== 'newest') DOM.$sortBadge.classList.add('active-sort');
 
 
 /* v1.5: ZAMAN DAMGASI — side toolbar ve kısayol ile tetiklenir */

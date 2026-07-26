@@ -49,14 +49,14 @@
     function buildLinkGraphData() {
         const nodesMap = new Map();
         const edgeMap = new Map();
-        notes.forEach(n => {
+        State.notes.forEach(n => {
             if (!n || n.group === Const.TRASH_GROUP) return;
             const wrap = document.createElement('div');
             wrap.innerHTML = n.content || '';
             const links = [...wrap.querySelectorAll('a.wikilink[data-note-id]')];
             links.forEach(a => {
                 const targetId = a.dataset.noteId;
-                const target = notes.find(t => String(t.id) === String(targetId) && t.group !== Const.TRASH_GROUP);
+                const target = State.notes.find(t => String(t.id) === String(targetId) && t.group !== Const.TRASH_GROUP);
                 if (!target) return;
                 if (String(n.id) === String(target.id)) return;
                 const idA = String(n.id), idB = String(target.id);
@@ -792,7 +792,7 @@
 
     function computeTotalWords() {
         let total = 0;
-        notes.forEach(n => {
+        State.notes.forEach(n => {
             const tmp = document.createElement('div');
             tmp.innerHTML = n.content || '';
             const txt = (tmp.textContent || '').trim();
@@ -803,7 +803,7 @@
 
     function computeWeekCount() {
         const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        return notes.filter(n => {
+        return State.notes.filter(n => {
             const t = Number(n.createdAt || n.id || 0);
             return t && t >= weekAgo;
         }).length;
@@ -860,9 +860,9 @@
     function qsFilterNotes(query) {
         const q = _qsNormalize(query).trim();
         if (!q) {
-            return notes.slice().sort((a, b) => (Number(b.updatedAt || b.id || 0)) - (Number(a.updatedAt || a.id || 0))).slice(0, 8);
+            return State.notes.slice().sort((a, b) => (Number(b.updatedAt || b.id || 0)) - (Number(a.updatedAt || a.id || 0))).slice(0, 8);
         }
-        return notes.filter(n => {
+        return State.notes.filter(n => {
             const hay = _qsNormalize([
                 n.title || '',
                 n.group || '',

@@ -295,7 +295,7 @@
                     window._fpUpdateNote(fpId, n ? n.title : (fpTitle.value || ''), fpContent.innerHTML, true);
                 }
                 // Ana editörü dialog göstermeden kaydet
-                const _mainN = (typeof notes !== 'undefined') ? notes.find(x => String(x.id) === String(mainId)) : null;
+                const _mainN = (typeof State.notes !== 'undefined') ? State.notes.find(x => String(x.id) === String(mainId)) : null;
                 if (_mainN) {
                     const $c = document.getElementById('content');
                     const $t = document.getElementById('title');
@@ -448,15 +448,15 @@
                     }
                     const name = prompt('Şablon adı:', title || 'Özel Şablon');
                     if (!name || !name.trim()) return;
-                    if (typeof customTemplates !== 'undefined' && typeof saveCustomTemplates === 'function') {
-                        customTemplates.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name: name.trim(), title, content });
+                    if (typeof State.customTemplates !== 'undefined' && typeof saveCustomTemplates === 'function') {
+                        State.customTemplates.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name: name.trim(), title, content });
                         saveCustomTemplates();
                         if (typeof buildTemplateDropdownContent === 'function') buildTemplateDropdownContent();
                     }
                     fpTplDrop.classList.remove('show'); closeFpMenu();
                 });
                 fpTplDrop.appendChild(saveBtn);
-                const cTpls = typeof customTemplates !== 'undefined' ? customTemplates : [];
+                const cTpls = typeof State.customTemplates !== 'undefined' ? State.customTemplates : [];
                 if (cTpls.length > 0) {
                     const sep2 = document.createElement('div');
                     sep2.className = 'tpl-header'; sep2.textContent = 'Özel Şablonlar'; sep2.style.marginTop = '4px';

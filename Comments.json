@@ -20,7 +20,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/01-core-storage-render.js",
-      "line": 242,
+      "line": 243,
       "anchor": "if (/(^|\\s)ng-/.test(el.className)) return;",
       "symbol": "normalizeHtml",
       "title": "Bos blok temizligi grid hucrelerini yiyebilir",

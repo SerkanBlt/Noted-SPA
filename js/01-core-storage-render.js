@@ -73,29 +73,30 @@ function patchContentCfg(p) { try { localStorage.setItem('noted_content_v1', JSO
     localStorage.setItem('noted_storage_v', '2');
 })();
 
-/* ══ UYGULAMA DURUMU ══ */
-let notes = safeLoadJSON('noted_v1', []); let openGroups = getContentCfg().groups || [];
-if (!Array.isArray(notes)) notes = []; if (!Array.isArray(openGroups)) openGroups = [];
-/* ══ contentMd migration (existing notes — re-runs if contentMd is empty) ══ */
+/* ══ UYGULAMA DURUMU (Faz 4d — Global Konsolidasyonu) ══ */
+const State = {};
+State.notes = safeLoadJSON('noted_v1', []); State.openGroups = getContentCfg().groups || [];
+if (!Array.isArray(State.notes)) State.notes = []; if (!Array.isArray(State.openGroups)) State.openGroups = [];
+/* ══ contentMd migration (existing State.notes — re-runs if contentMd is empty) ══ */
 (function() {
     let dirty = false;
-    notes.forEach(n => {
+    State.notes.forEach(n => {
         if (n.content && (n.contentMd === undefined || n.contentMd === '')) {
             n.contentMd = htmlToMd(n.content);
             dirty = true;
         }
     });
-    if (dirty) try { localStorage.setItem('noted_v1', JSON.stringify(notes)); } catch(_) {}
+    if (dirty) try { localStorage.setItem('noted_v1', JSON.stringify(State.notes)); } catch(_) {}
 })();
 /* ══ SABİTLER (Faz 4 — Global Konsolidasyonu) ══ */
 const Const = {};
 Const.TRASH_GROUP = 'Çöp Kutusu';
-let expandedNotes=new Set(), searchQuery='', filterGroup='all', filterTag='all';
+State.expandedNotes=new Set(); State.searchQuery=''; State.filterGroup='all'; State.filterTag='all';
 const _themeSaved = getUiCfg().theme || 'system';
-let themeMode = (_themeSaved==='dark'||_themeSaved==='light'||_themeSaved==='system') ? _themeSaved : 'system';
-let isDark = themeMode === 'dark'; /* geriye dönük uyumluluk — applyTheme günceller */
-let editorGroup='Genel', editorColorLabel=null, editorPinned=false, editorReminders=[], editorReminderNote='', tocOpen=false;
-let activePickerId=null, deleteTargetId=null, deletePermanent=false, pendingNoteId=null;
+State.themeMode = (_themeSaved==='dark'||_themeSaved==='light'||_themeSaved==='system') ? _themeSaved : 'system';
+State.isDark = State.themeMode === 'dark'; /* geriye dönük uyumluluk — applyTheme günceller */
+State.editorGroup='Genel'; State.editorColorLabel=null; State.editorPinned=false; State.editorReminders=[]; State.editorReminderNote=''; State.tocOpen=false;
+State.activePickerId=null; State.deleteTargetId=null; State.deletePermanent=false; State.pendingNoteId=null;
 
 /* ══ RENK PALETİ ══ */
 Const.PALETTE = [
@@ -132,7 +133,7 @@ function genId() { return ++_idSeed; }
 
 
 /* v1.1: Mevcut notlara eksik alanları ekle (backward compat) */
-notes = notes.map(n => ({
+State.notes = State.notes.map(n => ({
     pinned:     false,
     colorLabel: null,
     tags:       [],
@@ -285,21 +286,21 @@ function sanitize(html) {
 }
 function saveNotes() {
     try {
-        localStorage.setItem('noted_v1', JSON.stringify(notes));
+        localStorage.setItem('noted_v1', JSON.stringify(State.notes));
         try { recordActivityToday(); } catch(_e) {}
     } catch (e) {
         alert('⚠️ Depolama alanı dolu! Bazı notlar kaydedilemeyebilir.\nEski notları dışa aktarıp silerek yer açabilirsiniz.');
     }
 }
-/* ── Float panel helpers (notes scope'u gerektirir) ── */
+/* ── Float panel helpers (State.notes scope'u gerektirir) ── */
 window._fpGetNote = function(id) {
-    return notes.find(n => String(n.id) === String(id)) || null;
+    return State.notes.find(n => String(n.id) === String(id)) || null;
 };
 window._fpUpdateNote = function(id, title, content, silent) {
-    const idx = notes.findIndex(n => String(n.id) === String(id));
+    const idx = State.notes.findIndex(n => String(n.id) === String(id));
     if (idx === -1) return;
     const tags = parseTagsFromContent(content);
-    notes[idx] = { ...notes[idx], title, content, contentMd: htmlToMd(content), tags, updatedAt: Date.now() };
+    State.notes[idx] = { ...State.notes[idx], title, content, contentMd: htmlToMd(content), tags, updatedAt: Date.now() };
     saveNotes();
     if (!silent) try { render(); } catch(_) {}
 };
@@ -318,7 +319,7 @@ function parseTagsFromContent(html) {
 
 function getAllTags() {
     const all = new Set();
-    notes.forEach(n => (n.tags || []).forEach(t => all.add(t)));
+    State.notes.forEach(n => (n.tags || []).forEach(t => all.add(t)));
     return [...all].sort();
 }
 
@@ -422,7 +423,7 @@ Const.WIKILINK_RE = /\[\[([^\[\]]{1,120})\]\]/g;
 function findNoteByTitle(title) {
     if (!title) return null;
     const t = title.trim().toLocaleLowerCase('tr');
-    return notes.find(n => n.title.trim().toLocaleLowerCase('tr') === t) || null;
+    return State.notes.find(n => n.title.trim().toLocaleLowerCase('tr') === t) || null;
 }
 
 /* Bir notun HTML içeriğindeki [[Başlık]] dizgilerini wikilink <a> öğelerine çevirir.
@@ -475,7 +476,7 @@ function closeWlAutocomplete() {
 
 function openWlAutocomplete(query, rect) {
     wlAcActive = true;
-    const matches = notes.filter(n => n.title.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+    const matches = State.notes.filter(n => n.title.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
     DOM.$wlAcList.innerHTML = '';
     wlAcSelIndex = 0;
     if (matches.length === 0) {
@@ -581,7 +582,7 @@ function openOrCreateDailyNote() {
             pinned: false, colorLabel: null, tags: [],
             createdAt: Date.now(), updatedAt: Date.now()
         };
-        notes.push(n);
+        State.notes.push(n);
         saveNotes(); render();
     }
     handleEditNoteRequest(n.id);
@@ -617,16 +618,16 @@ function parseSearchQuery(q) {
 Const._themeIcons = { system:'fa-desktop', light:'fa-sun', dark:'fa-moon' };
 
 function applyTheme() {
-    isDark = themeMode === 'dark' || (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    patchUiCfg({theme: themeMode});
+    State.isDark = State.themeMode === 'dark' || (State.themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', State.isDark ? 'dark' : 'light');
+    patchUiCfg({theme: State.themeMode});
     const hmBtn = $('hm-theme-btn');
     if (hmBtn) {
         const ico = hmBtn.querySelector('i:first-child');
-        if (ico) ico.className = 'fas ' + Const._themeIcons[themeMode];
+        if (ico) ico.className = 'fas ' + Const._themeIcons[State.themeMode];
     }
     document.querySelectorAll('.hm-theme-option').forEach(el =>
-        el.classList.toggle('hm-theme-active', el.dataset.theme === themeMode));
+        el.classList.toggle('hm-theme-active', el.dataset.theme === State.themeMode));
     _applyThemeCustom();
 }
 
@@ -637,8 +638,8 @@ Const._THC_DEFS = {
     light: { '--accent':'#3b82f6','--bg':'#f8f9fa','--surface':'#ffffff','--surface-2':'#f1f3f5','--border':'#e5e7eb','--text':'#212529','--text-muted':'#6c757d','--tbl-header-bg':'#f1f3f5','--tbl-border':'#e5e7eb','--pnl-header-bg':'#f1f3f5','--pnl-border':'#e5e7eb','--col-sep':'#e5e7eb' },
     dark:  { '--accent':'#5b9df9','--bg':'#16181d','--surface':'#1e2127','--surface-2':'#262a31','--border':'#383d46','--text':'#e6e8eb','--text-muted':'#9aa3ad','--tbl-header-bg':'#262a31','--tbl-border':'#383d46','--pnl-header-bg':'#262a31','--pnl-border':'#383d46','--col-sep':'#383d46' },
 };
-function _thcGetCustom()  { const ui = getUiCfg(); return isDark ? (ui.customDark || {}) : (ui.customLight || {}); }
-function _thcSaveCustom(obj) { patchUiCfg(isDark ? {customDark: obj} : {customLight: obj}); }
+function _thcGetCustom()  { const ui = getUiCfg(); return State.isDark ? (ui.customDark || {}) : (ui.customLight || {}); }
+function _thcSaveCustom(obj) { patchUiCfg(State.isDark ? {customDark: obj} : {customLight: obj}); }
 function _thcHexToRgba(hex, a) {
     const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
     return `rgba(${r},${g},${b},${a})`;
@@ -651,7 +652,7 @@ function _applyThemeCustom() {
     for (const [v, val] of Object.entries(custom)) {
         document.documentElement.style.setProperty(v, val);
         if (v === '--accent') {
-            document.documentElement.style.setProperty('--accent-dim', _thcHexToRgba(val, isDark ? 0.16 : 0.12));
+            document.documentElement.style.setProperty('--accent-dim', _thcHexToRgba(val, State.isDark ? 0.16 : 0.12));
             document.documentElement.style.setProperty('--edit-glow', val);
         }
     }
@@ -661,16 +662,16 @@ function _applyThemeCustom() {
 let _thcRefreshUI = null;
 /* Sistem teması değişince güncelle */
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (themeMode === 'system') applyTheme();
+    if (State.themeMode === 'system') applyTheme();
 });
 applyTheme();
 
 /* ══ RENDER ══ */
 function applyGroupFilterColor() {
-    if (filterGroup === 'all') {
+    if (State.filterGroup === 'all') {
         DOM.$gfBadge.style.cssText = '';
     } else {
-        const c = getColor(filterGroup);
+        const c = getColor(State.filterGroup);
         DOM.$gfBadge.style.color = c.main;
         DOM.$gfBadge.style.borderColor = c.main;
         DOM.$gfBadge.style.backgroundColor = c.bg;
@@ -678,18 +679,18 @@ function applyGroupFilterColor() {
 }
 
 function applyTagFilterStyle() {
-    DOM.$tfBadge.classList.toggle('active-filter', filterTag !== 'all');
-    DOM.$tfBadge.textContent = filterTag !== 'all' ? '#' + filterTag : '#';
+    DOM.$tfBadge.classList.toggle('active-filter', State.filterTag !== 'all');
+    DOM.$tfBadge.textContent = State.filterTag !== 'all' ? '#' + State.filterTag : '#';
 }
 
 function buildGroupDropdown() {
-    const gs = [...new Set(notes.map(n => n.group))].sort();
+    const gs = [...new Set(State.notes.map(n => n.group))].sort();
     DOM.$gfDropdown.innerHTML = '';
     const mkItem = (value, label) => {
         const d = document.createElement('div');
-        d.className = 'gf-item' + (filterGroup === value ? ' active' : '');
+        d.className = 'gf-item' + (State.filterGroup === value ? ' active' : '');
         d.textContent = label;
-        if (filterGroup === value && value !== 'all') d.style.color = getColor(value).main;
+        if (State.filterGroup === value && value !== 'all') d.style.color = getColor(value).main;
         d.addEventListener('click', () => setGroupFilter(value));
         return d;
     };
@@ -702,7 +703,7 @@ function buildTagDropdown() {
     DOM.$tfDropdown.innerHTML = '';
     const mkItem = (value, label) => {
         const d = document.createElement('div');
-        d.className = 'tf-item' + (filterTag === value ? ' active' : '');
+        d.className = 'tf-item' + (State.filterTag === value ? ' active' : '');
         d.textContent = label;
         d.addEventListener('click', () => setTagFilter(value));
         return d;
@@ -723,7 +724,7 @@ function buildTagDropdown() {
 }
 
 function setGroupFilter(value) {
-    filterGroup = value;
+    State.filterGroup = value;
     DOM.$gfBadge.classList.remove('open');
     DOM.$gfDropdown.classList.remove('open');
     applyGroupFilterColor();
@@ -731,7 +732,7 @@ function setGroupFilter(value) {
 }
 
 function setTagFilter(value) {
-    filterTag = value;
+    State.filterTag = value;
     DOM.$tfBadge.classList.remove('open');
     DOM.$tfDropdown.classList.remove('open');
     applyTagFilterStyle();
@@ -742,17 +743,17 @@ function render() {
     applyGroupFilterColor();
     applyTagFilterStyle();
 
-    const ec = getColor(editorGroup);
+    const ec = getColor(State.editorGroup);
     DOM.$editorBadge.style.color = ec.main;
     DOM.$editorBadge.style.backgroundColor = ec.bg;
-    DOM.$badgeText.textContent = editorGroup;
+    DOM.$badgeText.textContent = State.editorGroup;
 
-    let filtered = notes;
-    if (filterGroup !== 'all') filtered = filtered.filter(n => n.group === filterGroup);
-    if (filterTag   !== 'all') filtered = filtered.filter(n => (n.tags || []).includes(filterTag));
-    if (searchQuery) {
+    let filtered = State.notes;
+    if (State.filterGroup !== 'all') filtered = filtered.filter(n => n.group === State.filterGroup);
+    if (State.filterTag   !== 'all') filtered = filtered.filter(n => (n.tags || []).includes(State.filterTag));
+    if (State.searchQuery) {
         /* v1.3: gelişmiş arama operatörleri (grup:, etiket:, renk:, sabit:) */
-        const { ops, free } = parseSearchQuery(searchQuery);
+        const { ops, free } = parseSearchQuery(State.searchQuery);
         if (ops.group)      filtered = filtered.filter(n => n.group.toLowerCase().includes(ops.group));
         if (ops.tag)        filtered = filtered.filter(n => (n.tags || []).some(t => t.toLowerCase().includes(ops.tag)));
         if (ops.colorLabel) filtered = filtered.filter(n => (n.colorLabel || '') === ops.colorLabel);
@@ -766,12 +767,12 @@ function render() {
             );
         }
     }
-    DOM.$headerCount.textContent = `${filtered.length}/${notes.length}`;
+    DOM.$headerCount.textContent = `${filtered.length}/${State.notes.length}`;
 
     DOM.$mainList.innerHTML = '';
     if (filtered.length === 0) {
         DOM.$mainList.innerHTML = `<div class="empty-state"><i class="fas fa-file-alt"></i>
-            <p>${searchQuery ? 'Sonuç bulunamadı' : 'Henüz not yok'}</p></div>`;
+            <p>${State.searchQuery ? 'Sonuç bulunamadı' : 'Henüz not yok'}</p></div>`;
         return;
     }
 
@@ -788,7 +789,7 @@ function render() {
         DOM.$mainList.appendChild(ph);
 
         const pinnedContainer = document.createElement('div');
-        pinnedContainer.className = 'pinned-notes-container';
+        pinnedContainer.className = 'pinned-State.notes-container';
         pinnedContainer.style.marginBottom = '12px';
         pinnedNotes.forEach(n => pinnedContainer.appendChild(buildNoteItem(n)));
         DOM.$mainList.appendChild(pinnedContainer);
@@ -799,7 +800,7 @@ function render() {
     normalNotes.forEach(n => { (groups[n.group] = groups[n.group] || []).push(n); });
 
     Object.keys(groups).sort().forEach(gName => {
-        const isOpen = openGroups.includes(gName) || !!searchQuery || filterTag !== 'all';
+        const isOpen = State.openGroups.includes(gName) || !!State.searchQuery || State.filterTag !== 'all';
         const c = getColor(gName);
 
         const gh = document.createElement('div');
@@ -828,7 +829,7 @@ function render() {
 
 /* v1.1: Not kartı oluşturma — ayrı fonksiyon */
 function buildNoteItem(n) {
-    const exp    = expandedNotes.has(n.id);
+    const exp    = State.expandedNotes.has(n.id);
     const expand = noteNeedsExpand(n);
     const plain  = stripHtml(n.content);
     const c      = getColor(n.group);
@@ -849,7 +850,7 @@ function buildNoteItem(n) {
 
     const titleEl = document.createElement('div');
     titleEl.className = 'note-title' + (expand ? ' can-expand' : '');
-    titleEl.innerHTML = highlight(esc(n.title || '(Başlıksız Not)'), searchQuery);
+    titleEl.innerHTML = highlight(esc(n.title || '(Başlıksız Not)'), State.searchQuery);
     if (expand) titleEl.title = exp ? 'Daralt' : 'Genişlet';
 
     const acts = document.createElement('div');
@@ -869,7 +870,7 @@ function buildNoteItem(n) {
 
     const sumEl = document.createElement('p');
     sumEl.className = 'note-summary';
-    sumEl.innerHTML = highlight(esc(plain.slice(0, 160)), searchQuery) + (expand && !exp ? '…' : '');
+    sumEl.innerHTML = highlight(esc(plain.slice(0, 160)), State.searchQuery) + (expand && !exp ? '…' : '');
 
     /* v1.1: Tag badge'leri */
     const tagsEl = document.createElement('div');
@@ -951,7 +952,7 @@ DOM.$mainList.addEventListener('click', e => {
         e.stopPropagation();
         const url = location.href.split('?')[0] + '?note=' + encodeURIComponent(id);
         if (navigator.share) {
-            const n = notes.find(n => String(n.id) === String(id));
+            const n = State.notes.find(n => String(n.id) === String(id));
             navigator.share({ title: n?.title || 'Not', url }).catch(() => {});
         } else {
             navigator.clipboard?.writeText(url).then(() => {
@@ -1075,7 +1076,7 @@ function scheduleExtLinkPreview(link) {
 }
 
 function buildWlPreviewContent(noteId) {
-    const n = notes.find(x => String(x.id) === String(noteId));
+    const n = State.notes.find(x => String(x.id) === String(noteId));
     if (!n) {
         return '<div class="wl-preview-broken"><i class="fas fa-link-slash"></i> Bu not artık mevcut değil (kırık bağlantı)</div>';
     }
@@ -1240,7 +1241,7 @@ DOM.$content.addEventListener('mousedown', e => {
 
 /* ══ v1.1: PIN ══ */
 function togglePin(id) {
-    const n = notes.find(x => String(x.id) === String(id));
+    const n = State.notes.find(x => String(x.id) === String(id));
     if (!n) return;
     n.pinned = !n.pinned;
     n.updatedAt = Date.now();
@@ -1251,7 +1252,7 @@ function togglePin(id) {
 }
 
 function updateEditorPinBtn(pinned) {
-    editorPinned = pinned;
+    State.editorPinned = pinned;
     DOM.$pinBtn.classList.toggle('pinned', pinned);
     DOM.$pinBtn.title = pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle';
 }
@@ -1262,8 +1263,8 @@ DOM.$pinBtn.addEventListener('click', () => {
         togglePin(eId);
     } else {
         /* Yeni not için editörde sabitleme */
-        editorPinned = !editorPinned;
-        updateEditorPinBtn(editorPinned);
+        State.editorPinned = !State.editorPinned;
+        updateEditorPinBtn(State.editorPinned);
     }
 });
 
@@ -1286,7 +1287,7 @@ function applyColorLabel(key) {
     const fpCtx = window._fpColorLabelContext;
     if (fpCtx) {
         window._fpColorLabelContext = null;
-        const n = notes.find(x => String(x.id) === String(fpCtx));
+        const n = State.notes.find(x => String(x.id) === String(fpCtx));
         if (n) { n.colorLabel = key || null; n.updatedAt = Date.now(); saveNotes(); }
         if (typeof window._fpSyncFooter === 'function') window._fpSyncFooter();
         $('color-label-popup').classList.remove('open');
@@ -1294,10 +1295,10 @@ function applyColorLabel(key) {
     }
     const eId = DOM.$editId.value;
     if (eId) {
-        const n = notes.find(x => String(x.id) === String(eId));
+        const n = State.notes.find(x => String(x.id) === String(eId));
         if (n) { n.colorLabel = key; n.updatedAt = Date.now(); saveNotes(); render(); }
     } else {
-        editorColorLabel = key;
+        State.editorColorLabel = key;
     }
     updateColorLabelBtn(key);
     $('color-label-popup').classList.remove('open');
@@ -1306,15 +1307,15 @@ function applyColorLabel(key) {
 /* ══ v1.6: İÇİNDEKİLER PANELİ ══ */
 function buildTocPanel(noteId) {
     if (!DOM.$editorToc || !DOM.$editorTocList) return;
-    const n = notes.find(x => String(x.id) === String(noteId));
+    const n = State.notes.find(x => String(x.id) === String(noteId));
     if (!n) { DOM.$editorToc.style.display = 'none'; DOM.$editorTocList.innerHTML = ''; if(DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.add('hidden'); return; }
     const tmp = document.createElement('div');
     tmp.innerHTML = sanitize(n.content);
     const heads = Array.from(tmp.querySelectorAll('h2, h3'));
     if (DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.toggle('hidden', heads.length === 0);
-    if (heads.length === 0) { DOM.$editorToc.style.display = 'none'; DOM.$editorTocList.innerHTML = ''; tocOpen = false; if(DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.remove('active'); return; }
+    if (heads.length === 0) { DOM.$editorToc.style.display = 'none'; DOM.$editorTocList.innerHTML = ''; State.tocOpen = false; if(DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.remove('active'); return; }
     DOM.$editorTocList.innerHTML = '';
-    if (tocOpen) positionTocPanel();
+    if (State.tocOpen) positionTocPanel();
     heads.forEach((h, i) => {
         const item = document.createElement('div');
         item.className = 'toc-item' + (h.tagName === 'H3' ? ' lvl-3' : '');
@@ -1324,7 +1325,7 @@ function buildTocPanel(noteId) {
         item.addEventListener('click', () => scrollToTocHeading(i));
         DOM.$editorTocList.appendChild(item);
     });
-    DOM.$editorToc.style.display = tocOpen ? '' : 'none';
+    DOM.$editorToc.style.display = State.tocOpen ? '' : 'none';
 }
 function positionTocPanel() {
     /* v1.10 güncelleme: İçindekiler popup'ı düğmenin üstünde, sağa doğru açılır */
@@ -1341,9 +1342,9 @@ function scrollToTocHeading(idx) {
     if (target) target.scrollIntoView({ behavior:'smooth', block:'center' });
 }
 function toggleTocPanel() {
-    tocOpen = !tocOpen;
-    if (DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.toggle('active', tocOpen);
-    if (tocOpen) positionTocPanel();
-    if (DOM.$editorToc) DOM.$editorToc.style.display = (tocOpen && DOM.$editorTocList && DOM.$editorTocList.children.length) ? '' : 'none';
+    State.tocOpen = !State.tocOpen;
+    if (DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.toggle('active', State.tocOpen);
+    if (State.tocOpen) positionTocPanel();
+    if (DOM.$editorToc) DOM.$editorToc.style.display = (State.tocOpen && DOM.$editorTocList && DOM.$editorTocList.children.length) ? '' : 'none';
 }
 

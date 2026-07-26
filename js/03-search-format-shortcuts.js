@@ -1,18 +1,18 @@
 /* ══ ACCORDION & EXPAND ══ */
 function toggleAccordion(name) {
-    if (openGroups.includes(name)) openGroups=openGroups.filter(x=>x!==name); else openGroups.push(name);
-    localStorage.setItem('noted_groups_v1',JSON.stringify(openGroups)); render();
+    if (State.openGroups.includes(name)) State.openGroups=State.openGroups.filter(x=>x!==name); else State.openGroups.push(name);
+    localStorage.setItem('noted_groups_v1',JSON.stringify(State.openGroups)); render();
 }
-function toggleExpand(id) { expandedNotes.has(id)?expandedNotes.delete(id):expandedNotes.add(id); render(); }
+function toggleExpand(id) { State.expandedNotes.has(id)?State.expandedNotes.delete(id):State.expandedNotes.add(id); render(); }
 
 /* ══ SEARCH ══ */
 const searchInput=$('search-input'), searchClear=$('search-clear');
 function clearSearch() {
-    searchInput.value=''; searchQuery=''; searchClear.classList.remove('visible'); render();
+    searchInput.value=''; State.searchQuery=''; searchClear.classList.remove('visible'); render();
 }
 const renderDebounced=debounce(render,150);
 searchInput.addEventListener('input', e => {
-    searchQuery=e.target.value.trim(); searchClear.classList.toggle('visible',searchQuery.length>0); renderDebounced();
+    State.searchQuery=e.target.value.trim(); searchClear.classList.toggle('visible',State.searchQuery.length>0); renderDebounced();
 });
 searchInput.addEventListener('keydown', e => {
     if (e.key==='Escape') { clearSearch(); searchInput.blur(); }
@@ -54,7 +54,7 @@ searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearch();
     recognition.onresult=e => {
         const raw=Array.from(e.results).map(r=>r[0].transcript).join('');
         const transcript=raw.replace(/[.,،؟?!;:]/g,'').trim();
-        searchInput.value=transcript; searchQuery=transcript;
+        searchInput.value=transcript; State.searchQuery=transcript;
         searchClear.classList.toggle('visible',transcript.length>0); render();
     };
     recognition.onend=()=>{ micBtn.classList.remove('listening'); micBtn.title='Sesle ara'; };
@@ -477,7 +477,7 @@ document.addEventListener('keydown',e=>{
         if (typeof slashMenuOpen !== 'undefined' && slashMenuOpen) closeSlashMenu();
         closeQuickCapture();
         closeTemplateDropdown();
-        if (focusModeActive) toggleFocusMode(true);
+        if (State.focusModeActive) toggleFocusMode(true);
         const _gOv = $('graph-overlay'); if (_gOv && _gOv.classList.contains('open')) closeLinkGraph();
         if (typeof closeQuickSwitcher === 'function') { const _qsOv=$('qs-overlay'); if(_qsOv&&_qsOv.classList.contains('open')) closeQuickSwitcher(); }
     }
@@ -513,7 +513,7 @@ document.addEventListener('click',e=>{
     /* v1.10 güncelleme: İçindekiler artık yüzen bir popup — dışarı tıklanınca kapanır */
     if (DOM.$editorToc && DOM.$editorToc.style.display !== 'none' && DOM.$tocToggleBtn
         && !DOM.$editorToc.contains(e.target) && e.target !== DOM.$tocToggleBtn && !DOM.$tocToggleBtn.contains(e.target)) {
-        DOM.$editorToc.style.display = 'none'; tocOpen = false; DOM.$tocToggleBtn.classList.remove('active');
+        DOM.$editorToc.style.display = 'none'; State.tocOpen = false; DOM.$tocToggleBtn.classList.remove('active');
     }
     const ci=$('custom-color');
     if(!ci||document.activeElement!==ci){ $('color-popup').classList.remove('open'); $('bg-color-popup').classList.remove('open'); }
@@ -530,8 +530,8 @@ $('upload-input').addEventListener('change',e=>{
             /* Sarmalı format: { _notes: [...], _ai: {...}, _ccbs: [...] } */
             const importedNotes = Array.isArray(raw) ? raw : (Array.isArray(raw._notes) ? raw._notes : null);
             if(!importedNotes) throw new Error('Kök eleman bir dizi olmalı.');
-            if(notes.length>0&&!confirm(`Mevcut ${notes.length} not silinecek ve içe aktarılan ${importedNotes.length} not yüklenecek.\nDevam edilsin mi?`)) return;
-            notes=importedNotes.map((n,i)=>({
+            if(State.notes.length>0&&!confirm(`Mevcut ${State.notes.length} not silinecek ve içe aktarılan ${importedNotes.length} not yüklenecek.\nDevam edilsin mi?`)) return;
+            State.notes=importedNotes.map((n,i)=>({
                 id:n.id??genId(), title:typeof n.title==='string'?n.title:`İçe aktarılan not ${i+1}`,
                 content:sanitize(typeof n.content==='string'?n.content:''), group:typeof n.group==='string'?n.group:'Genel',
                 pinned: n.pinned||false, colorLabel: n.colorLabel||null, tags: n.tags||[],
@@ -568,9 +568,9 @@ function exportNotes() {
     let payload;
     const ccbData = typeof window._ccbGetAll === 'function' ? window._ccbGetAll() : [];
     if (exportAi) {
-        payload = { _notes: notes, _ai: { noted_ai_v1: JSON.stringify(getAiCfg()) } };
+        payload = { _notes: State.notes, _ai: { noted_ai_v1: JSON.stringify(getAiCfg()) } };
     } else {
-        payload = { _notes: notes };
+        payload = { _notes: State.notes };
     }
     if (ccbData.length > 0) payload._ccbs = ccbData;
     a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
@@ -644,10 +644,10 @@ function editNote(id) {
         activateInstance(window._mainEditorInstance);
     }
     if (typeof window._undoSetupStart === 'function') window._undoSetupStart();
-    const n=notes.find(x=>String(x.id)===String(id)); if(!n) return;
+    const n=State.notes.find(x=>String(x.id)===String(id)); if(!n) return;
     document.body.classList.remove('editor-pristine');
     document.body.classList.remove('cf-ready');
-    DOM.$title.value=n.title; DOM.$editId.value=n.id; editorGroup=n.group;
+    DOM.$title.value=n.title; DOM.$editId.value=n.id; State.editorGroup=n.group;
     DOM.$content.innerHTML=sanitize(n.content);
     if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
     _upgradeGridWraps(DOM.$content);
@@ -683,13 +683,13 @@ function editNote(id) {
         setEditorLocked(n.locked || false);
     _snapTitle=n.title; _editActive=true; _contentDirty=false;
     /* v1.1 */
-    editorPinned=n.pinned||false; editorColorLabel=n.colorLabel||null;
-    updateEditorPinBtn(editorPinned); updateColorLabelBtn(editorColorLabel);
+    State.editorPinned=n.pinned||false; State.editorColorLabel=n.colorLabel||null;
+    updateEditorPinBtn(State.editorPinned); updateColorLabelBtn(State.editorColorLabel);
     /* v1.6 */
     /* Migrate legacy single reminder → array */
     const _rems = n.reminders || (n.reminder && n.reminder.at ? [{ at: n.reminder.at, fired: n.reminder.fired || false, title: n.reminder.reminderTitle || '' }] : []);
     updateReminderBtn(_rems, n.reminderNote || (n.reminder && n.reminder.reminderNote) || '');
-    tocOpen = false; buildTocPanel(n.id);
+    State.tocOpen = false; buildTocPanel(n.id);
     if (DOM.$reminderBtn) DOM.$reminderBtn.classList.remove('hidden');
     if (DOM.$exportMdBtn) DOM.$exportMdBtn.removeAttribute('disabled');
     const _expHtmlBtn = $('export-html-btn'); if (_expHtmlBtn) _expHtmlBtn.removeAttribute('disabled');
@@ -711,13 +711,13 @@ function resetEditor() {
     }
     if (typeof window.clearUndoHistory === 'function') window.clearUndoHistory();
     setEditorLocked(false);
-    DOM.$title.value=''; DOM.$content.innerHTML=''; DOM.$editId.value=''; editorGroup='Genel';
+    DOM.$title.value=''; DOM.$content.innerHTML=''; DOM.$editId.value=''; State.editorGroup='Genel';
     _snapTitle=''; _editActive=false; _contentDirty=false;
     /* v1.1 */
-    editorPinned=false; editorColorLabel=null;
+    State.editorPinned=false; State.editorColorLabel=null;
     updateEditorPinBtn(false); updateColorLabelBtn(null);
     /* v1.6 */
-    updateReminderBtn([], ''); tocOpen=false;
+    updateReminderBtn([], ''); State.tocOpen=false;
     if (DOM.$editorToc) DOM.$editorToc.style.display='none';
     if (DOM.$editorTocList) DOM.$editorTocList.innerHTML='';
     if (DOM.$tocToggleBtn) { DOM.$tocToggleBtn.classList.add('hidden'); DOM.$tocToggleBtn.classList.remove('active'); }
@@ -771,7 +771,7 @@ function hasUnsavedChanges() {
 
 function handleEditNoteRequest(id) {
     if(String(DOM.$editId.value)===String(id)) return;
-    if(hasUnsavedChanges()){ pendingNoteId=id; $('save-confirm-toast-overlay').classList.add('show'); }
+    if(hasUnsavedChanges()){ State.pendingNoteId=id; $('save-confirm-toast-overlay').classList.add('show'); }
     else editNote(id);
 }
 
@@ -780,15 +780,15 @@ $('toast-save-yes').addEventListener('click',()=>{
     $('save-confirm-toast-overlay').classList.remove('show');
     const title=DOM.$title.value.trim(), rawHtml=DOM.$content.innerHTML;
     if(title&&stripHtml(rawHtml).trim()) saveNote(); else resetEditor();
-    const next=pendingNoteId; pendingNoteId=null; if(next) editNote(next);
+    const next=State.pendingNoteId; State.pendingNoteId=null; if(next) editNote(next);
 });
 $('toast-save-no').addEventListener('click',()=>{
     $('save-confirm-toast-overlay').classList.remove('show'); resetEditor();
-    const next=pendingNoteId; pendingNoteId=null; if(next) editNote(next);
+    const next=State.pendingNoteId; State.pendingNoteId=null; if(next) editNote(next);
 });
-$('toast-save-cancel').addEventListener('click',()=>{ $('save-confirm-toast-overlay').classList.remove('show'); pendingNoteId=null; });
-$('delete-toast-overlay').addEventListener('click',e=>{ if(e.target!==$('delete-toast-overlay'))return; deleteTargetId=null;deletePermanent=false;$('delete-toast-overlay').classList.remove('show'); });
-$('save-confirm-toast-overlay').addEventListener('click',e=>{ if(e.target!==$('save-confirm-toast-overlay'))return; $('save-confirm-toast-overlay').classList.remove('show');pendingNoteId=null; });
+$('toast-save-cancel').addEventListener('click',()=>{ $('save-confirm-toast-overlay').classList.remove('show'); State.pendingNoteId=null; });
+$('delete-toast-overlay').addEventListener('click',e=>{ if(e.target!==$('delete-toast-overlay'))return; State.deleteTargetId=null;State.deletePermanent=false;$('delete-toast-overlay').classList.remove('show'); });
+$('save-confirm-toast-overlay').addEventListener('click',e=>{ if(e.target!==$('save-confirm-toast-overlay'))return; $('save-confirm-toast-overlay').classList.remove('show');State.pendingNoteId=null; });
 
 
 /* ══ v1.2: ŞABLON ══ */
@@ -841,7 +841,7 @@ $('template-btn').addEventListener('click', e => { e.stopPropagation(); toggleTe
     if (!btn) return;
     btn.addEventListener('click', function() {
         const eId = DOM.$editId.value;
-        const n = eId ? notes.find(x => String(x.id) === String(eId)) : null;
+        const n = eId ? State.notes.find(x => String(x.id) === String(eId)) : null;
         if (!n) { alert('Yazdırmak için önce bir not açın.'); return; }
         /* Geçici print iframe ile notu izole ederek yazdır */
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -904,7 +904,7 @@ function saveQuickCapture() {
         raw.split('\n').map(l => l.trim() ? '<p>' + esc(l) + '</p>' : '<p><br></p>').join('')
     );
     const tags = parseTagsFromContent(raw);
-    notes.push({
+    State.notes.push({
         id: genId(), title: title || 'Hızlı Not', content, contentMd: htmlToMd(content),
         group: 'Genel', pinned: false, colorLabel: null,
         tags, createdAt: Date.now(), updatedAt: Date.now()
