@@ -259,8 +259,6 @@
         DOM.$content.innerHTML = state.html;
         if (typeof _restoreGrids === 'function') _restoreGrids();
         if (typeof initShapeOverlays === 'function') initShapeOverlays();
-        /* _locked = true burada kalıyor — MutationObserver microtask'ları RAF'tan önce
-           ateşlenir; RAF içinde kilit açılırsa observer redo branch'ini kesmez */
         requestAnimationFrame(() => {
             _locked = false;
             DOM.$content.focus();
@@ -290,8 +288,6 @@
         });
     };
 
-    /* saveNote() ng-toolbar'ları geçici olarak kaldırıp geri ekler →
-       bu childList mutation'larının undo stack'e girmesini engelle */
     window._undoLockForSave = function () {
         _locked = true;
         requestAnimationFrame(() => { if (!_setup) _locked = false; });

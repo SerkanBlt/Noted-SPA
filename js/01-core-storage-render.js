@@ -241,10 +241,6 @@ function normalizeHtml(html) {
             el.replaceWith(...el.childNodes);
         }
     });
-    /* Yalnızca <br> içeren boş blok elementleri temizle (birden fazla art arda <br>).
-       Grid yapısal elemanları (ng-cell, ng-title, ng-resize, ng-v-wrap...) hariç —
-       bunlar kullanıcı hiç yazı girmediğinde de boş olarak var olmalı, silinirse
-       hücre reload sonrası editable olmaktan çıkıyor (kayıp/bozuk toolbar bug'ı). */
     div.querySelectorAll('p,div').forEach(el => {
         if (el.hasAttribute('data-ph')) return;
         if (/(^|\s)ng-/.test(el.className)) return;
@@ -317,8 +313,6 @@ function noteNeedsExpand(n) {
 
 /* ══ v1.1: TAG PARSE ══ */
 function parseTagsFromContent(html) {
-    /* HTML etiketlerini boşlukla değiştir — #tag ile hemen ardındaki wikilink veya
-       başka inline element birleşmesin; etiket yalnızca boşluk/satır sonu ile biter. */
     const text = (html || '').replace(/<[^>]+>/g, ' ') + ' ' + (DOM.$title.value || '');
     const matches = text.matchAll(/#([a-zA-ZğüşıöçĞÜŞİÖÇ][a-zA-ZğüşıöçĞÜŞİÖÇ0-9_]{1,30})/g);
     return [...new Set([...matches].map(m => m[1].toLowerCase()))];
@@ -433,8 +427,6 @@ function findNoteByTitle(title) {
     return State.notes.find(n => n.title.trim().toLocaleLowerCase('tr') === t) || null;
 }
 
-/* Bir notun HTML içeriğindeki [[Başlık]] dizgilerini wikilink <a> öğelerine çevirir.
-   Zaten <a>, <code> veya <pre> içindeyse dokunmaz (çakışmayı önler). */
 function convertWikiSyntax(html) {
     if (!html || html.indexOf('[[') === -1) return html;
     const wrap = document.createElement('div');
@@ -935,9 +927,6 @@ function buildNoteItem(n) {
         full.className = 'note-full' + (exp ? ' open' : '');
         /* v1.3: eski notlardaki düz [[Başlık]] dizgilerini de görüntülerken bağlantıya çevir */
         full.innerHTML = sanitize(convertWikiSyntax(n.content));
-        /* v1.3.1: wiki-bağlantılar uygulama içinde (aynı sayfada) gezinmeli —
-           yalnızca gerçek dış bağlantılara target=_blank uygula, .wikilink hariç
-           (Ctrl/Orta-tık ile yeni sekmede açılmasını da böylece engelliyoruz) */
         full.querySelectorAll('a[href]:not(.wikilink)').forEach(a => { a.target='_blank'; a.rel='noopener noreferrer'; });
         item.appendChild(full);
     }
@@ -1232,8 +1221,6 @@ DOM.$content.addEventListener('mouseout', e => {
     const a = e.target.closest('a[href]:not(.wikilink)');
     if (a && !a.contains(e.relatedTarget)) clearTimeout(EditorState._extPanelTimer);
 });
-/* Contenteditable içinde <a> tıklaması imleci konumlandırır ama gezinmez;
-   biz mousedown'da yakalayıp ilgili nota atlıyoruz.                          */
 DOM.$content.addEventListener('mousedown', e => {
     const wl = e.target.closest('a.wikilink');
     if (!wl || !wl.dataset.noteId) return;

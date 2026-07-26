@@ -20,7 +20,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/01-core-storage-render.js",
-      "line": 250,
+      "line": 246,
       "anchor": "if (/(^|\\s)ng-/.test(el.className)) return;",
       "symbol": "normalizeHtml",
       "title": "Bos blok temizligi grid hucrelerini yiyebilir",
@@ -34,7 +34,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/08-noted-grid-system.js",
-      "line": 1043,
+      "line": 1036,
       "anchor": "wrap.insertBefore(_createGridToolbar",
       "symbol": "_restoreGrids",
       "title": "Toolbar eklemesi DOM yapisi varsayarsa editNote() sessizce yarida kesilir",
@@ -62,7 +62,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/03-search-format-shortcuts.js",
-      "line": 152,
+      "line": 147,
       "anchor": "font[color]",
       "symbol": "applyColor",
       "title": "execCommand('foreColor') <font> uretir, sanitize() onu siler",
@@ -76,7 +76,7 @@
       "level": "critical",
       "type": "history",
       "file": "noted.css",
-      "line": 4211,
+      "line": 4179,
       "anchor": "#content table:not(.noted-grid),",
       "symbol": "CSS: editor tablo stilleri / .noted-grid",
       "title": "DUZELTILDI (Faz 1): yetim selektor listesi .noted-grid'e yapismisti, artik :not() ile ayrildi",
@@ -94,8 +94,8 @@
       "level": "important",
       "type": "why",
       "file": "noted.css",
-      "line": 4300,
-      "anchor": "th/td'nin kendisi TAMAMEN sade",
+      "line": 4268,
+      "anchor": "border: none; padding: 0;",
       "symbol": "CSS: .noted-grid.grid-panel",
       "title": "Kart gorseli th/td'de degil .ng-v-wrap'te durur",
       "body": "Panel kartinin border/radius/background/bosluk'u th/td'ye DEGIL ic eleman .ng-v-wrap'e verilir. Neden: th/td'ye padding/border eklemek table-layout:fixed genislik hesabina girer; resize sonrasi kilitlenmis px kolon genisliklerinde toplam genislik konteyneri asar ve panel sayfa disina tasar. .ng-v-wrap layout hesabina girmedigi icin serbestce boyutlandirilabilir. th/td'yi sade birak.",
@@ -108,13 +108,551 @@
       "level": "important",
       "type": "trap",
       "file": "noted.css",
-      "line": 4486,
+      "line": 4436,
       "anchor": "position: absolute; top: -32px; right: 0;",
       "symbol": "CSS: .ng-toolbar",
       "title": "Ata elemanda overflow-x:auto toolbar'i kirpar",
       "body": ".ng-toolbar negatif top (-32px) ile blogun USTUNDE konumlanir. Ata elemana overflow-x:auto vermek, CSS geregi overflow-y'yi de 'auto'ya zorlar ve toolbar'i kirpar — mobilde Tablo/Panel/Kolon toolbar'lari tamamen gorunmez olmustu. Bu yuzden yatay scroll .ng-wrap'e DEGIL dogrudan .noted-grid.grid-table'a verilir. .ng-wrap'e overflow ekleme.",
       "refs": [
         "v1.15.110"
+      ]
+    },
+    {
+      "id": "why-tagparse-html-strip-to-space",
+      "level": "info",
+      "type": "why",
+      "file": "js/01-core-storage-render.js",
+      "line": 316,
+      "anchor": "const text = (html || '').replace(/<[^>]+>/g, ' ')",
+      "symbol": "parseTagsFromContent",
+      "title": "HTML etiketleri BOSLUKLA degistirilir, bos string ile degil",
+      "body": "Etiketleri '' ile silmek yerine ' ' ile degistirmenin nedeni: '#tag</b> devam' gibi bir yapida etiket kaldirildiginda '#tagdevam' olusup tek kelimeye donusmesin, boslukla ayrilmis kalsin. Bu, #tag ile hemen ardindaki inline elementin (wikilink dahil) yanlislikla birlesmesini engeller.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-convertwikisyntax-skip-existing-links",
+      "level": "info",
+      "type": "why",
+      "file": "js/01-core-storage-render.js",
+      "line": 439,
+      "anchor": "if (node.parentElement && node.parentElement.closest('a, code, pre, .wikilink')) continue;",
+      "symbol": "convertWikiSyntax",
+      "title": "[[Baslik]] donusumu zaten a/code/pre icindeyse atlanir",
+      "body": "convertWikiSyntax() dogal metindeki [[Baslik]] dizgilerini <a class=wikilink> yapar. Metin zaten bir <a>, <code> veya <pre> icindeyse (ornegin onceden olusturulmus bir wikilink veya kod bloğu icindeki literal [[metin]]) donusum atlanir — aksi halde ic ice <a> etiketleri veya kod ornegindeki literal metnin yanlislikla linke donusmesi gibi cakismalar olusur.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-wikilink-target-blank-exclusion",
+      "level": "info",
+      "type": "why",
+      "file": "js/01-core-storage-render.js",
+      "line": 930,
+      "anchor": "full.querySelectorAll('a[href]:not(.wikilink)').forEach(a => { a.target='_blank'; a.rel='noopener noreferrer'; });",
+      "symbol": "buildNoteItem",
+      "title": ".wikilink baglantilari target=_blank almaz",
+      "body": "Genisletilmis not onizlemesinde dis baglantilar yeni sekmede acilsin diye target=_blank uygulanir, ama .wikilink (uygulama-ici not baglantisi) haric tutulur — cunku wikilink'ler ayni sayfada (SPA icinde) not degistirerek gezinmesi gereken baglantilardir; target=_blank verilirse Ctrl/Orta-tik ile yanlislikla yeni sekmede acilmis olur.",
+      "refs": [
+        "v1.3.1",
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-wikilink-mousedown-not-native-click",
+      "level": "info",
+      "type": "why",
+      "file": "js/01-core-storage-render.js",
+      "line": 1226,
+      "anchor": "if (!wl || !wl.dataset.noteId) return;",
+      "symbol": "DOM.$content mousedown (wikilink navigasyonu)",
+      "title": "Wikilink navigasyonu mousedown'da yakalanir, native <a> click'ine guvenilmez",
+      "body": "contentEditable icinde bir <a> etiketine tiklamak imleci o noktaya konumlandirir ama tarayicinin varsayilan navigasyonunu TETIKLEMEZ (editable alanlarda linkler pasiftir). Bu yuzden wikilink'e tiklayinca ilgili nota gecis, native click yerine mousedown olayinda elle yakalanip handleEditNoteRequest() ile yapilir.",
+      "refs": [
+        "v1.3",
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "history-toolbar-fallback-block-selection",
+      "level": "info",
+      "type": "history",
+      "file": "js/02-toolbar-panel-column.js",
+      "line": 948,
+      "anchor": "if (block === _et || !_et.contains(block)) {",
+      "symbol": "toolbar block-level selection helper",
+      "title": "Secim #content'in disina cikarsa ilk bloga veya yeni bos paragrafa duser",
+      "body": "v1.9 (2. tur): secim dogrudan #content uzerindeyse (orn. ilk satirdaki metin baska yere tasininca) eski dongu #content disina cikip yanlis ogeyi hedefliyordu. Artik guvenli sekilde ilk bloga dusulur, hic blok yoksa bos bir paragraf olusturulur.",
+      "refs": [
+        "v1.9"
+      ]
+    },
+    {
+      "id": "why-savenote-locks-undo-observer",
+      "level": "important",
+      "type": "why",
+      "file": "js/02-toolbar-panel-column.js",
+      "line": 1353,
+      "anchor": "if (typeof window._undoLockForSave === 'function') window._undoLockForSave();",
+      "symbol": "saveNote",
+      "title": "Kayit oncesi undo gozlemcisi kilitlenir",
+      "body": "saveNote() ng-toolbar/ng-add-col gibi UI elemanlarini gecici olarak kaldirip geri ekler; bu childList mutation'lari tetikler. MutationObserver tabanli undo/redo yigini bunlari GERCEK kullanici duzenlemesi sanip kirlenmesin diye, kaldir/geri-koy dongusu boyunca observer _undoLockForSave() ile kilitlenir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-picker-clears-static-html-grid",
+      "level": "info",
+      "type": "why",
+      "file": "js/03-search-format-shortcuts.js",
+      "line": 125,
+      "anchor": "const popup=$('color-popup'), bar=$('color-bar');",
+      "symbol": "COLOR PICKER / ARKA PLAN RENGİ IIFE'leri",
+      "title": "Renk popup'lari kendi izgarasini kurmadan once statik HTML'i temizler",
+      "body": "v1.10 (4. tur): renk-bar popup'larinin statik HTML'inde zaten hazir bir renk izgarasi vardi; JS de kendi izgarasini ekleyince palet iki kez goruntüleniyordu. Cozum: popup.innerHTML='' ile once temizlenir. Ayni desen hem metin rengi (color-popup) hem arka plan rengi (bg-color-popup) IIFE'sinde tekrarlanir.",
+      "refs": [
+        "v1.10"
+      ]
+    },
+    {
+      "id": "why-grid-bg-text-vs-cell-highlight",
+      "level": "info",
+      "type": "why",
+      "file": "js/03-search-format-shortcuts.js",
+      "line": 229,
+      "anchor": "const useTextHighlight = gType === 'column' || (gType === 'panel' && td.tagName === 'TD');",
+      "symbol": "applyBgColor",
+      "title": "Grid tipine gore arka plan METIN mi HUCRE mi boyanir",
+      "body": "Kolon: her zaman metin arka plani (hiliteColor/backColor). Panel: yalnizca icerik satirinda (td) metin arka plani, basliginda (th) hucre arka plani. Tablo: her zaman hucre arka plani. Bu ayrim gorsel tutarlilik icindir — panel basliginda metin degil kartin tamami vurgulanmasi beklenir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-panel-cell-bg-targets-ng-v-wrap",
+      "level": "important",
+      "type": "why",
+      "file": "js/03-search-format-shortcuts.js",
+      "line": 239,
+      "anchor": "const bgTarget = gType === 'panel' ? (td.querySelector('.ng-v-wrap') || td) : td;",
+      "symbol": "applyBgColor",
+      "title": "Panel hucre arka plani th/td'ye degil .ng-v-wrap'e uygulanir",
+      "body": "bkz. trap-grid-card-visual-lives-on-ng-v-wrap: Panel'de gorsel kart th/td'nin kendisinde degil ic eleman .ng-v-wrap'te durur (table-layout:fixed genislik hesabini bozmamak icin). Arka plan rengi th/td'ye uygulanirsa .ng-v-wrap'in arkasinda kalip GORUNMEZ olur — bu yuzden panel turunde hedef .ng-v-wrap'e yonlendirilir.",
+      "refs": [
+        "v1.15.105",
+        "trap-grid-card-visual-lives-on-ng-v-wrap"
+      ]
+    },
+    {
+      "id": "why-fontsize-uses-surroundcontents",
+      "level": "info",
+      "type": "why",
+      "file": "js/03-search-format-shortcuts.js",
+      "line": 293,
+      "anchor": "const range = sel.getRangeAt(0).cloneRange();",
+      "symbol": "applyInlineStyle (fontSize dali)",
+      "title": "fontSize execCommand yerine surroundContents kullanir",
+      "body": "execCommand('fontSize') DOM'u degistirip range'i invalid yapar (secim kaybolur, toolbar kapanir). Genel inline stil dalindaki gibi range.surroundContents(span) yaklasimiyla secim korunur ve toolbar acik kalir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-contentdirty-reset-deferred-raf",
+      "level": "info",
+      "type": "why",
+      "file": "js/03-search-format-shortcuts.js",
+      "line": 684,
+      "anchor": "requestAnimationFrame(() => { EditorState._contentDirty = false; if (typeof window._undoSetupEnd === 'function') window._undoSetupEnd(); });",
+      "symbol": "editNote (kapanis)",
+      "title": "_contentDirty sifirlama render() sonrasina requestAnimationFrame ile ertelenir",
+      "body": "render() ve DOM manipulasyonlari bittikten sonra flag sifirlanir — ara adimlarda (not acilirken yapilan programatik DOM degisiklikleri) tetiklenmis olabilecek sahte 'input' event'lerinin notu yanlislikla 'kirli' isaretlemesini onler.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-slash-char-deleted-via-selection-api",
+      "level": "info",
+      "type": "why",
+      "file": "js/04-unsaved-templates-drawer.js",
+      "line": 609,
+      "anchor": "function applySlashCommand(type) {",
+      "symbol": "applySlashCommand",
+      "title": "'/' karakteri deleteData() yerine selection API ile silinir",
+      "body": "deleteData() ile silme, paragrafi bosaltinca sonraki formatBlock cagrisinin yanlis bloğu hedeflemesine (cursor kaymasina) yol aciyordu. Bunun yerine Range/Selection API ile silme kullanilir; formatBlock dogru blokta calisir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-mdtrigger-skips-inside-li",
+      "level": "important",
+      "type": "why",
+      "file": "js/04-unsaved-templates-drawer.js",
+      "line": 955,
+      "anchor": "if (parentEl && parentEl.closest('code, pre, .wikilink, li')) return;",
+      "symbol": "inlineMdShortcut (keydown listener)",
+      "title": "Markdown kisayollari zaten bir <li> icindeyken tetiklenmez",
+      "body": "insertUnorderedList/insertOrderedList TOGGLE komutlaridir. Kullanici zaten bir liste ogesi icindeyken '* ' gibi bir tetikleyici yeniden calisirsa, yeni liste OLUSTURMAK yerine MEVCUT listeyi kaldirabilir. Bu yuzden tetikleyici li icinde devre disi birakilir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-ai-pinned-context-conditional-syntax",
+      "level": "important",
+      "type": "why",
+      "file": "js/05-ai-chat-panel.js",
+      "line": 456,
+      "anchor": "function _buildPinnedContext(sysText, query) {",
+      "symbol": "_buildPinnedContext",
+      "title": "Sistem mesajinda [[Baslik]] / [[?Baslik]] pin sozdizimi",
+      "body": "AI sistem mesajindaki pin notlari iki sozdizimiyle yazilir: [[Baslik]] HER sorguda baglama dahil edilir (kosulsuz); [[?Baslik]] yalnizca sorgu metniyle eslesirse dahil edilir (kosullu). Bu sozdizimini degistirirsen kullanicilarin mevcut sistem mesajlarindaki pin notlari calismayi durdurur.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-ai-retry-only-non-auth-non-network-errors",
+      "level": "info",
+      "type": "why",
+      "file": "js/05-ai-chat-panel.js",
+      "line": 881,
+      "anchor": "const _isAuthErr = _s === 401 || _s === 403;",
+      "symbol": "AI istek hata isleyicisi",
+      "title": "Sadece auth/ag hatasi OLMAYAN durumlarda bir sonraki modelle tekrar denenir",
+      "body": "401/403 (auth hatasi) veya ag baglantisi yoksa tekrar denemek anlamsizdir (sorun modelde degil, kimlik dogrulama veya baglantida) — bu iki durumda hemen durulur. Diger tum hatalar (429 rate-limit, 413 payload-too-large, 400 decommissioned model, 503, 504...) gecici/model-ozgu sayilip bir sonraki modelle otomatik yeniden denenir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-ccb-insert-dispatches-synthetic-input",
+      "level": "important",
+      "type": "why",
+      "file": "js/06-bookmark-settings-ccb.js",
+      "line": 766,
+      "anchor": "target.dispatchEvent(new Event('input', { bubbles: true }));",
+      "symbol": "insertCcb",
+      "title": "CCB eklendikten sonra sahte 'input' event'i dispatch edilir",
+      "body": "Programatik DOM degisikligi (CCB blogu eklemek) EditorState._contentDirty'yi tetiklemez — bu flag yalnizca gercek kullanici input'unda set edilir. Sentetik 'input' event dispatch etmek otomatik kaydi zorlar; aksi halde CCB eklenmis not, kullanici baska bir seye dokunmadan not degistirirse KAYDEDILMEDEN kaybolur.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-mutationobserver-catches-non-keyup-changes",
+      "level": "info",
+      "type": "why",
+      "file": "js/06-bookmark-settings-ccb.js",
+      "line": 1112,
+      "anchor": "var _obs = new MutationObserver(function() { _schedule(); });",
+      "symbol": "otomatik kayit gozlemcisi",
+      "title": "MutationObserver keyup/input'un yakalamadigi degisiklikleri yakalar",
+      "body": "Todo tiklama, toolbar formatlama, renk uygulama, link ekleme gibi islemler klavye/input event'i TETIKLEMEZ (programatik DOM degisikligidir). Bu degisikliklerin de otomatik kayda dahil olmasi icin MutationObserver ek bir yakalama katmani olarak eklenmistir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "history-statspanel-opens-below-button",
+      "level": "info",
+      "type": "history",
+      "file": "js/07-link-graph-focus-timer.js",
+      "line": 824,
+      "anchor": "panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 256)) + 'px';",
+      "symbol": "positionStatsPanel",
+      "title": "Istatistik paneli dugmenin ALTINDA acilir (eskiden ustteydi)",
+      "body": "v1.10 (5. tur): panel eskiden dugmenin USTUNDE aciliyordu, artik ALTINA ve dugme hizasindan SAGA dogru aciliyor. panel.style.bottom='auto' + top hesaplamasi bu yon degisikliginin sonucu — bottom bazli konumlamaya geri donersen bu iki satiri birlikte guncelle.",
+      "refs": [
+        "v1.10"
+      ]
+    },
+    {
+      "id": "history-no-static-seed-notes-in-html",
+      "level": "info",
+      "type": "history",
+      "file": "js/07-link-graph-focus-timer.js",
+      "line": 949,
+      "anchor": "(function initScrollJump() {",
+      "symbol": "dosya genelinde kural",
+      "title": "HTML icinde statik/seed not tutulmaz",
+      "body": "v1.10 (kullanici talebi, 2026-06-08): v1.9'da bir kerelik 'Versiyonlar/Yardim' notu HTML'e gomulu olarak enjekte ediliyordu, bu kaldirildi — proje kurali geregi statik/sabit kodlanmis kullanici notu HTML icinde tutulmaz (tum notlar localStorage/State.notes uzerinden gelir).",
+      "refs": [
+        "v1.10",
+        "2026-06-08"
+      ]
+    },
+    {
+      "id": "why-col-index-resets-per-row",
+      "level": "important",
+      "type": "why",
+      "file": "js/08-noted-grid-system.js",
+      "line": 48,
+      "anchor": "table.querySelectorAll('tbody tr').forEach(tr => {",
+      "symbol": "_upgradeGridWraps",
+      "title": "Kolon indexi (data-col) her satirda 0'dan baslar, global index degil",
+      "body": "Birden fazla satirli bir grid'de hucrelere 0,1,2,3,4,5... seklinde GLOBAL index verilirse resize/hizalama/kolon-tasima gibi islemler yanlis kolonu hedefler. Her satirda index 0'dan yeniden baslamali (satir1: 0,1,2 / satir2: 0,1,2) — data-col boylece her zaman 'kacinci kolon' anlamina gelir, 'kacinci hucre' degil.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-resize-locks-widths-before-drag",
+      "level": "important",
+      "type": "why",
+      "file": "js/08-noted-grid-system.js",
+      "line": 369,
+      "anchor": "const gridType = table.dataset.gridType;",
+      "symbol": "grid resize (sürükleme başlangıcı)",
+      "title": "Surukleme baslamadan once tum kolon genislikleri kilitlenir",
+      "body": "table-layout:fixed ile calisan grid'lerde, ilk surukleme oncesi tum kolonlarin genisligi mevcut render genisligine (px olarak) kilitlenmezse, tarayici bazi kolonlari 0 genislige cekebilir — resize baslar baslamaz layout bozulur.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-format-copier-uses-computed-style",
+      "level": "info",
+      "type": "why",
+      "file": "js/08-noted-grid-system.js",
+      "line": 1197,
+      "anchor": "const cs = window.getComputedStyle(anchorEl);",
+      "symbol": "Biçim Kopyalayıcı (format-copy) — biçim okuma",
+      "title": "Font/renk/kalinlik icin getComputedStyle en guvenilir yontemdir",
+      "body": "Bicim kopyalayici kaynagin bicimini okurken execCommand sorgu komutlari yerine getComputedStyle kullanir — boylece <b>, <strong>, <em>, <i>, <font color/face/size> gibi FARKLI etiketlerle uygulanmis bicimlerin hepsi TEK bir tutarli sonuca (hesaplanmis deger) indirgenir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "trap-computedstyle-backgroundcolor-transparent-gotcha",
+      "level": "important",
+      "type": "trap",
+      "file": "js/08-noted-grid-system.js",
+      "line": 1204,
+      "anchor": "let n = anchorEl;",
+      "symbol": "Biçim Kopyalayıcı — backgroundColor okuma",
+      "title": "getComputedStyle().backgroundColor seffaf elementte SAYFA rengini dondurur",
+      "body": "Bir elementin KENDI arka plani yoksa (seffaf), getComputedStyle().backgroundColor miras yoluyla SAYFA arka planini dondurebilir — bu, 'bu elementin gercekten bir arka plan rengi var' seklinde YANLIS sonuca yol acar. Dogru deger icin computed style yerine DOM'da yukari cikilip GERCEK inline background-color'u olan ilk atay bulunur.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "trap-textdecoration-not-inherited-in-computed-style",
+      "level": "important",
+      "type": "trap",
+      "file": "js/08-noted-grid-system.js",
+      "line": 1218,
+      "anchor": "if (n.style && n.style.textDecoration) {",
+      "symbol": "Biçim Kopyalayıcı — textDecoration okuma",
+      "title": "text-decoration CSS'te miras alinmaz, computed style <u>'yu child'a yansitmaz",
+      "body": "Bir <u> (alti cizili) etiketinin ICINDEKI text node'un computed style'i text-decoration'u GOSTERMEZ, cunku text-decoration CSS ozelligi normal miras (inheritance) ile degil, ozel bir 'yayilma' (propagation) mekanizmasiyla calisir ve computed style bunu yansitmaz. Dogru sonuc icin DOM'da yukari cikilip hem inline style hem semantik etiketler (U, S, STRIKE, DEL) elle toplanir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "trap-undolock-must-stay-true-until-raf",
+      "level": "important",
+      "type": "trap",
+      "file": "js/09-search-undo-bridge.js",
+      "line": 256,
+      "anchor": "        inst._idx--;",
+      "symbol": "undo/redo (grid geri yukleme kilidi)",
+      "title": "_locked, RAF'a kadar true kalmali — microtask/RAF sirasi tuzagi",
+      "body": "MutationObserver callback'leri MICROTASK olarak, requestAnimationFrame callback'lerinden ONCE atesler. _locked kilidi RAF ICINDE degil de daha erken acilirsa, DOM'u degistiren _restoreGrids()/initShapeOverlays() cagrilarinin tetikledigi mutation'lar observer tarafindan GERCEK kullanici duzenlemesi sanilip redo dalini kesebilir. Kilit mutlaka RAF callback'i icinde acilmali.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-ctx-submenu-hover-state-machine",
+      "level": "important",
+      "type": "why",
+      "file": "js/context-menu.js",
+      "line": 250,
+      "anchor": "function _buildSubPanel(items, parentPanel) {",
+      "symbol": "_buildSubPanel",
+      "title": "Alt menu hover durum makinesinin kurallari",
+      "body": "parentPanel: L1 panelini L2'den erisebilmek icin referans olarak tutulur. Her panelin kendi _timer ve _activeSub ozellikleri vardir. Kurallar: (1) herhangi bir item hover edilince o panelin _timer'i temizlenir (panel acik kalsin); (2) bir sub-item hover edilince KARDES alt panel kapatilir, KENDI alt paneli acilir; (3) sub-item/alt panelden ayrilirken kapanma timer'i baslatilir; (4) alt panele girerken hem kendi timer'i hem parent'in timer'i temizlenir. Bu kurallardan biri bozulursa alt menuler ya erken kapanir ya da birden fazla acik kalir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-floatpanel-nulls-fpnoteid-before-editnote",
+      "level": "important",
+      "type": "why",
+      "file": "js/float-panel.js",
+      "line": 309,
+      "anchor": "_fpNoteId = null;",
+      "symbol": "float panel (masaüstüne sürükleme sonrası ana editörde açma)",
+      "title": "editNote() cagrisindan once _fpNoteId sifirlanir",
+      "body": "editNote() icinde 'bu not zaten float editorde acik mi' diye kontrol eden bir guard vardir; _fpNoteId sifirlanmadan editNote(fpId) cagrilirsa guard notu zaten float'ta acik sanip erken return eder ve ana editorde acilmaz. Sifirlama bu guard'i bilerek bypass eder.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-floatpanel-toolbar-uses-mousedown",
+      "level": "info",
+      "type": "why",
+      "file": "js/float-panel.js",
+      "line": 1152,
+      "anchor": "tb.addEventListener('mousedown', e => {",
+      "symbol": "float panel toolbar",
+      "title": "Float panel toolbar butonlari mousedown kullanir, click degil",
+      "body": "Ana editor toolbar'iyla ayni desen: click event'ine kadar beklemek, mousedown-mouseup arasinda fp-content'teki metin secimini kaybettirir (focus calinir). mousedown'da islem yapmak secim canli kalirken formatlama uygulanmasini saglar.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "trap-cf-buttons-ghost-slots-space-between",
+      "level": "important",
+      "type": "trap",
+      "file": "noted.css",
+      "line": 962,
+      "anchor": ".cf-group { display:flex; align-items:center; gap:8px; }",
+      "symbol": "CSS: .content-footer (cf-*) butonlari",
+      "title": "Gizli butonlar space-between ile 'hayalet slot' birakir",
+      "body": "v1.6: Butonlar TEK bir flex satirinda justify-content:space-between ile dagitilinca, visibility:hidden olan butonlar da birer bosluk slotu olusturuyordu — gorunur butonlar simetrik durmuyordu (ozellikle yeni not olustururken, cogu buton gizliyken). Cozum: butonlar iki mantiksal gruba ayrildi (ikincil eylemler solda .cf-group, birincil eylemler saga .cf-group), yalnizca bu IKI GRUP arasinda alan dagitiliyor; grup ICI bosluk sabit gap ile kontrol ediliyor. Tek satirlik justify-content'e geri donme.",
+      "refs": [
+        "v1.6"
+      ]
+    },
+    {
+      "id": "why-editor-inner-wrap-fills-container",
+      "level": "important",
+      "type": "why",
+      "file": "noted.css",
+      "line": 3023,
+      "anchor": ".main-panel.fp-split-mode .editor-inner-wrap {",
+      "symbol": "CSS: .fp-split-mode .editor-inner-wrap",
+      "title": "editor-inner-wrap body-wrap'i tam doldurmali (absolute cocuklar buna gore konumlanir)",
+      "body": "Bu eleman icindeki absolute-positioned cocuklar bu container'a gore konumlanir. overflow:hidden icerik genislemesini onler (tasma engellenir), bottom:0 her zaman gorunur tabana denk gelmesini saglar. position:relative + flex:1 + min-height:0 uclusunden biri kaldirilirsa split-mode layout'u bozulur.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-ng-v-wrap-uses-flex-not-vertical-align",
+      "level": "info",
+      "type": "why",
+      "file": "noted.css",
+      "line": 4204,
+      "anchor": ".noted-grid thead th { vertical-align: middle; }",
+      "symbol": "CSS: .ng-v-wrap",
+      "title": ".ng-v-wrap gercek dikey ortalama icin flex kullanir, td'nin vertical-align'i degil",
+      "body": "td/th'nin kendisi vertical-align:middle ile kabaca ortalanir ama td display:table-cell OLARAK KALIR (tablo layout hesabi bozulmasin diye). Gercek/hassas dikey ortalama icin ic eleman .ng-v-wrap flex container yapilir (display:flex, flex-direction:column, justify-content:center) — boylece td'nin table-cell layout'u korunurken icerik istenildigi gibi ortalanabilir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "trap-panel-header-width-calc-required",
+      "level": "important",
+      "type": "trap",
+      "file": "noted.css",
+      "line": 4271,
+      "anchor": ".noted-grid.grid-panel thead tr th .ng-v-wrap {",
+      "symbol": "CSS: .noted-grid.grid-panel thead .ng-v-wrap",
+      "title": "Panel basligi width:calc(100% - 10px) ZORUNLU",
+      "body": "Base .ng-v-wrap zaten width:100% verir. Panel basliginda SADECE margin-right eklemek karti td SINIRLARI DISINA tasirir (gap olusmaz, kartlar ust uste biner) — cunku width hala %100 oldugundan margin toplam genisligi asar. width:calc(100% - 10px) ile once genislik kisilir, sonra margin-right ile bosluk acilir. Bu satiri kaldirip sadece margin eklersen kartlar cakisir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-panel-focus-accent-targets-ng-v-wrap",
+      "level": "important",
+      "type": "why",
+      "file": "noted.css",
+      "line": 4473,
+      "anchor": ".ng-wrap:focus-within .noted-grid.grid-panel thead tr th.col-active .ng-v-wrap,",
+      "symbol": "CSS: panel kolon-aktif accent border",
+      "title": "Panel focus-within accent border hedefi th/td degil .ng-v-wrap",
+      "body": "Panel yalnizca panel fokustayken VE aktif kolon (col-active) ise karti accent border alir — Tablo'nun :focus-within davranisiyla ayni aile (border-color accent + box-shadow accent-dim glow ring, tablonun formuluyle birebir ayni). :focus-within scope'u olmadan col-active class'i panelden cikinca da accent kaliyordu, bu yuzden :focus-within ile scope'landi. Kart borderi th/td'de degil .ng-v-wrap'te oldugu icin (bkz. trap-grid-card-visual-lives-on-ng-v-wrap) selektor hedefi de .ng-v-wrap'e yonlendirilir.",
+      "refs": [
+        "Faz 6",
+        "trap-grid-card-visual-lives-on-ng-v-wrap"
+      ]
+    },
+    {
+      "id": "why-panel-content-radius-only-last-row",
+      "level": "info",
+      "type": "why",
+      "file": "noted.css",
+      "line": 4285,
+      "anchor": ".noted-grid.grid-panel tbody td .ng-v-wrap {",
+      "symbol": "CSS: .noted-grid.grid-panel tbody td .ng-v-wrap",
+      "title": "Panel icerik satirinda alt kose yuvarlakligi SADECE en alt satirda",
+      "body": "Icerik satiri kartlarinin ust kenari yok (bir ustteki satir/baslikla birlesik gorunsun diye). Alt kose yuvarlakligi da SADECE en alt satirda uygulanir (ayri bir :last-child kurali ile) — Satir Ekle ile birden fazla icerik satiri eklenirse ARA satirlar koseSIZ kalir, boylece tum satirlar TEK PARCA bir kart gibi gorunur, her satir ayri kutucuk gibi degil.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-panel-resize-handle-right-5px",
+      "level": "info",
+      "type": "why",
+      "file": "noted.css",
+      "line": 4305,
+      "anchor": ".noted-grid.grid-panel .ng-resize { right: 5px; }",
+      "symbol": "CSS: .noted-grid.grid-panel .ng-resize",
+      "title": "Resize handle right:5px ile iki kart arasi 10px bosluga ortalanir",
+      "body": "td'nin kendi sag kenari (right:0) kullanilsaydi handle bosluğun DIS ucunda dururdu, iki kartin TAM ORTASINDA degil. Kartlar arasi bosluk 10px oldugundan, right:5px handle'i tam o boslugun ortasina yerlestirir.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "trap-resize-line-specificity-war",
+      "level": "important",
+      "type": "trap",
+      "file": "noted.css",
+      "line": 4306,
+      "anchor": ".ng-panel-frame .noted-grid.grid-panel .ng-resize::after,",
+      "symbol": "CSS: panel resize cizgisi rengi",
+      "title": "Resize cizgisi rengi icin ozel bir specificity savasi cozuldu",
+      "body": "Resize cizgisi HER DURUMDA (hover/surukleme dahil) transparan olmali — kart borderi zaten gorsel ayirici. Ancak base .noted-grid:focus-within/.hover/.resizing ::after kurallari (0,0,3,1) AYNI specificity'ye sahip olup DAHA SONRA geldigi icin CSS kaskad sirasi geregi KAZANIYOR ve accent rengi siziyordu. Cozum: .ng-panel-frame ile selektor specificity'si artirilip transparan kuralin KESIN kazanmasi saglandi. Bu selektorden .ng-panel-frame'i kaldirirsan specificity savasi geri doner.",
+      "refs": [
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "why-panel-mobile-switches-to-flex-column",
+      "level": "info",
+      "type": "why",
+      "file": "noted.css",
+      "line": 4505,
+      "anchor": ".noted-grid.grid-panel colgroup { display: none; }",
+      "symbol": "CSS: mobil .noted-grid.grid-panel",
+      "title": "Mobilde panel flex-column'a gecer, tablo layout'unu birakir",
+      "body": "Masaustunde .ng-v-wrap width:calc(100%-10px) + margin-right:10px ile kartlari YAN YANA dizip aralarinda bosluk birakiyordu. Mobilde her kolon (baslik+icerik) TEK bir kart olarak, DIKEY siralanmis kartlar seklinde gosterilmesi gerekir — bu yuzden panel tablo/th-td layout'u yerine flex-column'a gecer.",
+      "refs": [
+        "v1.15.110",
+        "Faz 6"
+      ]
+    },
+    {
+      "id": "trap-clone-replace-loses-ng-title-listeners",
+      "level": "important",
+      "type": "trap",
+      "file": "js/08-noted-grid-system.js",
+      "line": 1039,
+      "anchor": "const isPanelType = gType === 'panel';",
+      "symbol": "toolbar yenileme (grid toolbar refresh)",
+      "title": "clone+replace ng-title listener'larini siler, yeniden eklenmesi sart",
+      "body": "Panel'de _upgradeGridWraps'in bagladigi _setPanelColumnActive listener'i, toolbar yenileme sirasinda yapilan bir clone+replace islemiyle SESSIZCE siliniyordu — sonuc: col-active reload sonrasi hic tetiklenmiyordu. Bu yuzden toolbar her yenilendiginde .ng-title listener'lari da yeniden eklenir. Bu adimi atlarsan panel kolon-aktif vurgusu reload sonrasi calismayi durdurur.",
+      "refs": [
+        "Faz 6"
       ]
     }
   ]

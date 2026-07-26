@@ -123,8 +123,6 @@ DOM.$tfBadge.addEventListener('click', e => {
 (function() {
     let lastColor='#000000';
     const popup=$('color-popup'), bar=$('color-bar');
-    /* v1.10 güncelleme (4. tur): statik HTML içindeki hazır ızgara nedeniyle
-       palet iki kez görünüyordu — JS kendi ızgarasını kurmadan önce temizler */
     popup.innerHTML = '';
     const grid=document.createElement('div'); grid.className='color-swatches';
     const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title='Rengi kaldır';
@@ -145,9 +143,6 @@ DOM.$tfBadge.addEventListener('click', e => {
         _restoreToolbarSel();
         if (color) {
             document.execCommand('foreColor',false,color);
-            /* execCommand('foreColor') <font color="..."> üretir — sanitize() allowlist'inde
-               'font' tag'ı yok, kayıtta tamamen siliniyordu (renk kayboluyordu). fontFamily'deki
-               aynı workaround: <font> -> <span style="color"> dönüşümü. */
             const et = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || EditorState._activeEditTarget || DOM.$content;
             et.querySelectorAll('font[color]').forEach(font => {
                 const span = document.createElement('span');
@@ -202,8 +197,6 @@ DOM.$tfBadge.addEventListener('click', e => {
 (function() {
     let lastBgColor='#ffff00';
     const popup=$('bg-color-popup'), bar=$('bg-color-bar');
-    /* v1.10 güncelleme (4. tur): statik HTML içindeki hazır ızgara nedeniyle
-       palet iki kez görünüyordu — JS kendi ızgarasını kurmadan önce temizler */
     popup.innerHTML = '';
     const grid=document.createElement('div'); grid.className='color-swatches';
     const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title='Arka planı kaldır';
@@ -233,8 +226,6 @@ function applyBgColor(color,close=true) {
             if (td) {
                 const table = td.closest('.noted-grid');
                 const gType = table ? table.dataset.gridType : '';
-                /* Kolon: her zaman metin arka planı. Panel: yalnızca içerik satırında (td) metin
-                   arka planı — başlıkta (th) hücre arka planı. Tablo: her zaman hücre arka planı. */
                 const useTextHighlight = gType === 'column' || (gType === 'panel' && td.tagName === 'TD');
                 if (useTextHighlight) {
                     /* Metin arka planı — execCommand */
@@ -245,9 +236,6 @@ function applyBgColor(color,close=true) {
                         document.execCommand('backColor',  false, 'transparent');
                     }
                 } else {
-                    /* Panel başlığı (th) ve Tablo: hücre arka planı.
-                       Panel'de görsel kart arka planı th/td'nin kendisinde değil .ng-v-wrap'te
-                       (bkz. v1.15.105 taşma düzeltmesi) — bg oraya uygulanmazsa görünmez kalır. */
                     const bgTarget = gType === 'panel' ? (td.querySelector('.ng-v-wrap') || td) : td;
                     bgTarget.style.backgroundColor = color || '';
                 }
@@ -302,8 +290,6 @@ function applyInlineStyle(prop, value) {
     }
 
     if (prop === 'fontSize') {
-        /* execCommand('fontSize') DOM'u değiştirip range'i invalid yapıyor.
-           Genel inline stil dalı ile aynı surroundContents yaklaşımı — selection korunur. */
         const range = sel.getRangeAt(0).cloneRange();
         const span = document.createElement('span');
         span.style.fontSize = value;
@@ -360,10 +346,6 @@ function getCurrentFontSize() {
         if (!found) select.value = '';
     }
 
-    /* Font seçici: select açılırken selection kaybolur — mousedown'da snapshot al.
-       EditorState._savedToolbarSel debounce'lu (RAF/setTimeout) güncellendiğinden seçimden hemen
-       sonra mousedown olursa eski/boş kalabilir — snapshot almadan önce senkron
-       _saveToolbarSel() ile tazelenir (bkz. _restoreToolbarSel aynı sorun). */
     let _fontSelSnapshot = null;
     $('tb-font-select').addEventListener('mousedown', () => {
         _saveToolbarSel();
@@ -699,8 +681,6 @@ function editNote(id) {
     const _splitMp = document.querySelector('.main-panel.fp-split-mode');
     if (_splitMp) _splitMp.scrollTo({top:0,behavior:'smooth'});
     render();
-    /* render() ve DOM manipülasyonları bittikten sonra flag'i sıfırla —
-       ara adımlarda tetiklenmiş olabilecek sahte input eventlerini temizle */
     requestAnimationFrame(() => { EditorState._contentDirty = false; if (typeof window._undoSetupEnd === 'function') window._undoSetupEnd(); });
 }
 

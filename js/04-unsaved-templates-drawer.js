@@ -608,8 +608,6 @@ document.addEventListener('mousedown', e => {
 
 function applySlashCommand(type) {
     (EditorState._activeEditTarget||DOM.$content).focus();
-    /* '/' karakterini tarayıcı selection API ile sil
-       (deleteData() paragrafı boşaltınca formatBlock yanlış bloğu hedef alıyor → cursor kayıyor) */
     if (EditorState.slashTextNode && EditorState.slashTextNode.isConnected) {
         const text = EditorState.slashTextNode.nodeValue || '';
         const idx = text.lastIndexOf('/', EditorState.slashOffset - 1);
@@ -954,8 +952,6 @@ document.addEventListener('keydown', function inlineMdShortcut(e) {
     if (!node || node.nodeType !== 3) return;
     if (!_isInEditorArea(node)) return;
     const parentEl = node.parentElement;
-    /* li: zaten bir liste öğesindeyken tetiklenmesin (insertUnorderedList toggle
-       olduğundan mevcut listeyi yanlışlıkla kaldırabilir) */
     if (parentEl && parentEl.closest('code, pre, .wikilink, li')) return;
     const text = node.nodeValue || '';
     const offset = sel.anchorOffset;

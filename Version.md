@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.120
+**Modülerleşme Faz 6 — Inline Yorumları Comments.json'a Taşıma (REFACTOR_PLAN.md TAMAMLANDI)**
+- REFACTOR_PLAN.md'nin son fazı: kod içindeki çok satırlı açıklama yorumları (tuzak/gerekçe/tarihçe) tek kaynağa (`Comments.json`) taşındı, koddan silindi. Bölüm başlıkları (`══`/`===`/`───`), tek satırlık mekanik notlar ve JSDoc-stili API dokümantasyonu (`createGrid` parametreleri) yerinde bırakıldı
+- **38 yeni girdi** eklendi (7 → 45), 12 dosyaya yayılmış (`js/01`…`js/09`, `context-menu.js`, `float-panel.js`, `noted.css`) — kapsam: wikilink otomatik tamamlama/önizleme, toolbar undo kilidi, renk/yazı tipi seçici tuzakları, grid resize/hizalama tuzakları, computed-style tuzakları (backgroundColor/textDecoration), CCB otomatik kayıt tetikleyicisi, alt-menü hover durum makinesi, panel mobil layout, resize çizgisi specificity savaşı
+- **5 tekrarlayan yorum bulundu ve silindi** (yeni girdi açılmadı): bunlar zaten mevcut 7 kritik trap'in (`trap-normalizehtml-empty-block-removal`, `trap-savedtoolbarsel-debounce-race`, `trap-forecolor-produces-font-tag`, `trap-restoregrids-dom-shape-assumption`, `trap-grid-card-visual-lives-on-ng-v-wrap`, `trap-orphan-selector-list-id-specificity`) orijinal kaynak metniydi — bu silme sırasında `trap-grid-card-visual-lives-on-ng-v-wrap`'in anchor'ı (yorum metnine işaret ediyordu) kırıldı, kod satırına (`border: none; padding: 0;`) güncellendi
+- **Yan bulgu — gerçek bug:** `noted.css`'te `.stb::after { display:none; } /* tooltip JS ile yönetiliyor *` satırının kapanış `*/`'si eksikti (tek `*` ile bitiyordu). Bu, sonraki yorumu da (`/* Sürükleme tutamacı */`) aynı yorum bloğuna yutuyordu — kod kaybı yoktu (yutulan aralıkta sadece yorum vardı) ama düzeltildi
+- Düşük değerli/salt tarihsel notlar (ör. "v1.10 güncelleme: X artık Y de kapsıyor" gibi sadece "ne değişti" diyen, "neden" içermeyen notlar) **silindi**, taşınmadı — Comments.json'ı gürültüyle şişirmemek için
+- Doğrulama: `node tools/comments-check.js` temiz (45 girdi, 12 dosya); `git diff -U0 | grep '^[+-]' | grep -v '^[+-][+-]' | grep -vE '^[+-]\s*(/\*|\*|//)'` çalıştırıldı — kalan tüm satırlar çok-satırlı yorumların (bu kod tabanında devam satırları `*` ile başlamıyor) gövde metni veya tek bilinçli bug-fix satırıydı, gerçek kod satırı **sıfır** değişti; RKL-1…RKL-15 tekrar çalıştırıldı (panel kart boşluğu/radius, resize handle konumu `right:5px`, resize çizgisi her zaman transparan, son-satır-only radius, mobil flex-column geçişi, toolbar aç/kapat, markdown kısayolu, ham tablo yapıştırma) — tümü Comments.json'a taşınan açıklamalarla birebir eşleşti; konsolda sıfır hata
+
+---
+
 ## v1.15.119
 **Modülerleşme Faz 4 Kapanış Temizliği — Global Konsolidasyonu TAMAMLANDI**
 - v1.15.118'de Faz 4'ün planla adı geçen 5 kümesi bitmişti ama global-satır sayısı hâlâ 23'tü (hedef ≤15) — kalan 18 satır plana dahil edilmemiş özellik-yerel/geçiş durumu değişkenlerdi: wikilink otomatik tamamlama (`wlAcActive` vb. 5), wikilink önizleme (`_wlPreviewShowT` vb. 3), dış panel (`_extPanelTimer`/`_extPanelZ`/`_extPanelMap`), toolbar sürükleme (`toolbarHideTimer` vb. 3), arama DOM referansları (`searchInput`/`searchClear`/`renderDebounced`), slash menü (`slashMenuOpen` vb. 4), CCB/AI/bookmark bayrakları (`_aiInserting`, `_bmMousedownInGutter`), grid hizalama popup'ı (`_ngAlignPopup`/`_ngAlignTable`), `_idSeed`, `activeInstance`

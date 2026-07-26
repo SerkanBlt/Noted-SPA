@@ -306,8 +306,6 @@
                 }
                 vs.classList.add('dragging');
                 setTimeout(() => vs.classList.remove('dragging'), 350);
-                /* editNote guard'ı bypass: _fpNoteId sıfırlanmadan editNote(fpId) çağrılırsa
-                   "bu not zaten float editörde açık" diyerek return eder */
                 _fpNoteId = null;
                 if (typeof editNote === 'function') editNote(fpId);
                 loadNote(mainId);
@@ -1151,8 +1149,6 @@
         new ResizeObserver(syncFpHeadHeight).observe(editorTop);
     }
 
-    /* Düğme tıklamaları — mousedown kullan (click gibi değil) böylece
-       fp-content seçimi kaybolmaz (tıklama sırasında focus çalınmaz) */
     tb.addEventListener('mousedown', e => {
         const btn = e.target.closest('.stb');
         if (!btn) return;

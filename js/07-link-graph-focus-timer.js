@@ -821,8 +821,6 @@
         const panel = $('stats-panel'), mini = $('stats-mini-btn');
         if (!panel || !mini) return;
         const r = mini.getBoundingClientRect();
-        /* v1.10 guncelleme (5. tur): panel artik dugmenin ALTINA ve onun
-           hizasindan SAGA dogru aciliyor (eskiden ustte aciliyordu) */
         panel.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 256)) + 'px';
         panel.style.bottom = 'auto';
         panel.style.top = (r.bottom + 6) + 'px';
@@ -945,10 +943,6 @@
             else if (e.key === 'Escape') { e.preventDefault(); closeQuickSwitcher(); }
         });
     })();
-
-
-    /* v1.10 güncelleme (kullanıcı talebi, 2026-06-08): v1.9 "Versiyonlar/Yardım" tek seferlik
-       seed enjeksiyonu kaldırıldı — html içinde statik not tutulmaması kuralı gereği. */
 
 
     /* ══ SCROLL HIZLI GEZİNTİ ══ */

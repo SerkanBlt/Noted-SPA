@@ -45,8 +45,6 @@ function _upgradeGridWraps(root) {
             const title = th.querySelector('.ng-title');
             if (title) title.addEventListener('focus', () => _setPanelColumnActive(table, i));
         });
-        /* Satır başına kolon indexi hesaplanır — birden fazla satırda global index
-           (0,1,2,3,4,5...) yanlış olurdu; her satırda 0'dan başlamalı (0,1,2 / 0,1,2). */
         table.querySelectorAll('tbody tr').forEach(tr => {
             [...tr.children].forEach((td, i) => {
                 td.dataset.col = td.dataset.col || String(i);
@@ -368,8 +366,6 @@ function _startGridResize(e, table, colIdx) {
     const rightCol = cols[colIdx + 1];
     if (!leftCol || !rightCol) { handle.classList.remove('resizing'); return; }
 
-    /* İlk sürükleme öncesi: tüm col'ların width'ini mevcut render genişliğine kilitle.
-       Aksi hâlde table-layout:fixed bazı col'ları 0'a çekebilir. */
     const gridType = table.dataset.gridType;
     const rowSel = gridType === 'column' ? 'tbody tr:first-child td' : 'thead tr:first-child th';
     const rowCells = [...table.querySelectorAll(rowSel)];
@@ -1035,17 +1031,11 @@ function _restoreGrids() {
             if (tClass) gType = tClass.replace('grid-', '');
         }
         if (gType) { wrap.dataset.gridType = gType; table.dataset.gridType = gType; }
-        /* Toolbar'ı yenile — her zaman wrap'ın İLK çocuğu olarak eklenir (createGrid ile aynı sıra).
-           table doğrudan wrap'ın çocuğu olmayabilir (panel'de ng-panel-frame içinde) — table referansıyla
-           insertBefore çağırmak "not a child of this node" hatası fırlatıp editNote'u yarıda kesiyordu. */
         let tb = wrap.querySelector('.ng-toolbar');
         if (tb) tb.remove();
         wrap.insertBefore(_createGridToolbar(wrap, table), wrap.firstChild);
         /* Resize handle'larını yenile */
         _bindGridResize(table);
-        /* ng-title listener'larını yenile.
-           Panel'de _upgradeGridWraps'in bağladığı _setPanelColumnActive listener'ı bu clone+replace
-           siliyordu (col-active reload sonrası hiç tetiklenmiyordu) — burada yeniden ekleniyor. */
         const isPanelType = gType === 'panel';
         table.querySelectorAll('.ng-title').forEach(title => {
             const fresh = title.cloneNode(true);
@@ -1204,8 +1194,6 @@ document.addEventListener('keydown', function clearRowSelKey(e) {
         const anchorEl = anchor ? (anchor.nodeType === 3 ? anchor.parentElement : anchor) : null;
         const fmt = { fontFamily:'', fontSize:'', color:'', backgroundColor:'', fontWeight:'', fontStyle:'', textDecoration:'' };
         if (anchorEl && anchorEl !== document.body) {
-            /* getComputedStyle: font/color/weight/style için en güvenilir yol —
-               <b>, <strong>, <em>, <i>, <font color/face/size> tag'larını da kapsar */
             const cs = window.getComputedStyle(anchorEl);
             fmt.fontFamily = cs.fontFamily || '';
             fmt.fontSize   = cs.fontSize   || '';
@@ -1213,8 +1201,6 @@ document.addEventListener('keydown', function clearRowSelKey(e) {
             fmt.fontWeight = cs.fontWeight || '';
             fmt.fontStyle  = cs.fontStyle  || '';
 
-            /* backgroundColor: computed style şeffaf elementi page arka planıyla renklendirir,
-               bu yüzden inline stil için DOM'da yukarı çık */
             let n = anchorEl;
             while (n && n !== DOM.$content && n !== document.body) {
                 if (n.style && n.style.backgroundColor &&
@@ -1226,8 +1212,6 @@ document.addEventListener('keydown', function clearRowSelKey(e) {
                 n = n.parentElement;
             }
 
-            /* textDecoration: CSS'te miras alınmaz, computed style <u> tag'ını child'a yansıtmaz.
-               DOM'da yukarı çıkarak inline stil VE semantik tag'ları topla */
             const tdSet = new Set();
             n = anchorEl;
             while (n && n !== DOM.$content && n !== document.body) {

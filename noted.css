@@ -757,7 +757,7 @@
             position:relative;
         }
         .stb:hover { background:var(--accent-dim); color:var(--accent); }
-        .stb::after { display:none; } /* tooltip JS ile yönetiliyor *
+        .stb::after { display:none; } /* tooltip JS ile yönetiliyor */
 
         /* Sürükleme tutamacı */
         .toolbar-drag {
@@ -959,18 +959,8 @@
             justify-content:space-between;
             padding:8px 12px 10px; width:100%;
         }
-        /* v1.6 düzeltme: Butonlar tek bir satırda justify-content:space-between
-           ile dağıtılınca, gizli (visibility:hidden) butonlar da birer "hayalet
-           slot" oluşturduğundan görünür butonlar simetrik durmuyordu — özellikle
-           yeni not oluştururken (çoğu buton gizliyken). Çözüm: butonları iki
-           mantıksal gruba ayırıp (ikincil eylemler solda, birincil eylemler
-           sağda) yalnızca bu iki grup arasında alan dağıtıyoruz; her grubun
-           içindeki boşluk sabit `gap` ile kontrol ediliyor — böylece görünür
-           butonlar her zaman kendi grubunda bitişik ve dengeli kalıyor. */
         .cf-group { display:flex; align-items:center; gap:8px; }
         .cf-btn.hidden { display:none; }
-        /* v1.6 düzeltme: dışa aktarma kümesini diğer eylemlerden ayıran ince ayraç —
-           görsel kalabalığı azaltıp "bunlar bir arada" hissi veriyor */
         .cf-divider { width:1px; height:20px; background:var(--border); border-radius:1px; }
         .cf-divider.hidden { display:none; }
 
@@ -3030,8 +3020,6 @@ input[type="file"] { display:none; }
                 position: relative !important;
             }
 
-            /* editor-inner-wrap: body-wrap'ı TAM doldur — absolute çocuklar buraya göre konumlanır.
-               overflow:hidden ile içerik genişlemesi önlenir, bottom:0 her zaman görünür tabana denk gelir */
             .main-panel.fp-split-mode .editor-inner-wrap {
                 position: relative !important;
                 flex: 1 !important;
@@ -3878,9 +3866,6 @@ input[type="file"] { display:none; }
         .toc-item { font-size:.85rem; color:var(--text); cursor:pointer; padding:3px 6px; border-radius:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:background .12s,color .12s; }
         .toc-item:hover { background:var(--accent-dim); color:var(--accent); }
         .toc-item.lvl-3 { padding-left:20px; opacity:.85; font-size:.8rem; }
-        /* v1.6 düzeltme: dinlenme halinde de diğer cf-btn'lerle (cf-export vb.)
-           tutarlı bir görünüm — şeffaf zemin + ince kenarlık, sadece "active"
-           durumunda vurgu rengine geçiyor. Böylece ikon havada asılı kalmıyor. */
         #toc-toggle-btn { background:transparent; border:none; color:var(--text-muted); transition:background .15s, color .15s; }
         #toc-toggle-btn:hover { color:var(--accent); background:transparent; }
         #toc-toggle-btn.active { color:var(--accent); background:transparent; border:none; }
@@ -3938,11 +3923,8 @@ input[type="file"] { display:none; }
         /* v1.9: DAKTILO MODU (Typewriter Mode) */
         .typewriter-mode #content > * { opacity: .35; transition: opacity .22s ease; }
         .typewriter-mode #content > .tw-active { opacity: 1; }
-        /* v1.9 güncelleme (2. tur): Daktilo Modu artık tek tek ToDo satırlarını da hedefler */
         .typewriter-mode .todo-list.tw-active > .todo-item { opacity: .35; transition: opacity .22s ease; }
         .typewriter-mode .todo-list.tw-active > .todo-item.tw-todo-active { opacity: 1; }
-        /* v1.10 guncelleme (5. tur): bullet/numarali liste satirlari da Daktilo
-           Modunda satir satir aktiflesir (uzerine gelinen satir one cikar) */
         .typewriter-mode #content > ul:not(.todo-list).tw-active > li,
         .typewriter-mode #content > ol.tw-active > li { opacity: .35; transition: opacity .22s ease; }
         .typewriter-mode #content > ul:not(.todo-list).tw-active > li.tw-li-active,
@@ -3957,8 +3939,6 @@ input[type="file"] { display:none; }
         #fp-tw-btn.active { color: var(--accent); }
 
         /* v1.9: ISTATISTIK PANELI */
-        /* v1.10 güncelleme (4. tur): istatistik paneli artık akış-içi blok değil,
-           düğme üzerinde/tıklamasında açılan yüzen bir pop-up (üst çizgi de kalktı) */
         /* stats-panel: Ayarlar > Genel içinde statik */
         #stats-panel { display:block; }
         #stats-panel .stats-body { display:flex; flex-direction:column; gap:8px; }
@@ -4010,11 +3990,8 @@ input[type="file"] { display:none; }
             padding:0 8px; color:var(--accent);
         }
         .gf-wrap, .tf-wrap, .sort-wrap, .view-wrap { position:relative; display:flex; align-items:center; }
-        /* v1.9 güncelleme (2. tur): İstatistik/Hızlı Git "Notlar" ile aynı hizada, dikeyde ortalı, sağa dayalı */
         .list-header-row { display:flex; align-items:center; }
         .list-header-actions { display:flex; align-items:center; gap:4px; margin-left:auto; order:2; }
-        /* v1.10 güncelleme (4. tur): 'Notlar' yazısı ile yan düğmelerin dikey
-           hizası netleştirildi */
         .list-header-row .list-label { line-height:26px; margin-bottom:0; order:0; }
         .list-header-row #resize-handle { order:1; margin:0 0 0 8px; align-self:center; }
         .list-header-row { justify-content:flex-start; }
@@ -4199,15 +4176,6 @@ input[type="file"] { display:none; }
             border-color: var(--accent);
         }
 
-        /* ── Editör içine yapıştırılan HAM tablolar (noted-grid olmayan) ──
-           TARİHÇE: Buradaki selektör listesi eskiden sonu virgülle bitiyordu ve araya
-           yalnızca yorum girdiği için tarayıcı bunu aşağıdaki .noted-grid kuralıyla TEK
-           kural olarak ayrıştırıyordu. Sonuç: #content table td (ID → specificity 1,0,2)
-           grid hücrelerine margin:0 / border-collapse dayatıyordu, class tabanlı grid
-           kurallarını eziyordu. Üç ayrı bug'ın kök nedeni buydu.
-           Çözüm: :not(.noted-grid) — artık grid tablolarıyla HİÇ eşleşmiyor, dolayısıyla
-           ID specificity'si zararsız. Bildirimler eski (kazara) davranışla birebir aynı
-           tutuldu ki yapıştırılan tabloların görünümü değişmesin. */
         #content table:not(.noted-grid),
         .col-panel-content table:not(.noted-grid),
         .layout-col table:not(.noted-grid) {
@@ -4234,8 +4202,6 @@ input[type="file"] { display:none; }
         /* Hücreler ve başlıklar: varsayılan dikey hizalama */
         .noted-grid tbody td,
         .noted-grid thead th { vertical-align: middle; }
-        /* ng-v-wrap: td/th içinde flex container ile gerçek dikey ortalama
-           td display:table-cell kalır (layout korunur), wrapper flex yapar */
         .ng-v-wrap {
             display: flex;
             flex-direction: column;
@@ -4297,18 +4263,11 @@ input[type="file"] { display:none; }
             width: 100%;
         }
         .noted-grid.grid-panel:focus-within { border: none; box-shadow: none; }
-        /* th/td'nin kendisi TAMAMEN sade kalır (border/padding YOK) — table-layout:fixed genişlik
-           hesabı ve kilitli px kolon genişlikleri (resize sonrası) bundan etkilenmez, taşma riski ortadan kalkar.
-           Kart görseli (border/radius/background/boşluk) .ng-v-wrap üzerinde — o, layout hesabına girmeyen
-           bir iç eleman olduğu için serbestçe boyutlandırılabilir. */
         .noted-grid.grid-panel thead tr th,
         .noted-grid.grid-panel tbody td {
             border: none; padding: 0;
         }
         .noted-grid.grid-panel tbody td { height: 52px; }
-        /* Kart — başlık (üst köşeler yuvarlak, alt kenar yok, içerikle birleşik).
-           width: calc(100% - 10px) ZORUNLU — base .ng-v-wrap zaten width:100% veriyor,
-           sadece margin-right eklemek kartı td dışına taşırır (gap oluşmaz, üst üste biner). */
         .noted-grid.grid-panel thead tr th .ng-v-wrap {
             background: var(--pnl-header-bg);
             border: 1px solid var(--pnl-border);
@@ -4323,9 +4282,6 @@ input[type="file"] { display:none; }
             box-sizing: border-box;
             box-shadow: 0 1px 4px var(--shadow);
         }
-        /* Kart — içerik satırları: üst kenar yok (bir üstteki satır/başlıkla birleşik).
-           Alt köşe yuvarlaklığı YALNIZCA en alt satırda (aşağıda) — birden fazla içerik satırı
-           varsa (Satır Ekle ile) ara satırlar köşesiz kalıp tek parça kart görünümü sürer. */
         .noted-grid.grid-panel tbody td .ng-v-wrap {
             background: var(--surface);
             border: 1px solid var(--pnl-border);
@@ -4346,13 +4302,7 @@ input[type="file"] { display:none; }
         /* Son kolon: sağda boşluk yok, kart dış kenara flush */
         .noted-grid.grid-panel thead tr th:last-child .ng-v-wrap,
         .noted-grid.grid-panel tbody td:last-child .ng-v-wrap { width: 100%; margin-right: 0; }
-        /* Resize handle: iki kart arasındaki 10px boşluğun TAM ORTASINA alınır.
-           td'nin kendi sağ kenarı (right:0) boşluğun dış ucu olurdu — right:5px ile ortalanır. */
         .noted-grid.grid-panel .ng-resize { right: 5px; }
-        /* Resize çizgisi: HER DURUMDA transparan (hover/sürükleme dahil) — kart borderi zaten ayırıcı.
-           Specificity: base .noted-grid:focus-within/.hover/.resizing ::after kuralları (0,0,3,1) ile eşit
-           olup DAHA SONRA geldiği için oradaki accent sızıyordu — .ng-panel-frame ile specificity artırılıp
-           kesin kazanması sağlandı. */
         .ng-panel-frame .noted-grid.grid-panel .ng-resize::after,
         .ng-panel-frame .noted-grid.grid-panel .ng-resize:hover::after,
         .ng-panel-frame .noted-grid.grid-panel .ng-resize.resizing::after { background: transparent !important; }
@@ -4520,11 +4470,6 @@ input[type="file"] { display:none; }
         .noted-grid.grid-table:focus-within tbody tr + tr td {
             border-top-color: var(--accent);
         }
-        /* Panel: yalnızca panel fokustayken VE aktif kolon (col-active) ise kartı accent border alır.
-           Tablo'nun :focus-within davranışıyla aynı aile: border-color accent + box-shadow accent-dim
-           glow ring (tablonun box-shadow: 0 0 0 2px var(--accent-dim) ile birebir aynı formül).
-           :focus-within scope'u olmadan col-active class'ı panelden çıkınca da accent kalıyordu.
-           Kart border'ı th/td'de değil .ng-v-wrap'te olduğu için hedef de ona göre. */
         .ng-wrap:focus-within .noted-grid.grid-panel thead tr th.col-active .ng-v-wrap,
         .ng-wrap:focus-within .noted-grid.grid-panel tbody td.col-active .ng-v-wrap {
             border-color: var(--accent);
@@ -4547,11 +4492,6 @@ input[type="file"] { display:none; }
 
         /* ── Mobil + dar layout: Grid görünümleri ── */
         @media (max-width: 640px) {
-            /* .ng-wrap'e overflow-x:auto verilmez: overflow-x'i visible dışında bir
-               değere ayarlamak tarayıcıda overflow-y'yi de 'auto'ya zorluyor — bu da
-               üstte position:absolute + negatif top ile duran .ng-toolbar'ı kırpıp
-               mobilde tamamen görünmez yapıyordu. Yatay scroll ihtiyacı yalnızca
-               Tablo tipinde var; onu doğrudan tabloya veriyoruz, wrap serbest kalır. */
             .noted-grid.grid-table {
                 min-width: 360px;
                 table-layout: auto; /* mobilde sabit layout yerine içerik bazlı */
@@ -4559,9 +4499,6 @@ input[type="file"] { display:none; }
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            /* Panel mobil: her kolon (başlık+içerik) TEK kart, kartlar arasında boşluk.
-               .ng-v-wrap masaüstünde width:calc(100%-10px)+margin-right:10px ile yan yana
-               boşluk bırakıyordu — mobilde tam genişlik ve dikey kartlar arası boşluk gerekir. */
             .noted-grid.grid-panel {
                 display: flex; flex-direction: column;
             }

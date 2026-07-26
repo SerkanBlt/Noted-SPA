@@ -763,8 +763,6 @@ DOM.$content.addEventListener('input', () => {
         sel.addRange(r2);
         target.focus();
 
-        /* Programatik DOM değişikliği EditorState._contentDirty'yi tetiklemez; input event dispatch ederek
-           otomatik kaydı zorla (aksi hâlde not anahtarlanmadan önce kaydedilmez) */
         target.dispatchEvent(new Event('input', { bubbles: true }));
     }
     window._insertCcb = insertCcb;
@@ -1110,8 +1108,6 @@ DOM.$content.addEventListener('input', () => {
         if (t && (t.classList.contains('col-panel-content') || t.classList.contains('layout-col'))) _schedule();
     });
 
-    /* MutationObserver — todo tıklama, toolbar formatı, renk, link gibi
-       keyup/input tetiklemeyenleri yakala */
     if (content && window.MutationObserver) {
         var _obs = new MutationObserver(function() { _schedule(); });
         _obs.observe(content, { childList: true, subtree: true, characterData: true, attributes: true });

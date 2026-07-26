@@ -329,12 +329,6 @@ function _saveToolbarSel() {
 }
 
 function _restoreToolbarSel() {
-    /* EditorState._savedToolbarSel selectionchange'te debounce'lu (RAF/setTimeout) güncelleniyor.
-       Toolbar butonuna seçimden hemen sonra tıklanırsa debounce henüz çalışmamış olabilir —
-       EditorState._savedToolbarSel eski/boş kalır, restore de o eski range'i uygulayıp canlı seçimi
-       (asıl doğru olanı) ezer, format komutu hiçbir şeye uygulanmamış gibi olur.
-       Restore etmeden önce senkron bir _saveToolbarSel() çağrısı, mousedown anındaki
-       canlı seçim hâlâ geçerliyse onu hemen yakalayıp bu yarışı ortadan kaldırır. */
     _saveToolbarSel();
     if (!EditorState._savedToolbarSel) return;
     const { et, range } = EditorState._savedToolbarSel;
@@ -951,9 +945,6 @@ function runSpecial(type) {
             s2.removeAllRanges(); s2.addRange(nr2);
         } else {
             let block = node;
-            /* v1.9 güncelleme (2. tur): seçim doğrudan #content üzerindeyse (örn. ilk satırdaki
-               metin başka yere taşınınca) eski döngü #content dışına çıkıp yanlış öğeyi hedefliyordu;
-               artık güvenli şekilde ilk bloğa düşülür / gerekirse boş bir paragraf oluşturulur */
             if (block === _et || !_et.contains(block)) {
                 if (!_et.firstElementChild) {
                     const p0 = document.createElement('p'); p0.appendChild(document.createElement('br'));
@@ -1359,10 +1350,7 @@ function setEditorLocked(locked) {
 
 function saveNote() {
     const title   = DOM.$title.value.trim();
-    /* ng-toolbar kaldır/geri-koy döngüsü childList mutation'ı tetikler —
-       undo stack'i kirletmemesi için observer'ı kilitle */
     if (typeof window._undoLockForSave === 'function') window._undoLockForSave();
-    /* ng-toolbar ve ng-block-del gibi UI elementlerini geçici olarak kaldır */
     const _tmpRemoved = [];
     DOM.$content.querySelectorAll('.ng-toolbar, .ng-add-col').forEach(el => {
         _tmpRemoved.push({ parent: el.parentNode, next: el.nextSibling, el });

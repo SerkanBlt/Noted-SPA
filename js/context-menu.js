@@ -247,15 +247,6 @@
         panel.style.top  = top  + 'px';
     }
 
-    /*
-     * _buildSubPanel — parentPanel: L1 paneli L2'den de erişebilmek için referans
-     * Her panelin _timer ve _activeSub özellikleri var.
-     * Kurallar:
-     *  - Herhangi bir item hover → o panelin _timer'ını temizle (panel açık kalsın)
-     *  - Sub item hover → kardeş alt paneli kapat, kendi alt panelini aç
-     *  - Sub item / alt panelden ayrılırken → timer başlat
-     *  - Alt panele girerken → hem kendi timer'ını hem parent _timer'ını temizle
-     */
     function _buildSubPanel(items, parentPanel) {
         const panel = document.createElement('div');
         panel.className = 'ctx-sub-panel';

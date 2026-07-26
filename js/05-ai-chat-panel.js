@@ -453,9 +453,6 @@
         ].filter(Boolean).join('\n') + titlesSection;
     }
 
-    /* ── Sistem mesajındaki pin notlarını context'e çevir ──
-         [[Başlık]]  → her sorguda dahil (her zaman)
-         [[?Başlık]] → yalnızca sorguyla eşleşince dahil (koşullu)   */
     function _buildPinnedContext(sysText, query) {
         if (!sysText || typeof State.notes === 'undefined' || !State.notes.length)
             return { ctx: '', ids: new Set() };
@@ -881,8 +878,6 @@
                 if (err.name === 'AbortError') return;
                 const _s   = err.httpStatus || 0;
                 const msg  = err.message || '';
-                /* Yalnızca auth hatası ve ağ bağlantısı yoksa tekrar deneme — diğer tüm hataları
-                   (429, 413, 400 decommissioned, 503, 504…) bir sonraki modelle yeniden dene */
                 const _isAuthErr = _s === 401 || _s === 403;
                 const _isNetErr  = !_s && msg === 'Failed to fetch';
                 if (!_isAuthErr && !_isNetErr && qi + 1 < _modelsQueue.length) {
