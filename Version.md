@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.113
+**Modülerleşme Faz 3 — JS 12 Dosyaya Bölündü**
+- 10.701 satırlık ana `<script>` bloğu, yalnızca üst düzey `══` bölüm sınırlarında kesilerek 9 dosyaya ayrıldı: `01-core-storage-render.js` … `09-search-undo-bridge.js` (her biri ≤1.636 satır, ortalama ~1.189). Zaten IIFE olan 3 blok (`help-modal.js`, `float-panel.js`, `context-menu.js`) da kendi konumlarında ayrıldı — toplam 12 dosya
+- **`<script type="module">` KULLANILMADI** — hepsi klasik `<script src>`, global scope'u aynen paylaşıyor, `file://` altında çalışıyor. `Noted.html` 13.875 → 1.389 satıra düştü (yalnızca markup + script/link etiketleri)
+- **İlk kesim denemesi 4 dosyada syntax hatasına yol açtı** (kesim noktaları çok satırlı `/* ═══...═══ */` yorum bloklarının ortasına denk gelmişti — biri de bir `forEach` callback'inin ortasındaydı). Tüm 80 bölüm işaretinin **kesin** satır numaraları referans dosyadan tek tek çıkarılıp doğrulanarak yeniden kesildi; bu kez her dosya `node --check` ile tek tek syntax doğrulamasından geçirildi, sonra birleştirilmiş içerik `diff` ile orijinal blokla **byte-identical** karşılaştırıldı
+- `Comments.json`'daki 4 JS girdisinin `file` alanı ilgili yeni dosyalara güncellendi (`normalizeHtml`→01, `_restoreToolbarSel`→02, `applyColor`→03, `_restoreGrids`→08-noted-grid-system.js — bu oturumda en çok düzeltilen grid sistemi kodu tek parça korundu)
+- Doğrulama: `createGrid`/`saveNote`/`_setPanelColumnActive`/`_restoreGrids` fonksiyon olarak tanımlı, `window._fpWlDetect`/`window._openHelpOverlay` köprüleri çalışıyor, RKL-1…RKL-15 baseline ile birebir eşleşti, konsolda sıfır hata; `file://` altında gerçek bir Chrome penceresinde görsel olarak da doğrulandı
+
+---
+
 ## v1.15.112
 **Modülerleşme Faz 2 — CSS `noted.css`'e Ayrıldı**
 - 4.643 satırlık `<style>` bloğu (%25'lik kesim) `Noted.html`'den birebir çıkarılıp `noted.css`'e taşındı; `Noted.html` 18.519 → 13.875 satıra düştü
