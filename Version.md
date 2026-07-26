@@ -2,6 +2,14 @@
 
 ---
 
+## v1.15.110
+**Markdown Satır-Başı Kısayolları + Mobil Grid Düzeltmeleri**
+- **Markdown kısayolları:** Satır başında karakter + boşluk yazınca otomatik dönüşüm — `* ` / `- ` madde listesi, `[] ` görev listesi, `|| ` tablo (`/t` ile aynı). Ek olarak mantıklı görülen kısayollar da eklendi: `# `/`## `/`### ` başlık, `> ` alıntı, `1. ` sıralı liste. Mevcut `/xxx ` sistemiyle aynı alt yapıyı (`applySlashCommand`) kullanıyor; liste öğesi içindeyken tekrar tetiklenmiyor (yanlışlıkla listeyi kaldırmasın diye)
+- **Mobil — Panel/Kolon layout düzeltildi:** `.ng-v-wrap`'in masaüstü boşluk hilesi (`width:calc(100%-10px)+margin-right:10px`) mobilde de sızıyordu, kartlar tam genişlik olmuyordu. Ayrıca `#content table td` (eski ID selektör) `margin:0` vererek yeni margin-bottom tabanlı boşluk kuralını eziyordu (bkz. v1.15.103/105 ile aynı kök neden ailesi) — `#content` ile specificity artırılarak düzeltildi. Artık Panel kartları ve Kolon blokları mobilde tam genişlik, eşit ve aralarında gerçek boşlukla diziliyor
+- **Mobil — Tablo/Panel/Kolon toolbar'ları görünmüyordu:** `.ng-wrap { overflow-x: auto }` kuralı, CSS gereği `overflow-y`'yi de zorla `auto`ya çeviriyor, bu da üstte `position:absolute` + negatif `top` ile duran `.ng-toolbar`'ı kırpıyordu. Yatay scroll ihtiyacı yalnızca Tablo tipinde olduğundan `overflow-x:auto` doğrudan `.noted-grid.grid-table`'a taşındı, `.ng-wrap` serbest bırakıldı
+
+---
+
 ## v1.15.109
 **Grid — Zengin Metin Biçimlendirme: 2 Kök Neden Düzeltildi**
 - **Yarış durumu (race condition):** `_savedToolbarSel` yalnızca debounce'lu (RAF/`setTimeout`) `selectionchange` ile güncelleniyordu; bir grid hücresinde metin seçilip hemen ardından toolbar'da font boyutu/ailesi gibi bir işlem tetiklenirse debounce henüz çalışmamış oluyor, `_restoreToolbarSel()` eski/boş bir range'i geri yükleyip canlı (doğru) seçimi eziyordu — komut hiçbir şeye uygulanmıyordu. Özellikle madde imli liste (`<li>`) içeriğinde tutarlı şekilde tetikleniyordu. `_restoreToolbarSel()` artık restore etmeden önce senkron `_saveToolbarSel()` ile tazeleniyor; font seçici (`tb-font-select`) kendi mousedown snapshot'ında da aynı düzeltme uygulandı
