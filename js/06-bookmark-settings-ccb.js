@@ -609,6 +609,35 @@ DOM.$content.addEventListener('input', () => {
     function ccbUpdate(id, item) { const arr = ccbGetAll(); const i = arr.findIndex(c => c.id === id); if (i >= 0) { arr[i] = { ...arr[i], ...item }; ccbSave(arr); } }
     function ccbDelete(id)       { ccbSave(ccbGetAll().filter(c => c.id !== id)); }
 
+    /* ── Dışa/İçe aktar: her CCB tek bir .ccb.json dosyası olarak taşınabilir ── */
+    function ccbExport(id) {
+        const ccb = ccbById(id);
+        if (!ccb) return;
+        const payload = { _type: 'noted-ccb', _version: 1, group: ccb.group || 'Genel', name: ccb.name, height: ccb.height || 200, code: ccb.code || '' };
+        const a = document.createElement('a');
+        a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
+        a.download = (ccb.name || 'ccb').replace(/[\\\/:*?"<>|]/g, '-').slice(0, 60) + '.ccb.json';
+        a.click();
+    }
+    /* Tek CCB nesnesi veya dizi kabul eder; id her zaman yeniden üretilir (çakışma olmasın) */
+    function ccbImportFromObjects(list) {
+        let added = 0;
+        list.forEach(raw => {
+            if (!raw || typeof raw !== 'object') return;
+            const name = typeof raw.name === 'string' ? raw.name.trim() : '';
+            const code = typeof raw.code === 'string' ? raw.code : '';
+            if (!name || !code.trim()) return;
+            ccbAdd({
+                group: typeof raw.group === 'string' && raw.group.trim() ? raw.group.trim() : 'Genel',
+                name,
+                height: Number.isFinite(raw.height) ? raw.height : 200,
+                code,
+            });
+            added++;
+        });
+        return added;
+    }
+
     /* public API */
     window._ccbGetAll  = ccbGetAll;
     window._ccbSave    = ccbSave;
@@ -616,6 +645,8 @@ DOM.$content.addEventListener('input', () => {
     window._ccbAdd     = ccbAdd;
     window._ccbUpdate  = ccbUpdate;
     window._ccbDelete  = ccbDelete;
+    window._ccbExport  = ccbExport;
+    window._ccbImportFromObjects = ccbImportFromObjects;
 
     /* ── HTML syntax highlighter (basit regex tabanlı) ── */
     function ccbHighlight(code) {
@@ -833,6 +864,7 @@ DOM.$content.addEventListener('input', () => {
                     '<div class="ccb-item-body">' +
                         '<div class="ccb-item-actions">' +
                             '<button class="ccb-act-btn ccb-edit-btn">Düzenle</button>' +
+                            '<button class="ccb-act-btn ccb-export-btn">Dışa Aktar</button>' +
                             '<button class="ccb-act-btn danger ccb-del-btn">Sil</button>' +
                         '</div>' +
                         '<div class="ccb-code-view">' + _ccbHighlight(ccb.code||'') + '</div>' +
@@ -844,6 +876,10 @@ DOM.$content.addEventListener('input', () => {
                 item.querySelector('.ccb-edit-btn').addEventListener('click', e => {
                     e.stopPropagation();
                     openForm(ccb);
+                });
+                item.querySelector('.ccb-export-btn').addEventListener('click', e => {
+                    e.stopPropagation();
+                    ccbExport(ccb.id);
                 });
                 item.querySelector('.ccb-del-btn').addEventListener('click', e => {
                     e.stopPropagation();
@@ -943,6 +979,31 @@ DOM.$content.addEventListener('input', () => {
 
         addBtn.addEventListener('click', () => openForm(null));
         devTab.addEventListener('click', renderList);
+
+        /* İçe aktar: tek CCB nesnesi veya dizi (.ccb.json) kabul eder */
+        const importBtn   = document.getElementById('ccb-import-btn');
+        const importInput = document.getElementById('ccb-import-input');
+        if (importBtn && importInput) {
+            importBtn.addEventListener('click', () => importInput.click());
+            importInput.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const r = new FileReader();
+                r.onload = ev => {
+                    try {
+                        const raw = JSON.parse(ev.target.result);
+                        const list = Array.isArray(raw) ? raw : [raw];
+                        const added = ccbImportFromObjects(list);
+                        if (!added) { alert('İçe aktarılabilir CCB bulunamadı — dosyada "name" ve "code" alanları olmalı.'); return; }
+                        renderList();
+                        alert(added + ' CCB içe aktarıldı.');
+                    } catch (err) { alert('Geçersiz JSON: ' + err.message); }
+                };
+                r.readAsText(file);
+                e.target.value = '';
+            });
+        }
+
         renderList();
     })();
 })();

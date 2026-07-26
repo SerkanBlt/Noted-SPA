@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.122
+**CCB Dışa Aktar / İçe Aktar — Addin'e Giden İlk Adım**
+- Kullanıcı talebi üzerine: CCB'ler artık tek tek `.ccb.json` dosyası olarak dışa/içe aktarılabiliyor — ileride bir "store"dan CCB seçip kurma özelliğine giden ilk, düşük riskli adım. Tam bir plugin/addin API'si **bilinçli olarak yapılmadı** (REFACTOR_PLAN.md'nin kapsam dışı listesinde: "stabil sınırlar oturmadan tasarlanamaz") — bunun yerine mevcut mimariye (localStorage tabanlı CCB listesi) dokunmadan, üstüne eklenen basit bir dosya taşınabilirliği katmanı
+- **Ayarlar > Geliştirici** sekmesine "İçe Aktar" butonu eklendi (mevcut "Yeni CCB" yanında); her CCB satırına "Dışa Aktar" butonu eklendi (Düzenle/Sil yanında) — tamamı mevcut `.ccb-act-btn`/`.ccb-add-btn` stilleri yeniden kullanılarak, yeni CSS eklenmeden
+- Dışa aktarılan format: `{_type:"noted-ccb", _version:1, group, name, height, code}` — `_type`/`_version` alanları ileride format değişirse eski dosyaları ayırt edebilmek için (bkz. `Comments.json` → `why-ccb-export-has-type-version-fields`)
+- İçe aktarma hem **tek CCB nesnesini** hem **CCB dizisini** (toplu) kabul eder; geçersiz girdiler (isim veya kod eksik) sessizce atlanır, kaç tanesinin başarıyla eklendiği kullanıcıya bildirilir; içe aktarılan her CCB'ye **yeni bir id** üretilir (mevcut CCB'lerle çakışma riski yok)
+- Bu, aynı oturumda düzeltilen bir bug ile birlikte geldi: mevcut vault-genelinde dışa/içe aktarma (`notlar.json`, "Dışa Aktar" ana menü butonu) zaten CCB'leri `_ccbs` alanıyla topluca taşıyordu — bu yeni özellik ona ek olarak **tekil** CCB paylaşımını mümkün kılıyor
+- Doğrulama: gerçek UI akışıyla (buton tıklama → form → dosya seçimi simülasyonu) hem dışa aktarılan JSON'un doğru biçimde üretildiği hem tekil/dizi içe aktarmanın doğru çalıştığı hem geçersiz girdilerin doğru filtrelendiği test edildi; ekran görüntüsüyle buton yerleşimi ve mevcut tasarım diliyle tutarlılığı doğrulandı; konsolda sıfır hata
+
+---
+
 ## v1.15.121
 **Fix — CCB (Customized Code Block) not kaydedilince siliniyordu**
 - **Kök neden:** CCB, bir nota `<iframe srcdoc="..." sandbox="allow-scripts allow-forms allow-modals">` olarak eklenir. `saveNote()` içindeki `sanitize()` (DOMPurify) çağrısının `ALLOWED_ATTR` listesinde `srcdoc` ve `sandbox` YOKTU — bu iki nitelik kayıt sırasında sessizce siliniyordu. Not yeniden açıldığında iframe içerik olmadan (boş) render oluyordu; `inflateCcbBlocks()` yalnızca iframe'in VARLIĞINI kontrol ettiğinden ("zaten inflate edilmiş" varsayıp) yeniden doldurmuyordu. Kullanıcı bunu "CCB'ler kaydedilmiyor" olarak yaşıyordu — CCB **tanımı** (localStorage, Ayarlar > Geliştirici) doğru kaydediliyordu, sorun yalnızca bir **nota eklenmiş CCB örneğinin** kayıt sonrası bozulmasıydı

@@ -72,6 +72,20 @@
       ]
     },
     {
+      "id": "why-ccb-export-has-type-version-fields",
+      "level": "info",
+      "type": "why",
+      "file": "js/06-bookmark-settings-ccb.js",
+      "line": 613,
+      "anchor": "function ccbExport(id) {",
+      "symbol": "ccbExport / ccbImportFromObjects",
+      "title": "Disa aktarilan CCB dosyasi _type/_version alanlari tasir",
+      "body": "Tek bir CCB'yi .ccb.json olarak disa/ice aktarma, ileride kullanicilarin bir 'store'dan CCB secip kurabilecegi addin sistemine giden ilk adimdir (REFACTOR_PLAN.md bilincli olarak plugin/addin API'sini kapsam disi birakmisti, bu sadece dosya tabanli paylasimdir). _type:'noted-ccb' ve _version:1 alanlari, format ileride degisirse (yeni alanlar, farkli calisma modeli) eski dosyalari ayirt edebilmek icin var — kaldirirsan gelecekte format algilama/gecis yolu kaybolur.",
+      "refs": [
+        "v1.15.122"
+      ]
+    },
+    {
       "id": "trap-forecolor-produces-font-tag",
       "level": "critical",
       "type": "trap",
@@ -349,7 +363,7 @@
       "level": "important",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 766,
+      "line": 797,
       "anchor": "target.dispatchEvent(new Event('input', { bubbles: true }));",
       "symbol": "insertCcb",
       "title": "CCB eklendikten sonra sahte 'input' event'i dispatch edilir",
@@ -363,7 +377,7 @@
       "level": "info",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 1112,
+      "line": 1173,
       "anchor": "var _obs = new MutationObserver(function() { _schedule(); });",
       "symbol": "otomatik kayit gozlemcisi",
       "title": "MutationObserver keyup/input'un yakalamadigi degisiklikleri yakalar",
