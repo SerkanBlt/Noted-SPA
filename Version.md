@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.112
+**Modülerleşme Faz 2 — CSS `noted.css`'e Ayrıldı**
+- 4.643 satırlık `<style>` bloğu (%25'lik kesim) `Noted.html`'den birebir çıkarılıp `noted.css`'e taşındı; `Noted.html` 18.519 → 13.875 satıra düştü
+- `<link rel="stylesheet" href="noted.css">` DOMPurify script'inden hemen sonra, `</head>`'den önce eklendi — kaldırılan `<style>` ile aynı konumda
+- **`file://` doğrulaması yapıldı:** gerçek bir Chrome penceresinde (`file:///.../Noted.html`) sayfa açılıp ekran görüntüsüyle doğrulandı — koyu tema, kenarlıklar, tipografi, ikonlar sorunsuz render oluyor. `<script type="module">`'ün aksine `<link rel="stylesheet">` `file://` altında CORS kısıtlamasına takılmıyor
+- `Comments.json`'daki 3 CSS girdisinin (`trap-orphan-selector-list-id-specificity`, `trap-grid-card-visual-lives-on-ng-v-wrap`, `trap-ng-toolbar-clipped-by-overflow`) `file` alanı `noted.css`'e güncellendi
+- Doğrulama: RKL-1…RKL-15 baseline ile birebir eşleşti, `noted.css` 200 OK ile yükleniyor, konsolda sıfır hata
+
+---
+
 ## v1.15.111
 **Modülerleşme Faz 1 — Yetim CSS Selektörünün Kökten Temizlenmesi**
 - `#content table, .col-panel-content table, ...` listesi sonu virgülle bitip araya yalnızca yorum girdiği için tarayıcı bunu `.noted-grid` kuralıyla **tek kural** olarak ayrıştırıyordu. Sonuç: `#content table td` (ID → specificity 1,0,2) grid hücrelerine `margin:0`/`border-collapse:collapse` dayatıp class tabanlı grid kurallarını eziyordu — panel `border-collapse` (v1.15.103), panel mobil `margin` (v1.15.110), kolon mobil `margin` (v1.15.110) bug'larının **ortak kök nedeni** buydu
