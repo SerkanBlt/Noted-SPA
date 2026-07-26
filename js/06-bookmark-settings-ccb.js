@@ -1,17 +1,17 @@
 /* ══ BOOKMARK GUTTER ══ */
-let _aiInserting = false; /* AI text eklerken bookmark tetiklenmesin */
-let _bmMousedownInGutter = false; /* mousedown gutter içinde başlamadıysa bookmark koyma */
+EditorState._aiInserting = false; /* AI text eklerken bookmark tetiklenmesin */
+EditorState._bmMousedownInGutter = false; /* mousedown gutter içinde başlamadıysa bookmark koyma */
 DOM.$content.addEventListener('mousemove', function(e) {
     const xInContent = e.clientX - DOM.$content.getBoundingClientRect().left;
     this.style.cursor = xInContent < 28 ? 'pointer' : '';
 });
 DOM.$content.addEventListener('mouseleave', function() { this.style.cursor = ''; });
 DOM.$content.addEventListener('mousedown', function(e) {
-    _bmMousedownInGutter = (e.clientX - DOM.$content.getBoundingClientRect().left) < 28;
+    EditorState._bmMousedownInGutter = (e.clientX - DOM.$content.getBoundingClientRect().left) < 28;
 });
 DOM.$content.addEventListener('click', function(e) {
-    if (_aiInserting) return;
-    if (!_bmMousedownInGutter) return;
+    if (EditorState._aiInserting) return;
+    if (!EditorState._bmMousedownInGutter) return;
     const xInContent = e.clientX - DOM.$content.getBoundingClientRect().left;
     if (xInContent > 28) return;
     const rect = DOM.$content.getBoundingClientRect();
@@ -573,7 +573,7 @@ DOM.$content.addEventListener('input', () => {
             refresh();
         }
 
-        _thcRefreshUI = refresh;
+        EditorState._thcRefreshUI = refresh;
 
         panel.addEventListener('input', e => {
             if (!e.target.matches('.thc-picker')) return;
@@ -593,7 +593,7 @@ DOM.$content.addEventListener('input', () => {
         const panel = document.getElementById('stab-tab2');
         if (!panel) return;
         if (!panel.dataset.thcReady) _thcInit();
-        else if (typeof _thcRefreshUI === 'function') _thcRefreshUI();
+        else if (typeof EditorState._thcRefreshUI === 'function') EditorState._thcRefreshUI();
     };
 })();
 
@@ -705,14 +705,14 @@ DOM.$content.addEventListener('input', () => {
         target.focus();
 
         /* slash '/' karakterini sil */
-        if (typeof slashTextNode !== 'undefined' && slashTextNode && slashTextNode.isConnected) {
-            const text = slashTextNode.nodeValue || '';
-            const idx  = text.lastIndexOf('/', (typeof slashOffset !== 'undefined' ? slashOffset : text.length) - 1);
+        if (typeof EditorState.slashTextNode !== 'undefined' && EditorState.slashTextNode && EditorState.slashTextNode.isConnected) {
+            const text = EditorState.slashTextNode.nodeValue || '';
+            const idx  = text.lastIndexOf('/', (typeof EditorState.slashOffset !== 'undefined' ? EditorState.slashOffset : text.length) - 1);
             if (idx !== -1) {
                 const sel = window.getSelection();
                 const r   = document.createRange();
-                r.setStart(slashTextNode, idx);
-                r.setEnd(slashTextNode, idx + 1);
+                r.setStart(EditorState.slashTextNode, idx);
+                r.setEnd(EditorState.slashTextNode, idx + 1);
                 sel.removeAllRanges(); sel.addRange(r);
                 target.focus(); document.execCommand('delete', false, null);
             }

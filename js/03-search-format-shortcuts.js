@@ -6,18 +6,18 @@ function toggleAccordion(name) {
 function toggleExpand(id) { State.expandedNotes.has(id)?State.expandedNotes.delete(id):State.expandedNotes.add(id); render(); }
 
 /* ══ SEARCH ══ */
-const searchInput=$('search-input'), searchClear=$('search-clear');
+DOM.searchInput=$('search-input'); DOM.searchClear=$('search-clear');
 function clearSearch() {
-    searchInput.value=''; State.searchQuery=''; searchClear.classList.remove('visible'); render();
+    DOM.searchInput.value=''; State.searchQuery=''; DOM.searchClear.classList.remove('visible'); render();
 }
-const renderDebounced=debounce(render,150);
-searchInput.addEventListener('input', e => {
-    State.searchQuery=e.target.value.trim(); searchClear.classList.toggle('visible',State.searchQuery.length>0); renderDebounced();
+DOM.renderDebounced=debounce(render,150);
+DOM.searchInput.addEventListener('input', e => {
+    State.searchQuery=e.target.value.trim(); DOM.searchClear.classList.toggle('visible',State.searchQuery.length>0); DOM.renderDebounced();
 });
-searchInput.addEventListener('keydown', e => {
-    if (e.key==='Escape') { clearSearch(); searchInput.blur(); }
+DOM.searchInput.addEventListener('keydown', e => {
+    if (e.key==='Escape') { clearSearch(); DOM.searchInput.blur(); }
 });
-searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearch(); searchInput.focus(); });
+DOM.searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearch(); DOM.searchInput.focus(); });
 
 /* v1.3: arama operatörleri ipucu */
 /* Gelişmiş arama operatörleri — hover ile göster/gizle */
@@ -54,14 +54,14 @@ searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearch();
     recognition.onresult=e => {
         const raw=Array.from(e.results).map(r=>r[0].transcript).join('');
         const transcript=raw.replace(/[.,،؟?!;:]/g,'').trim();
-        searchInput.value=transcript; State.searchQuery=transcript;
-        searchClear.classList.toggle('visible',transcript.length>0); render();
+        DOM.searchInput.value=transcript; State.searchQuery=transcript;
+        DOM.searchClear.classList.toggle('visible',transcript.length>0); render();
     };
     recognition.onend=()=>{ micBtn.classList.remove('listening'); micBtn.title='Sesle ara'; };
     recognition.onerror=e=>{ micBtn.classList.remove('listening'); micBtn.title='Sesle ara'; };
     micBtn.addEventListener('click', e => {
         e.stopPropagation();
-        if (!_se.classList.contains('open')) { _se.classList.add('open'); searchInput.focus(); }
+        if (!_se.classList.contains('open')) { _se.classList.add('open'); DOM.searchInput.focus(); }
         if (micBtn.classList.contains('listening')) recognition.stop();
         else { recognition.start(); micBtn.classList.add('listening'); micBtn.title='Dinleniyor…'; }
     });
@@ -474,7 +474,7 @@ document.addEventListener('keydown',e=>{
         DOM.$tfBadge.classList.remove('open'); DOM.$tfDropdown.classList.remove('open');
         $('color-popup').classList.remove('open'); $('bg-color-popup').classList.remove('open'); $('color-label-popup').classList.remove('open');
         if (typeof DOM.$sortDropdown !== 'undefined' && DOM.$sortDropdown) { DOM.$sortBadge.classList.remove('open'); DOM.$sortDropdown.classList.remove('open'); }
-        if (typeof slashMenuOpen !== 'undefined' && slashMenuOpen) closeSlashMenu();
+        if (typeof EditorState.slashMenuOpen !== 'undefined' && EditorState.slashMenuOpen) closeSlashMenu();
         closeQuickCapture();
         closeTemplateDropdown();
         if (State.focusModeActive) toggleFocusMode(true);

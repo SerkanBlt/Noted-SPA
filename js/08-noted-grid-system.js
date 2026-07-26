@@ -234,7 +234,7 @@ function _createGridToolbar(wrap, table) {
         bar.appendChild(makeBtn('fa-arrow-right',    'Seçili Kolonu Sağa Taşı','', () => _gridMoveCol(getTable(),  1)));
         bar.appendChild(makeBtn('fa-align-left',     'Hücre Hizalama',         '', () => {
             const pop  = _getOrCreateAlignPopup();
-            _ngAlignTable = getTable();
+            EditorState._ngAlignTable = getTable();
             _updateAlignActive();
             if (pop.classList.contains('open')) { pop.classList.remove('open'); return; }
             const alignBtn = bar.querySelector('[title="Hücre Hizalama"]');
@@ -535,8 +535,8 @@ function _gridMoveCol(table, dir) {
 }
 
 /* ── Hizalama popup ── */
-let _ngAlignPopup = null;
-let _ngAlignTable = null;
+EditorState._ngAlignPopup = null;
+EditorState._ngAlignTable = null;
 
 function _alignSvg(v, h) {
     const bx = {left:3, center:5, right:7}[h];
@@ -545,7 +545,7 @@ function _alignSvg(v, h) {
 }
 
 function _getOrCreateAlignPopup() {
-    if (_ngAlignPopup) return _ngAlignPopup;
+    if (EditorState._ngAlignPopup) return EditorState._ngAlignPopup;
     const pop = document.createElement('div');
     pop.className = 'ng-align-popup';
     [['top','left'],['top','center'],['top','right'],
@@ -563,8 +563,8 @@ function _getOrCreateAlignPopup() {
         btn.innerHTML = _alignSvg(v, h);
         btn.addEventListener('mousedown', e => e.preventDefault());
         btn.addEventListener('click', () => {
-            if (!_ngAlignTable) return;
-            _gridSetColAlign(_ngAlignTable, v, h);
+            if (!EditorState._ngAlignTable) return;
+            _gridSetColAlign(EditorState._ngAlignTable, v, h);
             _updateAlignActive();
         });
         pop.appendChild(btn);
@@ -573,25 +573,25 @@ function _getOrCreateAlignPopup() {
     document.addEventListener('mousedown', e => {
         if (pop.classList.contains('open') && !pop.contains(e.target)) pop.classList.remove('open');
     });
-    _ngAlignPopup = pop;
+    EditorState._ngAlignPopup = pop;
     return pop;
 }
 
 function _updateAlignActive() {
-    if (!_ngAlignPopup || !_ngAlignTable) return;
+    if (!EditorState._ngAlignPopup || !EditorState._ngAlignTable) return;
     let cell = window._lastGridCell || null;
-    if (!cell || !_ngAlignTable.contains(cell)) {
+    if (!cell || !EditorState._ngAlignTable.contains(cell)) {
         const et = (EditorState._savedToolbarSel && EditorState._savedToolbarSel.et) || document.activeElement;
         cell = et ? et.closest('td, th') : null;
     }
-    const tr      = cell && _ngAlignTable.contains(cell) ? cell.closest('tr') : null;
+    const tr      = cell && EditorState._ngAlignTable.contains(cell) ? cell.closest('tr') : null;
     const colIdx  = tr ? [...tr.children].indexOf(cell) : 0;
-    const isTable = _ngAlignTable.dataset.gridType === 'table';
-    const firstTr = _ngAlignTable.querySelector('tbody tr');
+    const isTable = EditorState._ngAlignTable.dataset.gridType === 'table';
+    const firstTr = EditorState._ngAlignTable.querySelector('tbody tr');
     const td      = firstTr ? firstTr.children[colIdx] : null;
     const curV    = (td && td.dataset.valign)  || (isTable ? 'middle' : 'top');
     const curH    = (td && td.dataset.halign)  || 'left';
-    _ngAlignPopup.querySelectorAll('.ng-align-btn').forEach(btn =>
+    EditorState._ngAlignPopup.querySelectorAll('.ng-align-btn').forEach(btn =>
         btn.classList.toggle('ng-align-active', btn.dataset.valign === curV && btn.dataset.halign === curH)
     );
 }

@@ -73,6 +73,11 @@ function patchContentCfg(p) { try { localStorage.setItem('noted_content_v1', JSO
     localStorage.setItem('noted_storage_v', '2');
 })();
 
+/* ══ EDİTÖR OTURUM DURUMU (Faz 4e — Global Konsolidasyonu) ══
+   Tanım burada (js/01) çünkü bu dosyadaki wikilink/wl-preview/ext-panel
+   özellik-yerel durumu da bu nesneye taşındı; js/02 sadece kullanır. */
+const EditorState = {};
+
 /* ══ UYGULAMA DURUMU (Faz 4d — Global Konsolidasyonu) ══ */
 const State = {};
 State.notes = safeLoadJSON('noted_v1', []); State.openGroups = getContentCfg().groups || [];
@@ -92,8 +97,10 @@ if (!Array.isArray(State.notes)) State.notes = []; if (!Array.isArray(State.open
 const Const = {};
 Const.TRASH_GROUP = 'Çöp Kutusu';
 State.expandedNotes=new Set(); State.searchQuery=''; State.filterGroup='all'; State.filterTag='all';
-const _themeSaved = getUiCfg().theme || 'system';
-State.themeMode = (_themeSaved==='dark'||_themeSaved==='light'||_themeSaved==='system') ? _themeSaved : 'system';
+State.themeMode = (function() {
+    const t = getUiCfg().theme || 'system';
+    return (t==='dark'||t==='light'||t==='system') ? t : 'system';
+})();
 State.isDark = State.themeMode === 'dark'; /* geriye dönük uyumluluk — applyTheme günceller */
 State.editorGroup='Genel'; State.editorColorLabel=null; State.editorPinned=false; State.editorReminders=[]; State.editorReminderNote=''; State.tocOpen=false;
 State.activePickerId=null; State.deleteTargetId=null; State.deletePermanent=false; State.pendingNoteId=null;
@@ -128,8 +135,8 @@ function debounce(fn, ms) {
     let t;
     return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
 }
-let _idSeed = Date.now();
-function genId() { return ++_idSeed; }
+EditorState._idSeed = Date.now();
+function genId() { return ++EditorState._idSeed; }
 
 
 /* v1.1: Mevcut notlara eksik alanları ekle (backward compat) */
@@ -181,7 +188,7 @@ DOM.$searchOpBtn    = $('search-op-btn');
 DOM.$searchOpHint   = $('search-op-hint');
 
 /* ══ MULTI-EDITOR INSTANCE MANAGER ══ */
-let activeInstance = null;
+EditorState.activeInstance = null;
 
 function createInstance(contentEl, noteId) {
     const inst = { $el: contentEl, noteId: String(noteId || ''), _stack: [], _idx: -1, dirty: false };
@@ -190,9 +197,9 @@ function createInstance(contentEl, noteId) {
 }
 
 function activateInstance(inst) {
-    if (!inst || inst === activeInstance) return;
-    if (activeInstance) saveContext(activeInstance);
-    activeInstance = inst;
+    if (!inst || inst === EditorState.activeInstance) return;
+    if (EditorState.activeInstance) saveContext(EditorState.activeInstance);
+    EditorState.activeInstance = inst;
     DOM.$content = inst.$el;
     if (typeof window._undoSwitchTarget === 'function') window._undoSwitchTarget(inst.$el);
 }
@@ -203,7 +210,7 @@ function saveContext(inst) {
 
 /* Ana editör instance'ı — _undoSwitchTarget henüz tanımlı değil, doğrudan set */
 window._mainEditorInstance = createInstance(DOM.$content, '');
-activeInstance = window._mainEditorInstance;
+EditorState.activeInstance = window._mainEditorInstance;
 
 /* ══ HELPERS ══ */
 function esc(s) {
@@ -467,18 +474,18 @@ function convertWikiSyntax(html) {
 
 /* Belirli bir nota bağlantı veren diğer notları bulur (geri bağlantılar) */
 /* ── Wiki-bağlantı otomatik tamamlama ── */
-let wlAcActive = false, wlAcRange = null, wlAcStartOffset = -1, wlAcStartNode = null, wlAcSelIndex = 0;
+EditorState.wlAcActive = false; EditorState.wlAcRange = null; EditorState.wlAcStartOffset = -1; EditorState.wlAcStartNode = null; EditorState.wlAcSelIndex = 0;
 
 function closeWlAutocomplete() {
-    wlAcActive = false; wlAcRange = null; wlAcStartNode = null; wlAcStartOffset = -1; wlAcSelIndex = 0;
+    EditorState.wlAcActive = false; EditorState.wlAcRange = null; EditorState.wlAcStartNode = null; EditorState.wlAcStartOffset = -1; EditorState.wlAcSelIndex = 0;
     DOM.$wlAutocomplete.classList.remove('open');
 }
 
 function openWlAutocomplete(query, rect) {
-    wlAcActive = true;
+    EditorState.wlAcActive = true;
     const matches = State.notes.filter(n => n.title.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
     DOM.$wlAcList.innerHTML = '';
-    wlAcSelIndex = 0;
+    EditorState.wlAcSelIndex = 0;
     if (matches.length === 0) {
         const d = document.createElement('div');
         d.className = 'wl-ac-empty';
@@ -503,10 +510,10 @@ function openWlAutocomplete(query, rect) {
 }
 
 function insertWikilink(title) {
-    if (!wlAcRange) { closeWlAutocomplete(); return; }
+    if (!EditorState.wlAcRange) { closeWlAutocomplete(); return; }
     /* insertNode sonrası range.startContainer element'e dönüşür — hedefi önceden yakala */
-    const _targetCE = (wlAcRange.startContainer && wlAcRange.startContainer.nodeType === 3)
-        ? wlAcRange.startContainer.parentElement?.closest('[contenteditable]')
+    const _targetCE = (EditorState.wlAcRange.startContainer && EditorState.wlAcRange.startContainer.nodeType === 3)
+        ? EditorState.wlAcRange.startContainer.parentElement?.closest('[contenteditable]')
         : null;
     const target = findNoteByTitle(title);
     const a = document.createElement('a');
@@ -514,7 +521,7 @@ function insertWikilink(title) {
     a.href = '#';
     if (target) a.dataset.noteId = String(target.id);
     a.innerHTML = '<i class="fas fa-link"></i>' + esc(title);
-    const range = wlAcRange;
+    const range = EditorState.wlAcRange;
     range.deleteContents();
     range.insertNode(a);
     const space = document.createTextNode(' ');
@@ -544,26 +551,26 @@ DOM.$content.addEventListener('input', function wlDetect(e) {
     const r = document.createRange();
     r.setStart(node, startOffset);
     r.setEnd(node, sel.anchorOffset);
-    wlAcRange = r;
+    EditorState.wlAcRange = r;
     const rect = r.getBoundingClientRect();
     if (!rect.width && !rect.height) { closeWlAutocomplete(); return; }
     openWlAutocomplete(query, rect);
 });
 
 DOM.$content.addEventListener('keydown', e => {
-    if (!wlAcActive || !DOM.$wlAutocomplete.classList.contains('open')) return;
+    if (!EditorState.wlAcActive || !DOM.$wlAutocomplete.classList.contains('open')) return;
     const items = [...DOM.$wlAcList.querySelectorAll('.wl-ac-item')];
     if (e.key === 'Escape') { e.preventDefault(); closeWlAutocomplete(); return; }
     if (e.key === 'ArrowDown' && items.length) {
-        e.preventDefault(); wlAcSelIndex = (wlAcSelIndex + 1) % items.length;
-        items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
-        items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
+        e.preventDefault(); EditorState.wlAcSelIndex = (EditorState.wlAcSelIndex + 1) % items.length;
+        items.forEach((it, i) => it.classList.toggle('active', i === EditorState.wlAcSelIndex));
+        items[EditorState.wlAcSelIndex].scrollIntoView({ block:'nearest' });
     } else if (e.key === 'ArrowUp' && items.length) {
-        e.preventDefault(); wlAcSelIndex = (wlAcSelIndex - 1 + items.length) % items.length;
-        items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
-        items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
+        e.preventDefault(); EditorState.wlAcSelIndex = (EditorState.wlAcSelIndex - 1 + items.length) % items.length;
+        items.forEach((it, i) => it.classList.toggle('active', i === EditorState.wlAcSelIndex));
+        items[EditorState.wlAcSelIndex].scrollIntoView({ block:'nearest' });
     } else if (e.key === 'Enter' && items.length) {
-        e.preventDefault(); insertWikilink(items[wlAcSelIndex].dataset.title);
+        e.preventDefault(); insertWikilink(items[EditorState.wlAcSelIndex].dataset.title);
     }
 }, true);
 
@@ -657,9 +664,9 @@ function _applyThemeCustom() {
         }
     }
     /* Picker'ları güncelle (ayarlar paneli açıksa) */
-    if (typeof _thcRefreshUI === 'function') _thcRefreshUI();
+    if (typeof EditorState._thcRefreshUI === 'function') EditorState._thcRefreshUI();
 }
-let _thcRefreshUI = null;
+EditorState._thcRefreshUI = null;
 /* Sistem teması değişince güncelle */
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (State.themeMode === 'system') applyTheme();
@@ -986,16 +993,16 @@ DOM.$mainList.addEventListener('click', e => {
 /* ══ v1.3.1: WİKİ-BAĞLANTI HOVER ÖNİZLEME PANELİ ══
    Bağlı nota tıklamadan, üzerine gelindiğinde içeriğinin küçültülmüş
    ("zoom-out") bir önizlemesini yüzen bir panelde gösterir. */
-let _wlPreviewShowT = null, _wlPreviewHideT = null, _wlPreviewLink = null;
+EditorState._wlPreviewShowT = null; EditorState._wlPreviewHideT = null; EditorState._wlPreviewLink = null;
 DOM.$wlPreviewInner = document.getElementById('wl-preview-inner');
 
 /* ── Çoklu dış bağlantı panelleri ── */
-let _extPanelTimer = null, _extPanelZ = 99999;
-const _extPanelMap = new Map(); /* link → panel */
+EditorState._extPanelTimer = null; EditorState._extPanelZ = 99999;
+EditorState._extPanelMap = new Map(); /* link → panel */
 
 function createExtLinkPanel(link) {
     if (!link || !link.isConnected) return;
-    if (_extPanelMap.has(link)) { _extPanelMap.get(link).style.zIndex = ++_extPanelZ; return; }
+    if (EditorState._extPanelMap.has(link)) { EditorState._extPanelMap.get(link).style.zIndex = ++EditorState._extPanelZ; return; }
     const url = link.getAttribute('href') || '';
     if (!url || url.startsWith('#') || url.startsWith('javascript')) return;
 
@@ -1004,7 +1011,7 @@ function createExtLinkPanel(link) {
     const initH = isYT ? Math.round(340 * 9 / 16) : 340;
     const panel = document.createElement('div');
     panel.className = 'wl-preview ext-mode ' + (isYT ? 'yt-mode' : 'web-mode') + ' open';
-    panel.style.zIndex = ++_extPanelZ;
+    panel.style.zIndex = ++EditorState._extPanelZ;
     panel.style.width = initW + 'px'; panel.style.height = initH + 'px';
     panel.innerHTML =
         '<div class="yt-drag-bar"></div>' +
@@ -1021,7 +1028,7 @@ function createExtLinkPanel(link) {
     panel.style.left = _initLeft + 'px'; panel.style.top = _initTop + 'px';
 
     document.body.appendChild(panel);
-    _extPanelMap.set(link, panel);
+    EditorState._extPanelMap.set(link, panel);
 
     /* Gerçek yüksekliğe göre dikey ince ayar */
     requestAnimationFrame(() => {
@@ -1032,7 +1039,7 @@ function createExtLinkPanel(link) {
 
     /* Kapat */
     panel.querySelector('.wl-preview-close-btn').addEventListener('click', (e) => {
-        e.stopPropagation(); panel.remove(); _extPanelMap.delete(link);
+        e.stopPropagation(); panel.remove(); EditorState._extPanelMap.delete(link);
     });
 
     /* Taşı */
@@ -1044,7 +1051,7 @@ function createExtLinkPanel(link) {
         if (e.target.closest('button')) return;
         const r2 = panel.getBoundingClientRect();
         _ox = e.clientX - r2.left; _oy = e.clientY - r2.top;
-        panel.style.transition = 'none'; panel.style.zIndex = ++_extPanelZ;
+        panel.style.transition = 'none'; panel.style.zIndex = ++EditorState._extPanelZ;
         document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
         e.preventDefault();
     });
@@ -1061,18 +1068,18 @@ function createExtLinkPanel(link) {
         e.stopPropagation();
         const r3 = panel.getBoundingClientRect();
         _rox = e.clientX; _roy = e.clientY; _rw = r3.width; _rh = r3.height;
-        panel.style.zIndex = ++_extPanelZ;
+        panel.style.zIndex = ++EditorState._extPanelZ;
         document.addEventListener('mousemove', onResize); document.addEventListener('mouseup', onResizeUp);
         e.preventDefault();
     });
 
-    panel.addEventListener('mousedown', () => { panel.style.zIndex = ++_extPanelZ; });
+    panel.addEventListener('mousedown', () => { panel.style.zIndex = ++EditorState._extPanelZ; });
 }
 
 function scheduleExtLinkPreview(link) {
-    clearTimeout(_extPanelTimer);
-    if (_extPanelMap.has(link)) return;
-    _extPanelTimer = setTimeout(() => createExtLinkPanel(link), 3000);
+    clearTimeout(EditorState._extPanelTimer);
+    if (EditorState._extPanelMap.has(link)) return;
+    EditorState._extPanelTimer = setTimeout(() => createExtLinkPanel(link), 3000);
 }
 
 function buildWlPreviewContent(noteId) {
@@ -1090,7 +1097,7 @@ function buildWlPreviewContent(noteId) {
 
 function showWlPreview(link) {
     if (!link || !link.isConnected) return;
-    _wlPreviewLink = link;
+    EditorState._wlPreviewLink = link;
     DOM.$wlPreviewInner.innerHTML = buildWlPreviewContent(link.dataset.noteId);
     DOM.$wlPreview.classList.add('open');
 
@@ -1137,20 +1144,20 @@ function showWlPreview(link) {
 function hideWlPreview() {
     DOM.$wlPreview.classList.remove('open');
     DOM.$wlPreviewInner.innerHTML = '';
-    _wlPreviewLink = null;
+    EditorState._wlPreviewLink = null;
 }
 
 function scheduleWlPreview(link) {
-    clearTimeout(_wlPreviewHideT);
-    if (_wlPreviewLink === link && DOM.$wlPreview.classList.contains('open')) return;
-    clearTimeout(_wlPreviewShowT);
-    _wlPreviewShowT = setTimeout(() => showWlPreview(link), 260);
+    clearTimeout(EditorState._wlPreviewHideT);
+    if (EditorState._wlPreviewLink === link && DOM.$wlPreview.classList.contains('open')) return;
+    clearTimeout(EditorState._wlPreviewShowT);
+    EditorState._wlPreviewShowT = setTimeout(() => showWlPreview(link), 260);
 }
 
 function scheduleHideWlPreview() {
-    clearTimeout(_wlPreviewShowT);
-    clearTimeout(_wlPreviewHideT);
-    _wlPreviewHideT = setTimeout(hideWlPreview, 350);
+    clearTimeout(EditorState._wlPreviewShowT);
+    clearTimeout(EditorState._wlPreviewHideT);
+    EditorState._wlPreviewHideT = setTimeout(hideWlPreview, 350);
 }
 
 /* ── Dış bağlantı hover önizleme ── */
@@ -1202,12 +1209,12 @@ DOM.$mainList.addEventListener('mouseout', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && !wl.contains(e.relatedTarget)) { scheduleHideWlPreview(); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
-    if (a && !a.contains(e.relatedTarget)) clearTimeout(_extPanelTimer);
+    if (a && !a.contains(e.relatedTarget)) clearTimeout(EditorState._extPanelTimer);
 });
 /* Liste kaydırılırsa veya not daraltılırsa paneli kapat */
 DOM.$mainList.addEventListener('scroll', () => { if (DOM.$wlPreview.classList.contains('open')) hideWlPreview(); }, { passive:true });
 /* Önizleme panelinin kendisine girilince timer iptal, çıkınca gizle */
-DOM.$wlPreview.addEventListener('mouseenter', () => { clearTimeout(_wlPreviewHideT); clearTimeout(_wlPreviewShowT); });
+DOM.$wlPreview.addEventListener('mouseenter', () => { clearTimeout(EditorState._wlPreviewHideT); clearTimeout(EditorState._wlPreviewShowT); });
 DOM.$wlPreview.addEventListener('mouseleave', () => { scheduleHideWlPreview(); }); /* ext-mode'da no-op */
 
 /* ══ v1.3.2: EDITOR (DOM.$content) içindeki wikilink'ler için hover önizleme + tıklama ══
@@ -1223,7 +1230,7 @@ DOM.$content.addEventListener('mouseout', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && !wl.contains(e.relatedTarget)) { scheduleHideWlPreview(); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
-    if (a && !a.contains(e.relatedTarget)) clearTimeout(_extPanelTimer);
+    if (a && !a.contains(e.relatedTarget)) clearTimeout(EditorState._extPanelTimer);
 });
 /* Contenteditable içinde <a> tıklaması imleci konumlandırır ama gezinmez;
    biz mousedown'da yakalayıp ilgili nota atlıyoruz.                          */

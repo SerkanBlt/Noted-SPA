@@ -2,6 +2,18 @@
 
 ---
 
+## v1.15.119
+**Modülerleşme Faz 4 Kapanış Temizliği — Global Konsolidasyonu TAMAMLANDI**
+- v1.15.118'de Faz 4'ün planla adı geçen 5 kümesi bitmişti ama global-satır sayısı hâlâ 23'tü (hedef ≤15) — kalan 18 satır plana dahil edilmemiş özellik-yerel/geçiş durumu değişkenlerdi: wikilink otomatik tamamlama (`wlAcActive` vb. 5), wikilink önizleme (`_wlPreviewShowT` vb. 3), dış panel (`_extPanelTimer`/`_extPanelZ`/`_extPanelMap`), toolbar sürükleme (`toolbarHideTimer` vb. 3), arama DOM referansları (`searchInput`/`searchClear`/`renderDebounced`), slash menü (`slashMenuOpen` vb. 4), CCB/AI/bookmark bayrakları (`_aiInserting`, `_bmMousedownInGutter`), grid hizalama popup'ı (`_ngAlignPopup`/`_ngAlignTable`), `_idSeed`, `activeInstance`
+- Bunların tamamı `EditorState` (çoğu) veya `DOM` (arama referansları) nesnesine, aynı grep-doğrulanmış dot-notation rename tekniğiyle taşındı. `_themeSaved` (yalnızca bir sonraki satırda kullanılan tek kullanımlık boot değeri) namespace'e taşınmak yerine tamamen elendi — bir IIFE içine gömülerek top-level bildirim ihtiyacı ortadan kaldırıldı
+- **`EditorState` nesnesinin tanımı `js/02`'den `js/01`'e taşındı:** bu temizlikte `js/01`'deki wikilink/ext-panel durumu da `EditorState`'e eklendiği için, nesnenin `js/02` yüklenmeden önce (yani `js/01`'in kendisinde) var olması gerekiyordu — aksi hâlde `js/01` çalışırken "EditorState is not defined" hatası verirdi. Bu, script yükleme sırasına bağımlı ince bir hataydı; ilk denemede atlanıp `node --check` + kapsamlı grep taramasıyla yakalandı
+- **Süreç içinde iki tekrarlayan hata bulundu ve düzeltildi:** (1) çoklu-değişken bildirim satırlarını elle bölerken bazı dosyalarda değişkenin SADECE bildirim satırı düzeltilip diğer ~15-30 kullanım yeri unutuldu — kapsamlı `grep` taraması bunu commit'ten önce yakaladı, ikinci bir codemod geçişiyle düzeltildi; (2) `searchInput`/`searchClear` için de aynı hata (bildirim düzeltildi, kullanım yerleri unutuldu) — aynı yöntemle yakalanıp düzeltildi
+- Ölçüm: top-level global-satır sayısı **23 → 5** — kalan 5 satırın tamamı kalıcı: `$` yardımcı fonksiyonu + `Const`/`DOM`/`State`/`EditorState` nesnelerinin kendisi (bunlar konsolidasyonun HEDEFİ, daha fazla azaltılamaz). **Faz 4 çıkış koşulu (≤15) karşılandı: 105 → 5**
+- Doğrulama: `node --check` 12 dosyada temiz; global scope sızıntısı yok; wikilink otomatik tamamlama (`[[` yazınca panel açılıyor), yazı tipi boyutu artırma, slash menü açılışı, tablo hücre hizalama popup'ı, arama debounce, bookmark gutter mousedown algılama — hepsi ayrı ayrı test edildi; RKL-1, RKL-9, RKL-12, RKL-13 tekrar doğrulandı; konsolda sıfır hata
+- `Comments.json`: `trap-normalizehtml-empty-block-removal` satır numarası (`--fix` ile) tazelendi, anchor değişmedi
+
+---
+
 ## v1.15.118
 **Modülerleşme Faz 4e — Global Konsolidasyonu: Editör Oturum Durumu (en hassas küme)**
 - Faz 4'ün planın açıkça "en son taşınsın" dediği son alt-fazı: `_activeEditTarget`, `_savedToolbarSel`, `_selChangePending`, `_editorLocked` (`js/02`) ve `_snapTitle`, `_editActive`, `_contentDirty` (`js/03`) — bu iki değişken (`_activeEditTarget`/`_savedToolbarSel`) v1.15.109'da bir yarış durumu (race condition) bug'ına yol açmıştı (bkz. `Comments.json` → `trap-savedtoolbarsel-debounce-race`), bu yüzden plan bunları en sona bırakmayı ve sonrasında RKL-11'i özellikle tekrar koşmayı şart koşuyor

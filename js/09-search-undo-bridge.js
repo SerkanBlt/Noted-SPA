@@ -213,9 +213,9 @@
     }
 
     function _pushState(html, cursor) {
-        if (_locked || _setup || !activeInstance) return;
+        if (_locked || _setup || !EditorState.activeInstance) return;
         /* Duplicate check ÖNCE yapılıyor — yoksa slice redo branch'ini keser */
-        const inst = activeInstance;
+        const inst = EditorState.activeInstance;
         const trimmed = inst._stack.slice(0, inst._idx + 1);
         if (trimmed.length && trimmed[trimmed.length - 1].html === html) return;
         inst._stack = trimmed;
@@ -236,7 +236,7 @@
     }
 
     window.clearUndoHistory = function () {
-        if (activeInstance) { activeInstance._stack = []; activeInstance._idx = -1; }
+        if (EditorState.activeInstance) { EditorState.activeInstance._stack = []; EditorState.activeInstance._idx = -1; }
         if (_debTimer) { clearTimeout(_debTimer); _debTimer = null; }
     };
 
@@ -252,7 +252,7 @@
 
     window.editorUndo = function () {
         _flushDebounce();
-        const inst = activeInstance; if (!inst || inst._idx <= 0) return;
+        const inst = EditorState.activeInstance; if (!inst || inst._idx <= 0) return;
         inst._idx--;
         const state = inst._stack[inst._idx];
         _locked = true;
@@ -273,7 +273,7 @@
 
     window.editorRedo = function () {
         if (_debTimer) { clearTimeout(_debTimer); _debTimer = null; }
-        const inst = activeInstance; if (!inst || inst._idx >= inst._stack.length - 1) return;
+        const inst = EditorState.activeInstance; if (!inst || inst._idx >= inst._stack.length - 1) return;
         inst._idx++;
         const state = inst._stack[inst._idx];
         _locked = true;
@@ -485,25 +485,25 @@ window._fpWlDetect = function(e) {
     const startOffset = sel.anchorOffset - m[0].length;
     const r = document.createRange();
     r.setStart(node, startOffset); r.setEnd(node, sel.anchorOffset);
-    wlAcRange = r;
+    EditorState.wlAcRange = r;
     const rect = r.getBoundingClientRect();
     if (!rect.width && !rect.height) { closeWlAutocomplete(); return; }
     openWlAutocomplete(query, rect);
 };
 window._fpWlKeydown = function(e) {
-    if (!wlAcActive || !DOM.$wlAutocomplete.classList.contains('open')) return;
+    if (!EditorState.wlAcActive || !DOM.$wlAutocomplete.classList.contains('open')) return;
     const items = [...DOM.$wlAcList.querySelectorAll('.wl-ac-item')];
     if (e.key === 'Escape') { e.preventDefault(); closeWlAutocomplete(); return; }
     if (e.key === 'ArrowDown' && items.length) {
-        e.preventDefault(); wlAcSelIndex = (wlAcSelIndex + 1) % items.length;
-        items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
-        items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
+        e.preventDefault(); EditorState.wlAcSelIndex = (EditorState.wlAcSelIndex + 1) % items.length;
+        items.forEach((it, i) => it.classList.toggle('active', i === EditorState.wlAcSelIndex));
+        items[EditorState.wlAcSelIndex].scrollIntoView({ block:'nearest' });
     } else if (e.key === 'ArrowUp' && items.length) {
-        e.preventDefault(); wlAcSelIndex = (wlAcSelIndex - 1 + items.length) % items.length;
-        items.forEach((it, i) => it.classList.toggle('active', i === wlAcSelIndex));
-        items[wlAcSelIndex].scrollIntoView({ block:'nearest' });
+        e.preventDefault(); EditorState.wlAcSelIndex = (EditorState.wlAcSelIndex - 1 + items.length) % items.length;
+        items.forEach((it, i) => it.classList.toggle('active', i === EditorState.wlAcSelIndex));
+        items[EditorState.wlAcSelIndex].scrollIntoView({ block:'nearest' });
     } else if (e.key === 'Enter' && items.length) {
-        e.preventDefault(); insertWikilink(items[wlAcSelIndex].dataset.title);
+        e.preventDefault(); insertWikilink(items[EditorState.wlAcSelIndex].dataset.title);
     }
 };
 window._fpOpenPicker = openPicker;

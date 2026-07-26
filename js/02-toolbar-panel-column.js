@@ -299,8 +299,8 @@ function insertEmptyParaBefore(el) {
     el.parentNode.insertBefore(p, el);
 }
 
-/* ══ EDİTÖR OTURUM DURUMU (Faz 4e — Global Konsolidasyonu, en son taşınan küme) ══ */
-const EditorState = {};
+/* ══ EDİTÖR OTURUM DURUMU (Faz 4e — Global Konsolidasyonu) ══
+   EditorState nesnesinin kendisi js/01'de tanımlı (bkz. oradaki not). */
 /* Aktif editör alanını takip et — panel içi formatlamada doğru alana uygulansın */
 EditorState._activeEditTarget = DOM.$content;
 DOM.$content.addEventListener('focus', () => { EditorState._activeEditTarget = DOM.$content; });
@@ -368,13 +368,13 @@ $('toolbar').addEventListener('mousedown', e => {
     _restoreToolbarSel();
     if (btn.id === 'tb-fsize-dec' || btn.id === 'tb-fsize-inc') {
         /* Font boyutu — Bold ile aynı mekanizma: e.preventDefault() zaten yapıldı */
-        _fsizeApplying = true;
+        EditorState._fsizeApplying = true;
         const sz = getCurrentFontSize();
         const newSz = btn.id === 'tb-fsize-dec' ? Math.max(8, sz - 2) : Math.min(96, sz + 2);
         applyInlineStyle('fontSize', newSz + 'px');
         $('tb-fsize-val').textContent = newSz;
-        clearTimeout(toolbarHideTimer); DOM.$toolbar.classList.add('tb-active');
-        requestAnimationFrame(() => { _fsizeApplying = false; });
+        clearTimeout(EditorState.toolbarHideTimer); DOM.$toolbar.classList.add('tb-active');
+        requestAnimationFrame(() => { EditorState._fsizeApplying = false; });
         return;
     }
     if      (btn.dataset.cmd)   document.execCommand(btn.dataset.cmd, false, null);
@@ -555,8 +555,8 @@ function _showAiGutterInd(savedRange) {
         window._inlineAI(action, selectedText, (result, modelName) => {
             if (aiBtn) aiBtn.classList.remove('tb-ai-busy');
             if (!result) { ind.error(); return; }
-            _aiInserting = true;
-            setTimeout(() => { _aiInserting = false; }, 120);
+            EditorState._aiInserting = true;
+            setTimeout(() => { EditorState._aiInserting = false; }, 120);
             savedEt.focus();
             const s = window.getSelection();
             const mdHtml = typeof window._mdToHtml === 'function'
@@ -1184,7 +1184,7 @@ document.addEventListener('keydown', e => {
 
 /* ══ TOOLBAR KONUMLANDIRMA ══ */
 DOM.$toolbar = $('toolbar');
-let toolbarHideTimer = null, toolbarDragged = false, _fsizeApplying = false;
+EditorState.toolbarHideTimer = null; EditorState.toolbarDragged = false; EditorState._fsizeApplying = false;
 
 /* Seçimin hangi editör alanında olduğunu döndür: #content veya panel */
 function getActiveEditorArea(sel) {
@@ -1205,7 +1205,7 @@ function positionToolbar() {
     if (!sel || sel.isCollapsed || !getActiveEditorArea(sel)) { scheduleHideToolbar(); return; }
     const rect = sel.getRangeAt(0).getBoundingClientRect();
     if (!rect.width && !rect.height) { scheduleHideToolbar(); return; }
-    if (!toolbarDragged) {
+    if (!EditorState.toolbarDragged) {
         const tbW=(DOM.$toolbar.offsetWidth||248), tbH=(DOM.$toolbar.offsetHeight||80), margin=8;
         let top=rect.top-tbH-margin, left=rect.left+(rect.width-tbW)/2;
         if (top < margin) top = rect.bottom + margin;
@@ -1213,16 +1213,16 @@ function positionToolbar() {
         if (left + tbW > window.innerWidth - margin) left = window.innerWidth - tbW - margin;
         DOM.$toolbar.style.top=top+'px'; DOM.$toolbar.style.left=left+'px';
     }
-    clearTimeout(toolbarHideTimer);
+    clearTimeout(EditorState.toolbarHideTimer);
     DOM.$toolbar.classList.add('tb-active');
     updateToolbarState();
 }
 function scheduleHideToolbar(delay=300) {
-    clearTimeout(toolbarHideTimer);
-    toolbarHideTimer = setTimeout(() => { DOM.$toolbar.classList.remove('tb-active'); toolbarDragged = false; }, delay);
+    clearTimeout(EditorState.toolbarHideTimer);
+    EditorState.toolbarHideTimer = setTimeout(() => { DOM.$toolbar.classList.remove('tb-active'); EditorState.toolbarDragged = false; }, delay);
 }
 document.addEventListener('selectionchange', () => {
-    if (_fsizeApplying) return;
+    if (EditorState._fsizeApplying) return;
     const sel = window.getSelection();
     const colDrop = $('tb-col-dropdown');
     if (colDrop && colDrop.classList.contains('open')) return;
@@ -1230,10 +1230,10 @@ document.addEventListener('selectionchange', () => {
     else scheduleHideToolbar();
 });
 DOM.$toolbar.addEventListener('mouseenter', () => {
-    clearTimeout(toolbarHideTimer);
+    clearTimeout(EditorState.toolbarHideTimer);
     /* Kolon dropdown açıkken toolbar’un üzerinden çıkılsa bile gizleme */
     const colDrop = $('tb-col-dropdown');
-    if (colDrop && colDrop.classList.contains('open')) clearTimeout(toolbarHideTimer);
+    if (colDrop && colDrop.classList.contains('open')) clearTimeout(EditorState.toolbarHideTimer);
 });
 DOM.$toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
 
@@ -1253,7 +1253,7 @@ DOM.$toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
         const tbW=DOM.$toolbar.offsetWidth, tbH=DOM.$toolbar.offsetHeight;
         let l=origLeft+(e.clientX-startX), t=origTop+(e.clientY-startY);
         l=Math.max(8,Math.min(l,window.innerWidth-tbW-8)); t=Math.max(8,Math.min(t,window.innerHeight-tbH-8));
-        DOM.$toolbar.style.left=l+'px'; DOM.$toolbar.style.top=t+'px'; toolbarDragged=true;
+        DOM.$toolbar.style.left=l+'px'; DOM.$toolbar.style.top=t+'px'; EditorState.toolbarDragged=true;
     }
     function onUp() {
         dragging=false; DOM.$toolbar.classList.remove('dragging');

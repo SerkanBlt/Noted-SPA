@@ -432,9 +432,9 @@ Const.SLASH_INLINE_MAP = {
 };
 
 DOM.$slashMenu = $('slash-menu');
-let slashMenuOpen = false, slashTextNode = null, slashOffset = 0, slashSelIndex = 0;
-let _slashActiveSub = null; /* Açık alt panel referansı */
-let _slashHideTimer = null;
+EditorState.slashMenuOpen = false; EditorState.slashTextNode = null; EditorState.slashOffset = 0; EditorState.slashSelIndex = 0;
+EditorState._slashActiveSub = null; /* Açık alt panel referansı */
+EditorState._slashHideTimer = null;
 
 function _slashPositionSub(catEl, subEl) {
     const catRect = catEl.getBoundingClientRect();
@@ -460,7 +460,7 @@ function _slashPositionSub(catEl, subEl) {
 
 function buildSlashMenuItems(filter) {
     /* Açık sub paneli temizle */
-    if (_slashActiveSub) { _slashActiveSub.remove(); _slashActiveSub = null; }
+    if (EditorState._slashActiveSub) { EditorState._slashActiveSub.remove(); EditorState._slashActiveSub = null; }
     DOM.$slashMenu.innerHTML = '';
 
     if (filter) {
@@ -509,24 +509,24 @@ function buildSlashMenuItems(filter) {
         cat._sub = sub;
 
         function showSub() {
-            if (_slashHideTimer) { clearTimeout(_slashHideTimer); _slashHideTimer = null; }
+            if (EditorState._slashHideTimer) { clearTimeout(EditorState._slashHideTimer); EditorState._slashHideTimer = null; }
             /* Diğer açık sub'ları gizle */
-            if (_slashActiveSub && _slashActiveSub !== sub) {
-                _slashActiveSub.style.display = 'none';
+            if (EditorState._slashActiveSub && EditorState._slashActiveSub !== sub) {
+                EditorState._slashActiveSub.style.display = 'none';
                 const prevCat = DOM.$slashMenu.querySelector('.slash-cat.active');
                 if (prevCat) prevCat.classList.remove('active');
             }
             sub.style.display = 'block';
-            _slashActiveSub = sub;
+            EditorState._slashActiveSub = sub;
             _slashPositionSub(cat, sub);
             cat.classList.add('active');
         }
 
         function hideSub() {
-            _slashHideTimer = setTimeout(() => {
+            EditorState._slashHideTimer = setTimeout(() => {
                 sub.style.display = 'none';
                 cat.classList.remove('active');
-                if (_slashActiveSub === sub) _slashActiveSub = null;
+                if (EditorState._slashActiveSub === sub) EditorState._slashActiveSub = null;
             }, 120);
         }
 
@@ -537,7 +537,7 @@ function buildSlashMenuItems(filter) {
             hideSub();
         });
         sub.addEventListener('mouseenter', () => {
-            if (_slashHideTimer) { clearTimeout(_slashHideTimer); _slashHideTimer = null; }
+            if (EditorState._slashHideTimer) { clearTimeout(EditorState._slashHideTimer); EditorState._slashHideTimer = null; }
         });
         sub.addEventListener('mouseleave', e => {
             /* Parent cat'e dönüyorsa gizleme */
@@ -551,7 +551,7 @@ function buildSlashMenuItems(filter) {
 }
 
 function openSlashMenu(rect) {
-    slashMenuOpen = true; slashSelIndex = 0;
+    EditorState.slashMenuOpen = true; EditorState.slashSelIndex = 0;
     buildSlashMenuItems(null);
 
     DOM.$slashMenu.style.visibility = 'hidden';
@@ -590,9 +590,9 @@ function openSlashMenu(rect) {
 }
 
 function closeSlashMenu() {
-    slashMenuOpen = false; slashTextNode = null; slashOffset = 0; slashSelIndex = 0;
-    if (_slashActiveSub) { _slashActiveSub.style.display = 'none'; _slashActiveSub = null; }
-    if (_slashHideTimer) { clearTimeout(_slashHideTimer); _slashHideTimer = null; }
+    EditorState.slashMenuOpen = false; EditorState.slashTextNode = null; EditorState.slashOffset = 0; EditorState.slashSelIndex = 0;
+    if (EditorState._slashActiveSub) { EditorState._slashActiveSub.style.display = 'none'; EditorState._slashActiveSub = null; }
+    if (EditorState._slashHideTimer) { clearTimeout(EditorState._slashHideTimer); EditorState._slashHideTimer = null; }
     /* Tüm body'e eklenmiş sub panelleri temizle */
     document.querySelectorAll('.slash-cat-sub').forEach(s => s.remove());
     DOM.$slashMenu.classList.remove('open');
@@ -600,7 +600,7 @@ function closeSlashMenu() {
 
 /* Slash menü dışına tıklayınca kapat */
 document.addEventListener('mousedown', e => {
-    if (!slashMenuOpen) return;
+    if (!EditorState.slashMenuOpen) return;
     if (DOM.$slashMenu.contains(e.target)) return;
     if (e.target.closest('.slash-cat-sub')) return;
     closeSlashMenu();
@@ -610,14 +610,14 @@ function applySlashCommand(type) {
     (EditorState._activeEditTarget||DOM.$content).focus();
     /* '/' karakterini tarayıcı selection API ile sil
        (deleteData() paragrafı boşaltınca formatBlock yanlış bloğu hedef alıyor → cursor kayıyor) */
-    if (slashTextNode && slashTextNode.isConnected) {
-        const text = slashTextNode.nodeValue || '';
-        const idx = text.lastIndexOf('/', slashOffset - 1);
+    if (EditorState.slashTextNode && EditorState.slashTextNode.isConnected) {
+        const text = EditorState.slashTextNode.nodeValue || '';
+        const idx = text.lastIndexOf('/', EditorState.slashOffset - 1);
         if (idx !== -1) {
             const sel = window.getSelection();
             const r = document.createRange();
-            r.setStart(slashTextNode, idx);
-            r.setEnd(slashTextNode, idx + 1); /* '/' karakterini seç */
+            r.setStart(EditorState.slashTextNode, idx);
+            r.setEnd(EditorState.slashTextNode, idx + 1); /* '/' karakterini seç */
             sel.removeAllRanges(); sel.addRange(r);
             (EditorState._activeEditTarget||DOM.$content).focus(); document.execCommand('delete', false, null); /* seçili '/' sil */
         }
@@ -759,29 +759,29 @@ function _isInEditorArea(node) {
 }
 
 function _tryOpenSlash(node, sel) {
-    if (!node || node.nodeType !== 3) { if (slashMenuOpen) closeSlashMenu(); return; }
+    if (!node || node.nodeType !== 3) { if (EditorState.slashMenuOpen) closeSlashMenu(); return; }
     const parentEl = node.parentElement;
-    if (parentEl && parentEl.closest('code, pre, .wikilink')) { if (slashMenuOpen) closeSlashMenu(); return; }
+    if (parentEl && parentEl.closest('code, pre, .wikilink')) { if (EditorState.slashMenuOpen) closeSlashMenu(); return; }
     const text = node.nodeValue || '';
     const offset = sel.anchorOffset;
     const before = text.slice(0, offset);
     const trimmed = before.replace(/^[\s ]*/,'');
     if (trimmed === '/') {
-        slashTextNode = node; slashOffset = offset;
+        EditorState.slashTextNode = node; EditorState.slashOffset = offset;
         const r = sel.getRangeAt(0).cloneRange();
         const rect = r.getBoundingClientRect();
-        if (!rect.width && !rect.height) { if (slashMenuOpen) closeSlashMenu(); return; }
+        if (!rect.width && !rect.height) { if (EditorState.slashMenuOpen) closeSlashMenu(); return; }
         openSlashMenu(rect);
     } else {
-        if (slashMenuOpen) closeSlashMenu();
+        if (EditorState.slashMenuOpen) closeSlashMenu();
     }
 }
 
 DOM.$content.addEventListener('input', function slashDetect() {
-    if (wlAcActive) { if (slashMenuOpen) closeSlashMenu(); return; }
+    if (EditorState.wlAcActive) { if (EditorState.slashMenuOpen) closeSlashMenu(); return; }
     const sel = window.getSelection();
     if (!sel || !sel.isCollapsed || !sel.rangeCount || !DOM.$content.contains(sel.anchorNode)) {
-        if (slashMenuOpen) closeSlashMenu(); return;
+        if (EditorState.slashMenuOpen) closeSlashMenu(); return;
     }
     _tryOpenSlash(sel.anchorNode, sel);
 }, true);
@@ -791,15 +791,15 @@ document.addEventListener('input', function slashDetectDelegate(e) {
     if (!e.target.classList.contains('col-panel-content') &&
         !e.target.classList.contains('layout-col') &&
         e.target.id !== 'fp-content') return;
-    if (wlAcActive) { if (slashMenuOpen) closeSlashMenu(); return; }
+    if (EditorState.wlAcActive) { if (EditorState.slashMenuOpen) closeSlashMenu(); return; }
     const sel = window.getSelection();
-    if (!sel || !sel.isCollapsed || !sel.rangeCount) { if (slashMenuOpen) closeSlashMenu(); return; }
+    if (!sel || !sel.isCollapsed || !sel.rangeCount) { if (EditorState.slashMenuOpen) closeSlashMenu(); return; }
     _tryOpenSlash(sel.anchorNode, sel);
 }, true);
 
 /* Klavye navigasyonu — tüm editör alanları, capture phase */
 document.addEventListener('keydown', function slashKeydown(e) {
-    if (!slashMenuOpen || !DOM.$slashMenu.classList.contains('open')) return;
+    if (!EditorState.slashMenuOpen || !DOM.$slashMenu.classList.contains('open')) return;
     if (!_isInEditorArea(window.getSelection()?.anchorNode)) return;
 
     const cats = [...DOM.$slashMenu.querySelectorAll('.slash-cat')];
@@ -810,10 +810,10 @@ document.addEventListener('keydown', function slashKeydown(e) {
 
     if (e.key === 'Escape') {
         e.preventDefault();
-        if (_slashActiveSub) {
+        if (EditorState._slashActiveSub) {
             /* Alt menü açıksa önce onu kapat */
-            _slashActiveSub.style.display = 'none';
-            _slashActiveSub = null;
+            EditorState._slashActiveSub.style.display = 'none';
+            EditorState._slashActiveSub = null;
             cats.forEach(c => c.classList.remove('active'));
         } else {
             closeSlashMenu();
@@ -822,8 +822,8 @@ document.addEventListener('keydown', function slashKeydown(e) {
     }
 
     /* Alt menü açıksa içinde gezin */
-    if (_slashActiveSub && _slashActiveSub.style.display !== 'none') {
-        const items = [..._slashActiveSub.querySelectorAll('.slash-menu-item')];
+    if (EditorState._slashActiveSub && EditorState._slashActiveSub.style.display !== 'none') {
+        const items = [...EditorState._slashActiveSub.querySelectorAll('.slash-menu-item')];
         const activeIdx = items.findIndex(i => i.classList.contains('active'));
 
         if (e.key === 'ArrowDown') {
@@ -849,8 +849,8 @@ document.addEventListener('keydown', function slashKeydown(e) {
         if (e.key === 'ArrowLeft') {
             e.preventDefault();
             /* Alt menüden ana menüye dön — parent cat seçili kalır */
-            _slashActiveSub.style.display = 'none';
-            _slashActiveSub = null;
+            EditorState._slashActiveSub.style.display = 'none';
+            EditorState._slashActiveSub = null;
             return;
         }
     }
@@ -860,7 +860,7 @@ document.addEventListener('keydown', function slashKeydown(e) {
         e.preventDefault();
         const next = (activeCatIdx + 1) % cats.length;
         /* Önceki sub'u kapat */
-        if (_slashActiveSub) { _slashActiveSub.style.display = 'none'; _slashActiveSub = null; }
+        if (EditorState._slashActiveSub) { EditorState._slashActiveSub.style.display = 'none'; EditorState._slashActiveSub = null; }
         cats.forEach(c => c.classList.remove('active'));
         cats[next].classList.add('active');
         return;
@@ -868,7 +868,7 @@ document.addEventListener('keydown', function slashKeydown(e) {
     if (e.key === 'ArrowUp') {
         e.preventDefault();
         const prev = (activeCatIdx - 1 + cats.length) % cats.length;
-        if (_slashActiveSub) { _slashActiveSub.style.display = 'none'; _slashActiveSub = null; }
+        if (EditorState._slashActiveSub) { EditorState._slashActiveSub.style.display = 'none'; EditorState._slashActiveSub = null; }
         cats.forEach(c => c.classList.remove('active'));
         cats[prev].classList.add('active');
         return;
@@ -879,7 +879,7 @@ document.addEventListener('keydown', function slashKeydown(e) {
         const activeCat = activeCatIdx >= 0 ? cats[activeCatIdx] : cats[0];
         if (activeCat && activeCat._sub) {
             activeCat._sub.style.display = 'block';
-            _slashActiveSub = activeCat._sub;
+            EditorState._slashActiveSub = activeCat._sub;
             _slashPositionSub(activeCat, activeCat._sub);
             /* Sub'daki ilk itemi aktif et */
             const items = [...activeCat._sub.querySelectorAll('.slash-menu-item')];
@@ -896,7 +896,7 @@ document.addEventListener('keydown', function slashKeydown(e) {
 /* ── /komut<SPACE> satır-başı inline kısayollar ── */
 document.addEventListener('keydown', function inlineSlashShortcut(e) {
     if (e.key !== ' ') return;
-    if (slashMenuOpen) return;
+    if (EditorState.slashMenuOpen) return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     const sel = window.getSelection();
     if (!sel || !sel.isCollapsed || !sel.rangeCount) return;
@@ -924,8 +924,8 @@ document.addEventListener('keydown', function inlineSlashShortcut(e) {
         (EditorState._activeEditTarget || DOM.$content).focus();
         document.execCommand('delete', false, null);
     }
-    slashTextNode = node;
-    slashOffset = slashPos + 1;
+    EditorState.slashTextNode = node;
+    EditorState.slashOffset = slashPos + 1;
     applySlashCommand(cmdType);
 }, true);
 
@@ -946,7 +946,7 @@ Const.MD_INLINE_TRIGGERS = [
 ];
 document.addEventListener('keydown', function inlineMdShortcut(e) {
     if (e.key !== ' ') return;
-    if (slashMenuOpen) return;
+    if (EditorState.slashMenuOpen) return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     const sel = window.getSelection();
     if (!sel || !sel.isCollapsed || !sel.rangeCount) return;
@@ -977,7 +977,7 @@ document.addEventListener('keydown', function inlineMdShortcut(e) {
         (EditorState._activeEditTarget || DOM.$content).focus();
         document.execCommand('delete', false, null);
     }
-    slashTextNode = null; /* applySlashCommand'ın '/' silme adımı atlansın — zaten sildik */
+    EditorState.slashTextNode = null; /* applySlashCommand'ın '/' silme adımı atlansın — zaten sildik */
     applySlashCommand(matchType);
 }, true);
 

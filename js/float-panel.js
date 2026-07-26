@@ -123,7 +123,7 @@
         const wl = e.target.closest('a.wikilink');
         if (wl && !wl.contains(e.relatedTarget) && typeof scheduleHideWlPreview === 'function') { scheduleHideWlPreview(); return; }
         const a = e.target.closest('a[href]:not(.wikilink)');
-        if (a && !a.contains(e.relatedTarget)) clearTimeout(_extPanelTimer);
+        if (a && !a.contains(e.relatedTarget)) clearTimeout(EditorState._extPanelTimer);
     });
 
     /* ── Wikilink tıklama → ana editörde aç ── */
