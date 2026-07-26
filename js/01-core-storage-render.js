@@ -275,6 +275,7 @@ function sanitize(html) {
             'colspan','rowspan','width','height',
             'class','style','id',
             'contenteditable','spellcheck',
+            'srcdoc','sandbox',
             'preserveAspectRatio','viewBox','xmlns',
             /* data-* uygulamaya özel */
             'data-note-id','data-wikilink','data-grid-type','data-gridtype',

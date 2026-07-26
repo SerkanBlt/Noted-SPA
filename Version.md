@@ -2,6 +2,15 @@
 
 ---
 
+## v1.15.121
+**Fix — CCB (Customized Code Block) not kaydedilince siliniyordu**
+- **Kök neden:** CCB, bir nota `<iframe srcdoc="..." sandbox="allow-scripts allow-forms allow-modals">` olarak eklenir. `saveNote()` içindeki `sanitize()` (DOMPurify) çağrısının `ALLOWED_ATTR` listesinde `srcdoc` ve `sandbox` YOKTU — bu iki nitelik kayıt sırasında sessizce siliniyordu. Not yeniden açıldığında iframe içerik olmadan (boş) render oluyordu; `inflateCcbBlocks()` yalnızca iframe'in VARLIĞINI kontrol ettiğinden ("zaten inflate edilmiş" varsayıp) yeniden doldurmuyordu. Kullanıcı bunu "CCB'ler kaydedilmiyor" olarak yaşıyordu — CCB **tanımı** (localStorage, Ayarlar > Geliştirici) doğru kaydediliyordu, sorun yalnızca bir **nota eklenmiş CCB örneğinin** kayıt sonrası bozulmasıydı
+- **Düzeltme:** `srcdoc` ve `sandbox`, `sanitize()`'ın `ALLOWED_ATTR` listesine eklendi (`js/01-core-storage-render.js`). `sandbox` niteliğinin de allowlist'te olması güvenlik açısından önemli — o olmadan iframe'in kısıtlama seti kaybolabilirdi
+- Bu proje ailesindeki bilinen "sanitize() sessiz veri kaybı" tuzaklarından biri daha (bkz. `trap-forecolor-produces-font-tag`); yeni girdi `trap-sanitize-strips-iframe-srcdoc-sandbox` olarak `Comments.json`'a eklendi
+- Doğrulama: gerçek UI akışıyla (Ayarlar > Geliştirici > Yeni CCB formu → nota ekle → kaydet → kapat → yeniden aç) `srcdoc`/`sandbox` kayıttan sonra korunduğu, iframe'in gerçekten render olup script'inin çalıştığı ekran görüntüsüyle doğrulandı; RKL-10 (renk uygulama, aynı `sanitize()` yolunu kullanır) regresyon olmadığı için tekrar test edildi; konsolda sıfır hata
+
+---
+
 ## v1.15.120
 **Modülerleşme Faz 6 — Inline Yorumları Comments.json'a Taşıma (REFACTOR_PLAN.md TAMAMLANDI)**
 - REFACTOR_PLAN.md'nin son fazı: kod içindeki çok satırlı açıklama yorumları (tuzak/gerekçe/tarihçe) tek kaynağa (`Comments.json`) taşındı, koddan silindi. Bölüm başlıkları (`══`/`===`/`───`), tek satırlık mekanik notlar ve JSDoc-stili API dokümantasyonu (`createGrid` parametreleri) yerinde bırakıldı
