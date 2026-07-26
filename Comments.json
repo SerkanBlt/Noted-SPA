@@ -16,6 +16,21 @@
   },
   "entries": [
     {
+      "id": "trap-vendor-css-trim-orphan-selector",
+      "level": "critical",
+      "type": "trap",
+      "file": "vendor/fontawesome.css",
+      "line": 8,
+      "anchor": "@font-face{font-family:\"Font Awesome 6 Free\"",
+      "symbol": "vendor/fontawesome.css (kirpilmis Font Awesome)",
+      "title": "Bu dosya KIRPILMISTIR; yeniden uretirken gruplu selektor tuzagina dikkat",
+      "body": "Font Awesome 6.4.0'in 102KB'lik all.min.css'i, yalnizca kullanilan ~110 ikon birakilarak 18KB'ye kirpildi (fontu da yalnizca solid). YENI BIR IKON KULLANIRSAN bu dosyada karsiligi yoktur, ikon bos cikar — kirpma islemini tekrarlamak gerekir. TUZAK: FA minified CSS gruplu selektor kullanir (.fa-bolt:before,.fa-zap:before{content:\"\\f0e7\"}). Tek selektor arayan bir regex grubun ORTASINDAN eslesir; sildiginde geriye yetim '.fa-bolt:before,' kalir ve bir SONRAKI kuralla birlesip onun kod noktasini alir. Ilk denemede tam bunu yasadik: 22 ikon yanlis glife baglandi (bolt->gunes, bars->ampul). Bu, projenin daha once 3 kez yasadigi yetim-selektor tuzaginin (bkz. trap-orphan-selector-list-id-specificity) aynisidir. DOGRU YONTEM: kuralin TAMAMINI (tum selektor grubunu) yakala, icinden kullanilanlari birak, hicbiri kullanilmiyorsa kurali komple sil. DOGRULAMA: orijinal CSS ile kirpilmisin kod noktalarini karsilastir — hepsi birebir ayni olmalidir; ekran goruntusune bakmak yetmez, yanlis glif de bir glifdir.",
+      "refs": [
+        "v1.15.125",
+        "trap-orphan-selector-list-id-specificity"
+      ]
+    },
+    {
       "id": "trap-pointer-drag-needs-touch-action-none",
       "level": "critical",
       "type": "trap",

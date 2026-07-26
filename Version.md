@@ -2,6 +2,21 @@
 
 ---
 
+## v1.15.125
+**Fix — 3 CDN bağımlılığı yerele gömüldü (Mobil hazırlığı 2/3)**
+- **Kapatılan güvenlik açığı:** `sanitize()` içinde `if (typeof DOMPurify === 'undefined') return html;` satırı vardı — DOMPurify CDN'den yüklenemediğinde (uçakta, kesintide, engelli ağda) temizleme **tamamen atlanıyordu**. Ölçüldü: CDN yokken `<img src=x onerror="alert(1)"><script>…</script>` ham olarak geçiyordu. DOMPurify artık `vendor/purify.min.js`'ten yüklendiği için bu yol tamamen ortadan kalktı
+- **Çevrimdışı çalışma:** Uygulama artık sıfır dış istek yapıyor (ağ sekmesiyle doğrulandı). Önceden ağsız açılışta 347 ikon ve tüm tipografi kayboluyordu
+- Eklenenler: `vendor/purify.min.js` (21KB), `vendor/fontawesome.css` (18KB), `vendor/fonts.css` (5KB), `vendor/fonts/` (13 woff2, ~620KB)
+- **Font Awesome kırpıldı:** 102KB → 18KB (%82). Uygulama yalnızca `fas` (solid) stilini ve ~110 ikonu kullanıyor; kalan 1732 ikon kuralı ve 9 gereksiz `@font-face` çıkarıldı
+- **Roboto:** yalnızca fiilen istenen ağırlıklar (300/400/700) ve `latin` + `latin-ext` alt kümeleri indirildi — `latin-ext` Türkçe (ğ ı ş İ Ğ Ş) için zorunlu, ölçümle doğrulandı. Diğer 6 alt küme (kiril, yunan, vietnam…) alınmadı
+- Üretim betikleri `tools/vendor-build-fontawesome.js` ve `tools/vendor-build-fonts.js` olarak saklandı — yeni ikon kullanılırsa yeniden çalıştırılmalı
+- **Süreçte bulunan ve düzeltilen gerçek bug:** İlk kırpma denemesinde 22 ikon **yanlış glife** bağlandı (`bolt` → güneş, `bars` → ampul). Sebep: FA minified CSS gruplu selektör kullanıyor (`.fa-bolt:before,.fa-zap:before{…}`); tek selektör arayan regex grubun ortasından eşleşip sildiğinde geriye **yetim `.fa-bolt:before,`** kalıyor ve bir sonraki kuralla birleşip onun kod noktasını alıyordu. Bu, projenin daha önce üç kez yaşadığı `trap-orphan-selector-list-id-specificity` tuzağının birebir aynısı. Kuralın tamamını işleyen sürümle düzeltildi ve `Comments.json` → `trap-vendor-css-trim-orphan-selector` olarak kaydedildi
+- **`file://` altında font testi:** Göreli URL'li `@font-face`'in `file://` altında çalışıp çalışmadığı varsayılmadı, ayrı bir test sayfasıyla ölçüldü — çalışıyor, dolayısıyla base64 gömme (%33 şişme) gereksizdi
+- Not: HTML dışa aktarma özelliğindeki (`js/04`) CDN bağlantıları **bilinçli olarak** korundu — dışa aktarılan dosya Downloads'a gider, yanında `vendor/` klasörü olmaz; orada `sans-serif`'e zarif şekilde düşüyor
+- Doğrulama: Sıfır dış kaynak (`link[href]`/`script[src]` taraması boş); tüm fontlar `document.fonts.check()` ile yüklü; Türkçe karakterlerin Roboto ile çizildiği genişlik ölçümüyle kanıtlandı; **110 ikonun kod noktası orijinal CSS ile birebir karşılaştırıldı — sıfır sapma** (ekran görüntüsü yeterli değil, yanlış glif de bir gliftir); `file://` altında gerçek tarayıcıda açılıp doğrulandı; tam RKL-1…RKL-15 + dokunmatik regresyonu; konsolda sıfır hata
+
+---
+
 ## v1.15.124
 **Fix — Dokunmatik sürükleme 2/2: kalan noktalar (Mobil hazırlığı 1/3 tamamlandı)**
 - v1.15.123'te eklenen `startPointerDrag()` yardımcısına kalan **altı** sürükleme noktası bağlandı: üst toolbar taşıma (`js/02`), AI panel genişliği (`js/05`), Todo panel genişliği (`js/06`), float panel dikey splitter (`float-panel.js`), wiki önizleme paneli taşıma ve boyutlandırma (`js/01`)
