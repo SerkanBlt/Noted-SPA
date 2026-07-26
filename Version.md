@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.124
+**Fix — Dokunmatik sürükleme 2/2: kalan noktalar (Mobil hazırlığı 1/3 tamamlandı)**
+- v1.15.123'te eklenen `startPointerDrag()` yardımcısına kalan **altı** sürükleme noktası bağlandı: üst toolbar taşıma (`js/02`), AI panel genişliği (`js/05`), Todo panel genişliği (`js/06`), float panel dikey splitter (`float-panel.js`), wiki önizleme paneli taşıma ve boyutlandırma (`js/01`)
+- İlgili kollara `touch-action:none` eklendi: `.toolbar-drag`, `#ai-panel-resize-handle`, `#todo-panel-resize-handle`, `#fp-vsplitter`, `.yt-drag-bar`, `.ext-resize-handle`
+- **Bilinçli olarak dönüştürülmeyenler:** `js/03` yan panel splitter'ı ve içerik yükseklik kolu, `js/07` bağlantı haritası, `float-panel.js` mobil çekme kulpları — bunların **zaten kendi `touchstart`/`touchmove` yolları var** ve bazıları tasarlanmış jestler içeriyor (yükseklik kolunda 420ms uzun-basma + titreşim geri bildirimi, haritada iki parmak pinch-zoom). Çalışan bu kodu pointer'a çevirmek o jestleri bozardı; gerekçe `Comments.json` → `trap-pointer-drag-needs-touch-action-none` içine yazıldı
+- Hover amaçlı `mousemove` dinleyicileri (yer imi oluğu, harita düğüm vurgusu) sürükleme olmadıkları için kapsam dışı bırakıldı
+- Doğrulama: AI panel genişliği **üç girdi türüyle de** hedeflenen piksele tam isabetle ayarlandı — fare 500px, dokunmatik 600px, kalem 350px (hepsi istenen değeri birebir tutturdu) ve ayar `localStorage`'a kaydedildi. Toolbar dokunmatikle taşındı (100→190px), Todo paneli dokunmatikle daraltıldı (860→659px, kaydedildi). Test sırasında iki kez "değişmedi" sonucu alındı; her ikisi de araştırıldı ve **gerçek regresyon değil**, sınır-değere dayanma (panel zaten min/max genişlikteydi) olduğu kanıtlandı. Tam RKL-1…RKL-15; konsolda sıfır hata
+
+---
+
 ## v1.15.123
 **Fix — Dokunmatik sürükleme çalışmıyordu (Mobil hazırlığı 1/3)**
 - **Kök neden:** Tüm sürükleme etkileşimleri yalnızca `mousedown` + `document.mousemove/mouseup` dinliyordu. Tarayıcılar dokunmayı *tıklama* için fare olayına çevirir ama **sürükleme** için çevirmez — parmak hareketi sayfa kaydırmasına gider. Sonuç: kolon genişliği değiştirme ve şekil taşı/boyutlandır/döndür dokunmatik cihazlarda tamamen ölüydü, konsolda hiçbir hata vermeden

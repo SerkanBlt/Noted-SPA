@@ -1232,12 +1232,12 @@ DOM.$toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
 (function() {
     let dragging=false, startX, startY, origLeft, origTop;
     const handle = $('toolbar-drag');
-    handle.addEventListener('mousedown', e => {
+    handle.addEventListener('pointerdown', e => {
         if (e.button !== 0) return; e.preventDefault();
         dragging=true; startX=e.clientX; startY=e.clientY;
         origLeft=parseInt(DOM.$toolbar.style.left)||0; origTop=parseInt(DOM.$toolbar.style.top)||0;
         DOM.$toolbar.classList.add('dragging');
-        document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+        startPointerDrag(onMove, onUp);
     });
     function onMove(e) {
         if (!dragging) return;
@@ -1248,7 +1248,6 @@ DOM.$toolbar.addEventListener('mouseleave', () => scheduleHideToolbar(1500));
     }
     function onUp() {
         dragging=false; DOM.$toolbar.classList.remove('dragging');
-        document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp);
     }
 })();
 

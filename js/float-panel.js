@@ -273,17 +273,13 @@
                     _dockW = Math.max(280, Math.min(700, startW + (startX - e.clientX)));
                     FP.style.setProperty('--fp-dock-w', _dockW + 'px');
                 }
-                function onUp() {
+                startPointerDrag(onMove, function onUp() {
                     vs.classList.remove('dragging');
                     document.body.style.cursor = '';
                     document.body.style.userSelect = '';
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onUp);
-                }
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onUp);
+                });
             }
-            vs.addEventListener('mousedown', startVsDrag);
+            vs.addEventListener('pointerdown', startVsDrag);
             vs.addEventListener('dblclick', e => {
                 e.preventDefault();
                 const mainId = (document.getElementById('edit-id') || {}).value;

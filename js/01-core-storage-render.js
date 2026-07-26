@@ -1049,13 +1049,12 @@ function createExtLinkPanel(link) {
     const dragEl = panel.querySelector('.yt-drag-bar');
     let _ox = 0, _oy = 0;
     function onMove(e) { panel.style.left = (e.clientX - _ox) + 'px'; panel.style.top = (e.clientY - _oy) + 'px'; }
-    function onUp()   { panel.style.transition = ''; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
-    dragEl.addEventListener('mousedown', (e) => {
+    dragEl.addEventListener('pointerdown', (e) => {
         if (e.target.closest('button')) return;
         const r2 = panel.getBoundingClientRect();
         _ox = e.clientX - r2.left; _oy = e.clientY - r2.top;
         panel.style.transition = 'none'; panel.style.zIndex = ++EditorState._extPanelZ;
-        document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+        startPointerDrag(onMove, () => { panel.style.transition = ''; });
         e.preventDefault();
     });
 
@@ -1066,13 +1065,12 @@ function createExtLinkPanel(link) {
         panel.style.width  = Math.max(200, _rw + (e.clientX - _rox)) + 'px';
         panel.style.height = Math.max(100, _rh + (e.clientY - _roy)) + 'px';
     }
-    function onResizeUp() { document.removeEventListener('mousemove', onResize); document.removeEventListener('mouseup', onResizeUp); }
-    resizeHandle.addEventListener('mousedown', (e) => {
+    resizeHandle.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
         const r3 = panel.getBoundingClientRect();
         _rox = e.clientX; _roy = e.clientY; _rw = r3.width; _rh = r3.height;
         panel.style.zIndex = ++EditorState._extPanelZ;
-        document.addEventListener('mousemove', onResize); document.addEventListener('mouseup', onResizeUp);
+        startPointerDrag(onResize);
         e.preventDefault();
     });
 

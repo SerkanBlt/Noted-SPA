@@ -345,21 +345,15 @@ DOM.$content.addEventListener('input', () => {
             return w;
         };
 
-        todoHandle.addEventListener('mousedown', e => {
+        todoHandle.addEventListener('pointerdown', e => {
             e.preventDefault();
             todoPanel.classList.add('resizing');
             document.body.classList.add('ai-resizing');
-            const onMove = ev => _applyW(ev.clientX);
-            const onUp   = ev => {
-                const w = _applyW(ev.clientX);
-                patchUiCfg({ todoW: w });
+            startPointerDrag(ev => _applyW(ev.clientX), ev => {
+                patchUiCfg({ todoW: _applyW(ev.clientX) });
                 todoPanel.classList.remove('resizing');
                 document.body.classList.remove('ai-resizing');
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-            };
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
+            });
         });
     })();
 

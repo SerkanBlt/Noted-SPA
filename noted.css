@@ -761,6 +761,7 @@
 
         /* Sürükleme tutamacı */
         .toolbar-drag {
+            touch-action:none;
             width:calc(100% + 16px); height:10px;
             margin:-6px -8px 3px; padding:0;
             border-radius:10px 10px 0 0;
@@ -1767,6 +1768,7 @@ input[type="file"] { display:none; }
         #ai-panel-resize-handle {
             position:absolute; top:0; left:0; bottom:0; width:5px;
             cursor:col-resize; z-index:1;
+            touch-action:none;
         }
         body.ai-resizing { cursor:col-resize !important; user-select:none !important; }
 
@@ -2878,6 +2880,7 @@ input[type="file"] { display:none; }
         #fp-vsplitter {
             width: 8px; flex-shrink: 0; background: transparent;
             cursor: col-resize; position: relative; align-self: stretch;
+            touch-action: none;
         }
         #fp-vsplitter::after {
             content: ''; position: absolute;
@@ -3317,6 +3320,7 @@ input[type="file"] { display:none; }
         #todo-panel-resize-handle {
             position:absolute; top:0; left:0; bottom:0; width:5px;
             cursor:col-resize; z-index:1;
+            touch-action:none;
         }
         #todo-panel.resizing { user-select:none; }
         @media(max-width:600px) { #todo-panel-resize-handle { display:none; } }
@@ -3639,7 +3643,7 @@ input[type="file"] { display:none; }
             text-shadow:0 1px 4px rgba(0,0,0,.6);
         }
         .wl-preview.web-mode .wl-preview-close-btn:hover { background:rgba(0,0,0,.25); color:#fff; }
-        .yt-drag-bar { position:absolute; top:0; left:0; right:0; height:28px; cursor:move; z-index:1; background:transparent; }
+        .yt-drag-bar { position:absolute; top:0; left:0; right:0; height:28px; cursor:move; z-index:1; background:transparent; touch-action:none; }
         .wl-preview-toolbar { display:none; justify-content:flex-end; align-items:center; gap:2px; margin-bottom:7px; cursor:move; user-select:none; }
         .wl-preview.ext-mode .wl-preview-toolbar { display:flex; }
         .wl-preview-close-btn {
@@ -3648,7 +3652,7 @@ input[type="file"] { display:none; }
             transition:background .12s, color .12s;
         }
         .wl-preview-close-btn:hover { background:var(--surface-2); color:var(--text); }
-        .ext-resize-handle { position:absolute; bottom:0; right:0; width:18px; height:18px; cursor:se-resize; background:transparent; z-index:2; }
+        .ext-resize-handle { position:absolute; bottom:0; right:0; width:18px; height:18px; cursor:se-resize; background:transparent; z-index:2; touch-action:none; }
         @media (max-width:600px) { .wl-preview { display:none !important; } }
 
         /* ── Günlük Not Butonu ── */

@@ -56,17 +56,10 @@
             document.body.classList.remove('ai-resizing');
         };
 
-        resizeHandle.addEventListener('mousedown', e => {
+        resizeHandle.addEventListener('pointerdown', e => {
             e.preventDefault();
             _startResize();
-            const onMove = ev => _applyW(ev.clientX);
-            const onUp   = ev => {
-                _endResize(_applyW(ev.clientX));
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-            };
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
+            startPointerDrag(ev => _applyW(ev.clientX), ev => _endResize(_applyW(ev.clientX)));
         });
 
     }
