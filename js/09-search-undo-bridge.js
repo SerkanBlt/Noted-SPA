@@ -431,7 +431,15 @@
 /* ── Sağdan kayan snack bildirimi ── */
 function _showSnack(msg, type, dur) {
     type = type || 'warn'; dur = dur || 2800;
-    const c = document.getElementById('snack-container');
+    /* Konteyner markup'ta YOKTU — bu yuzden uygulamadaki tum snack mesajlari
+       (hucre uyarilari, "Baglanti kopyalandi", AI yedek model bildirimi…)
+       sessizce kayboluyordu. Tooltip host'u gibi burada olusturuluyor. */
+    let c = document.getElementById('snack-container');
+    if (!c && document.body) {
+        c = document.createElement('div');
+        c.id = 'snack-container';
+        document.body.appendChild(c);
+    }
     if (!c) { console.warn(msg); return; }
     const s = document.createElement('div');
     s.className = 'snack snack-' + type;

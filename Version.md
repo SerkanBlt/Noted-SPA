@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.126
+**Faz 5 adım 1 — Depolama dayanıklılığı (persist + erken kota uyarısı)**
+- **`navigator.storage.persist()` isteniyor.** İzin verilirse tarayıcı, cihaz depolaması azaldığında bu origin'in verisini **tahliye etmez**. Kritik nokta: bu koruma IndexedDB'ye değil **tüm origin'e** (localStorage dahil) uygulanır — yani Android'deki asıl veri kaybı riskini kapatan şey budur, IndexedDB'nin kendisi değil. Chrome izni etkileşim ölçütlerine göre verir (yer imi, ana ekrana ekleme, PWA kurulumu); localhost'ta `false` dönmesi normaldir ve hata değildir
+- **Kota uyarısı artık hata olmadan ÖNCE veriliyor.** Eski davranış yalnızca `setItem` hata fırlattıktan *sonra* uyarıyordu — o noktada veri zaten diske gitmemişti. `StorageHealth.check()` her kayıtta (30sn throttle) toplam yükü ölçüp %80'de bir kez uyarır; kullanıcının hâlâ yer açma şansı varken. `navigator.storage.estimate()` localStorage tavanını göstermediği (origin'in genel kotasını — GB'lar — döndürdüğü) için yük elle ölçülüyor
+- **Yan bulgu — gerçek bug:** `noted.css`'te `#snack-container` kuralı vardı ama **element `Noted.html`'de hiç yoktu**. Sonuç: uygulamadaki 10+ bildirim ("Önce bir hücreye tıklayın", "Başlık satırı silinemez", "Bağlantı kopyalandı", AI yedek model bildirimi…) yalnızca `console.warn`'a düşüyor, kullanıcıya **hiç görünmüyordu** — konsolda hata da vermiyordu. `_showSnack` artık konteyneri yoksa oluşturuyor (aynı dosyadaki tooltip host'uyla aynı örüntü). Bu düzeltme olmasa yeni kota uyarısı da görünmeyecekti
+- **Plandan bilinçli sapma (kullanıcı onaylı):** `REFACTOR_PLAN.md` Faz 5, `Storage` arayüzünün **async** olmasını ve çağıranların `await`'e uyarlanmasını söylüyor. Ölçüm sonrası bunun 60 senkron config çağrısı + 19 `saveNotes()` çağrısı + parse anında çalışan 5 okumaya dokunmayı gerektirdiği görüldü. Planın kendisinin "not kaybı mümkün" dediği fazda bu yüzey çok geniş bulundu; IndexedDB geçişi bir sonraki adımda **bellek-önbellekli (write-through)** tasarımla yapılacak — senkron çağrı yerleri korunur, yalnızca kalıcılık arka ucu değişir. Uygulama zaten `State.notes`'u bellekte tutup `saveNotes()` ile yazdığı için bu desene hâlihazırda uygun
+- Doğrulama: `persist()` çağrısı ve dönüş değeri ölçüldü; kota eşiği geçici olarak düşürülüp uyarının **gerçekten göründüğü** ekran görüntüsüyle doğrulandı; aynı uyarının ikinci kez spam yapmadığı ve 30sn throttle'ın çalıştığı test edildi; snack düzeltmesi sonrası uygulamanın diğer mesajlarının da göründüğü doğrulandı; not kaydet→diskte doğrula→sil döngüsü ve tam RKL-1…RKL-15; konsolda sıfır hata
+
+---
+
 ## v1.15.125
 **Fix — 3 CDN bağımlılığı yerele gömüldü (Mobil hazırlığı 2/3)**
 - **Kapatılan güvenlik açığı:** `sanitize()` içinde `if (typeof DOMPurify === 'undefined') return html;` satırı vardı — DOMPurify CDN'den yüklenemediğinde (uçakta, kesintide, engelli ağda) temizleme **tamamen atlanıyordu**. Ölçüldü: CDN yokken `<img src=x onerror="alert(1)"><script>…</script>` ham olarak geçiyordu. DOMPurify artık `vendor/purify.min.js`'ten yüklendiği için bu yol tamamen ortadan kalktı

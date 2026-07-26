@@ -19,6 +19,58 @@ function patchUiCfg(p)   { try { localStorage.setItem('noted_ui_v1',      JSON.s
 function getContentCfg() { try { return JSON.parse(localStorage.getItem('noted_content_v1') || '{}'); } catch(_) { return {}; } }
 function patchContentCfg(p) { try { localStorage.setItem('noted_content_v1', JSON.stringify({...getContentCfg(), ...p})); } catch(_) {} }
 
+/* ══ DEPOLAMA DAYANIKLILIĞI ══ */
+const StorageHealth = {
+    LIMIT_CHARS: 5 * 1024 * 1024,
+    WARN_RATIO: 0.8,
+    CHECK_MS: 30000,
+    persisted: null,
+    _warned: false,
+    _lastCheck: 0,
+    _lastRatio: 0,
+
+    /* Tum localStorage yukunu karakter cinsinden olcer (pahali — throttle'li cagir) */
+    usedChars() {
+        let n = 0;
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                n += k.length + (localStorage.getItem(k) || '').length;
+            }
+        } catch (_) {}
+        return n;
+    },
+
+    /* Yazma BASARISIZ olmadan once uyar — eski davranis yalnizca hatadan SONRA uyariyordu */
+    check(force) {
+        const now = Date.now();
+        if (!force && now - this._lastCheck < this.CHECK_MS) return this._lastRatio;
+        this._lastCheck = now;
+        this._lastRatio = this.usedChars() / this.LIMIT_CHARS;
+        if (this._lastRatio >= this.WARN_RATIO && !this._warned) {
+            this._warned = true;
+            const msg = 'Depolama alanı %' + Math.round(this._lastRatio * 100) +
+                        ' dolu. Notları dışa aktarıp eskilerini silmeniz önerilir.';
+            if (typeof _showSnack === 'function') _showSnack(msg, 'warn', 7000);
+            else console.warn('[Noted] ' + msg);
+        }
+        return this._lastRatio;
+    },
+
+    /* Kalici depolama izni — mobilde asil veri kaybi korumasi budur.
+       Verilirse tarayici, cihaz depolamasi azaldiginda bu origin'in verisini
+       (localStorage + IndexedDB dahil) tahliye ETMEZ. */
+    async requestPersist() {
+        if (!navigator.storage || !navigator.storage.persist) { this.persisted = false; return false; }
+        try {
+            this.persisted = (navigator.storage.persisted && await navigator.storage.persisted())
+                             || await navigator.storage.persist();
+        } catch (_) { this.persisted = false; }
+        return this.persisted;
+    },
+};
+StorageHealth.requestPersist();
+
 /* ── Tek seferlik migration: eski çok-anahtar yapısı → yeni birleşik yapı ── */
 (function _migrateStorageV2() {
     if (localStorage.getItem('noted_storage_v') === '2') return;
@@ -305,7 +357,9 @@ function saveNotes() {
     try {
         localStorage.setItem('noted_v1', JSON.stringify(State.notes));
         try { recordActivityToday(); } catch(_e) {}
+        try { StorageHealth.check(); } catch(_e) {}
     } catch (e) {
+        try { StorageHealth.check(true); } catch(_e) {}
         alert('⚠️ Depolama alanı dolu! Bazı notlar kaydedilemeyebilir.\nEski notları dışa aktarıp silerek yer açabilirsiniz.');
     }
 }
