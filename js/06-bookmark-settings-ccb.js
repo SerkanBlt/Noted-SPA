@@ -175,14 +175,20 @@ DOM.$content.addEventListener('input', () => {
 
 /* ══ TODO PANELİ ══ */
 (function initTodoPanel() {
-    const overlay  = $('todo-panel-overlay');
-    const list     = $('todo-panel-list');
-    const closeBtn = $('todo-panel-close');
-    const openBtn  = $('todo-panel-btn');
-    const badge    = $('todo-count-badge');
+    const overlay      = $('todo-panel-overlay');
+    const list         = $('todo-panel-list');
+    const closeBtn     = $('todo-panel-close');
+    const openBtn      = $('todo-panel-btn');
+    const badge        = $('todo-count-badge');
+    const collapseBtn  = $('todo-collapse-all');
+    const expandBtn    = $('todo-expand-all');
     if (!overlay || !list || !openBtn) return;
 
     let currentFilter = 'all';
+    /* Not başlığı grupları — açık olanların id'leri. Panel her açılışta boşaltılır (hepsi kapalı başlar) */
+    let expandedGroups = new Set();
+    /* En son render'da görünen tüm not id'leri — Tümünü Genişlet için */
+    let lastGroupNoteIds = [];
 
     /* Tüm notlardaki todo'ları topla */
     function collectTodos() {
@@ -256,6 +262,7 @@ DOM.$content.addEventListener('input', () => {
         list.innerHTML = '';
 
         if (!shown.length) {
+            lastGroupNoteIds = [];
             list.innerHTML = '<div class="todo-panel-empty"><i class="fas fa-check-circle"></i>' +
                 (currentFilter === 'done' ? 'Henüz tamamlanan görev yok' :
                  currentFilter === 'open' ? 'Tüm görevler tamamlandı!' :
@@ -269,44 +276,63 @@ DOM.$content.addEventListener('input', () => {
             if (!byNote[t.noteId]) byNote[t.noteId] = { title: t.noteTitle, items: [] };
             byNote[t.noteId].items.push(t);
         });
+        lastGroupNoteIds = Object.keys(byNote);
 
         Object.entries(byNote).forEach(([noteId, group]) => {
             const grp = document.createElement('div');
             grp.className = 'todo-panel-note-group';
 
+            const isOpen = expandedGroups.has(noteId);
+
+            /* Not başlığı — açılır/kapanır; başlık metnine tıklamak nota gider,
+               satırın geri kalanına (ok ikonu dahil) tıklamak daraltır/genişletir */
             const title = document.createElement('div');
             title.className = 'todo-panel-note-title';
-            title.textContent = group.title;
+
+            const chevron = document.createElement('i');
+            chevron.className = 'fas fa-chevron-' + (isOpen ? 'up' : 'down');
+            title.appendChild(chevron);
+
+            const titleText = document.createElement('span');
+            titleText.className = 'todo-panel-note-title-text';
+            titleText.textContent = group.title;
+            titleText.title = group.title;
+            title.appendChild(titleText);
+
+            titleText.addEventListener('click', e => {
+                e.stopPropagation();
+                overlay.classList.remove('open');
+                /* Nota git */
+                editNote(noteId);
+            });
+            title.addEventListener('click', () => {
+                expandedGroups.has(noteId) ? expandedGroups.delete(noteId) : expandedGroups.add(noteId);
+                renderList();
+            });
             grp.appendChild(title);
 
-            group.items.forEach(t => {
-                const row = document.createElement('div');
-                row.className = 'todo-panel-item' + (t.checked ? ' checked' : '');
+            if (isOpen) {
+                group.items.forEach(t => {
+                    const row = document.createElement('div');
+                    row.className = 'todo-panel-item' + (t.checked ? ' checked' : '');
 
-                const cb = document.createElement('div');
-                cb.className = 'todo-panel-cb';
+                    const cb = document.createElement('div');
+                    cb.className = 'todo-panel-cb';
 
-                const txt = document.createElement('div');
-                txt.className = 'todo-panel-text';
-                txt.textContent = t.text;
-                txt.title = t.text;
+                    const txt = document.createElement('div');
+                    txt.className = 'todo-panel-text';
+                    txt.textContent = t.text;
+                    txt.title = t.text;
 
-                row.appendChild(cb);
-                row.appendChild(txt);
+                    row.appendChild(cb);
+                    row.appendChild(txt);
 
-                cb.addEventListener('click', e => {
-                    e.stopPropagation();
-                    toggleTodo(noteId, t.idx);
+                    /* Satırın tamamı check/uncheck yapar — nota gitmek için not başlığına tıklanmalı */
+                    row.addEventListener('click', () => toggleTodo(noteId, t.idx));
+
+                    grp.appendChild(row);
                 });
-
-                row.addEventListener('click', () => {
-                    overlay.classList.remove('open');
-                    /* Nota git */
-                    editNote(noteId);
-                });
-
-                grp.appendChild(row);
-            });
+            }
 
             list.appendChild(grp);
         });
@@ -314,6 +340,7 @@ DOM.$content.addEventListener('input', () => {
 
     /* Aç */
     function open() {
+        expandedGroups = new Set(); /* her açılışta tüm not grupları kapalı başlar */
         renderList();
         overlay.classList.add('open');
         document.body.style.overflow = 'hidden';
@@ -343,6 +370,16 @@ DOM.$content.addEventListener('input', () => {
         currentFilter = btn.dataset.filter;
         $('todo-filter-row').querySelectorAll('.todo-filter-btn').forEach(b =>
             b.classList.toggle('active', b === btn));
+        renderList();
+    });
+
+    /* Tümünü Daralt / Tümünü Genişlet */
+    if (collapseBtn) collapseBtn.addEventListener('click', () => {
+        expandedGroups = new Set();
+        renderList();
+    });
+    if (expandBtn) expandBtn.addEventListener('click', () => {
+        expandedGroups = new Set(lastGroupNoteIds);
         renderList();
     });
 

@@ -2,6 +2,16 @@
 
 ---
 
+## v1.15.129
+**Görev paneli — açılır/kapanır not grupları + toplu daralt/genişlet + tıklama davranışı değişti**
+- **Not başlıkları artık açılır/kapanır.** Panel her açıldığında tüm gruplar **kapalı** başlıyor (`open()` her seferinde `expandedGroups` kümesini sıfırlıyor). Başlık satırındaki ok ikonuna veya başlığın boş alanına tıklamak grubu aç/kapa yapıyor; sadece başlık **metnine** tıklamak nota gidiyor — bu iki eylem aynı satırda ayrı hedeflerle (`e.stopPropagation()`) çakışmadan çalışıyor
+- **Filtre satırının sağına iki ikon düğme eklendi:** Tümünü Daralt (`fa-compress-alt`) / Tümünü Genişlet (`fa-expand-alt`) — ikisi de zaten vendor'a gömülü ikonlar, yeni ikon derlemesi gerekmedi. `margin-left:auto` ile filtre butonlarından ayrılıp satırın sağına yaslandı
+- **Tıklama davranışı değiştirildi (önceki sürümde eklenen davranışın üzerine):** v1.15.128'de checkbox'a tıklamak işaretliyor, satırın geri kalanı notu açıyordu. Artık **görev satırının tamamı** (checkbox dahil) işaretliyor; nota gitmek için **not başlığına** tıklamak gerekiyor. Kapalı bir grubun içindeki satırlar DOM'a hiç eklenmiyor (yalnızca açık gruplar render ediliyor) — büyük not sayısında gereksiz DOM şişmiyor
+- **`sw.js` `VERSION` senkron güncellendi**
+- Doğrulama: Panel her açılışta tüm grupların kapalı başladığı (`0` satır görünür) ölçüldü; ok ikonuna tıklamanın grubu açıp `chevron-down → chevron-up` olarak değiştiği ve panelin kapanmadığı doğrulandı; görev satırına tıklamanın notu **açmadan** işaretlediği (`note.content` üzerinden), başlık metnine tıklamanın paneli kapatıp notu açtığı (`edit-id` ile) ayrı ayrı test edildi; Tümünü Genişlet/Daralt düğmelerinin görünür satır sayısını (`3` ↔ `0`, iki not grubuyla) doğru değiştirdiği ölçüldü; düğmelerin filtre satırının sağına yaslandığı `getBoundingClientRect` ile doğrulandı; `node tools/comments-check.js` temiz
+
+---
+
 ## v1.15.128
 **Sol panel + Görev paneli + editör başlığı — 4 UX düzeltmesi**
 - **Bulunan gerçek bug:** Sabitlenmiş notlar konteynerinin class adı `js/01-core-storage-render.js` içinde `'pinned-State.notes-container'` yazılmıştı (muhtemelen bir "notes" → "State.notes" toplu bul-değiştir'in düz string literalini de yanlışlıkla değiştirmesiyle oluştu). `noted.css`'teki `#main-list.view-pill .pinned-notes-container { display:flex; gap:... }` kuralı bu yüzden hiç eşleşmiyordu — **Pil (pill) görünümünde sabitlenmiş notlar `margin:0` ile üst üste, gerçek 0px boşlukla diziliyordu.** Class adı düzeltildi; pil görünümdeki `gap` değeri de `8px 8px`'ten `5px 8px`'e çekilerek normal grupların `.group-content` `gap`'iyle birebir eşleştirildi. Kompakt ve standart görünümlerde sabitlenmiş notlar zaten `.note-item` üzerinden gruplarla aynı `margin-top`'u paylaşıyordu (ölçüldü: ikisi de eşit) — orada ayrı bir düzeltme gerekmedi
