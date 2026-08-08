@@ -856,7 +856,7 @@ function render() {
         DOM.$mainList.appendChild(ph);
 
         const pinnedContainer = document.createElement('div');
-        pinnedContainer.className = 'pinned-State.notes-container';
+        pinnedContainer.className = 'pinned-notes-container';
         pinnedContainer.style.marginBottom = '12px';
         pinnedNotes.forEach(n => pinnedContainer.appendChild(buildNoteItem(n)));
         DOM.$mainList.appendChild(pinnedContainer);

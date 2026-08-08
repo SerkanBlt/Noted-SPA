@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.128
+**Sol panel + Görev paneli + editör başlığı — 4 UX düzeltmesi**
+- **Bulunan gerçek bug:** Sabitlenmiş notlar konteynerinin class adı `js/01-core-storage-render.js` içinde `'pinned-State.notes-container'` yazılmıştı (muhtemelen bir "notes" → "State.notes" toplu bul-değiştir'in düz string literalini de yanlışlıkla değiştirmesiyle oluştu). `noted.css`'teki `#main-list.view-pill .pinned-notes-container { display:flex; gap:... }` kuralı bu yüzden hiç eşleşmiyordu — **Pil (pill) görünümünde sabitlenmiş notlar `margin:0` ile üst üste, gerçek 0px boşlukla diziliyordu.** Class adı düzeltildi; pil görünümdeki `gap` değeri de `8px 8px`'ten `5px 8px`'e çekilerek normal grupların `.group-content` `gap`'iyle birebir eşleştirildi. Kompakt ve standart görünümlerde sabitlenmiş notlar zaten `.note-item` üzerinden gruplarla aynı `margin-top`'u paylaşıyordu (ölçüldü: ikisi de eşit) — orada ayrı bir düzeltme gerekmedi
+- **Görevler paneli satır aralığı daraltıldı:** `.todo-panel-item` dikey padding'i `7px` → `4px`
+- **Görevler panelinde check/uncheck artık çalışıyor.** Önceden satıra tıklamak yalnızca notu açıyordu, işaretleme imkânı yoktu. Artık checkbox'a tıklamak notu açmadan işaretliyor/kaldırıyor; satırın geri kalanına tıklamak eskisi gibi notu açıyor. Not o an editörde açıksa canlı DOM güncelleniyor (mevcut `MutationObserver` + autosave zinciri devreye giriyor); açık değilse `note.content` doğrudan güncellenip `saveNotes()` çağrılıyor — iki yol da veri kaybı yaratmayacak şekilde ayrıştırıldı
+- **Editör başlığında grup rozeti ile arama düğmesi yer değiştirdi** (hem ana editör hem ikinci/float editör): rozet artık arama düğmesinden önce geliyor, böylece arama paneli açılıp genişlediğinde rozet onun solunda sabit kalıyor. Sıraya bağlı CSS kuralı olmadığı doğrulandıktan sonra saf DOM sırası değişikliği olarak uygulandı
+- **`sw.js` `VERSION` sabiti** de senkron güncellendi — aksi hâlde çevrimdışı kabuk eski dosyalarda takılı kalırdı (bkz. v1.15.127 notu)
+- Doğrulama: Pil görünümünde sabitlenmiş/normal notlar arası piksel boşluk `getBoundingClientRect` ile ölçüldü (önce: pin `0px`/grup `8px` column-gap uyumsuz; sonra: ikisi de `5px`/`8px` ile birebir eşleşiyor); kompakt ve standart görünümlerde ikisinin zaten eşit olduğu (`2px`, `5px`) ayrıca ölçüldü; görev paneli satır padding'i `getComputedStyle` ile doğrulandı; checkbox toggle iki senaryoda da test edildi — not editörde açıkken (canlı DOM + `_contentDirty` + 2sn sonra otomatik kaydın `note.content`'e yansıdığı ölçüldü) ve kapalıyken (`note.content` anında güncellendi); satırın geri kalanına tıklamanın hâlâ notu açtığı ve paneli kapattığı doğrulandı; rozet/arama sırası hem DOM hem `getBoundingClientRect` ile iki editörde de doğrulandı; `node tools/comments-check.js` temiz
+
+---
+
 ## v1.15.127
 **PWA temeli — manifest + ikonlar + çevrimdışı service worker (Play Store hazırlığı 1/2)**
 - `manifest.json` eklendi: `display: standalone` (TWA'nın şartı), `start_url`/`scope` **göreli** (`./`) — böylece hem GitHub Pages alt dizininde hem başka bir yolda çalışır

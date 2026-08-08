@@ -191,7 +191,7 @@ DOM.$content.addEventListener('input', () => {
             if (!note.content) return;
             const tmp = document.createElement('div');
             tmp.innerHTML = note.content;
-            tmp.querySelectorAll('.todo-item').forEach(li => {
+            tmp.querySelectorAll('.todo-item').forEach((li, idx) => {
                 const textEl = li.querySelector('.todo-text');
                 const text   = textEl ? textEl.textContent.trim() : li.textContent.trim();
                 if (!text) return;
@@ -200,10 +200,36 @@ DOM.$content.addEventListener('input', () => {
                     noteTitle: note.title || '(Başlıksız)',
                     text,
                     checked:  li.dataset.checked === 'true',
+                    idx, /* notun kendi içindeki .todo-item sırası — toggleTodo ile eşleştirmek için */
                 });
             });
         });
         return items;
+    }
+
+    /* Görev panelinden check/uncheck — notu açmadan işaretle */
+    function toggleTodo(noteId, idx) {
+        const isOpenInEditor = DOM.$editId && String(DOM.$editId.value) === String(noteId);
+        if (isOpenInEditor) {
+            /* Not editörde açıksa canlı DOM'u değiştir — MutationObserver otomatik kaydeder */
+            const li = DOM.$content.querySelectorAll('.todo-item')[idx];
+            if (!li) return;
+            li.dataset.checked = li.dataset.checked === 'true' ? 'false' : 'true';
+            EditorState._contentDirty = true;
+        } else {
+            const note = State.notes.find(n => String(n.id) === String(noteId));
+            if (!note || !note.content) return;
+            const tmp = document.createElement('div');
+            tmp.innerHTML = note.content;
+            const li = tmp.querySelectorAll('.todo-item')[idx];
+            if (!li) return;
+            li.dataset.checked = li.dataset.checked === 'true' ? 'false' : 'true';
+            note.content = tmp.innerHTML;
+            note.updatedAt = Date.now();
+            saveNotes();
+        }
+        renderList();
+        updateBadge();
     }
 
     /* Badge'i güncelle */
@@ -267,6 +293,11 @@ DOM.$content.addEventListener('input', () => {
 
                 row.appendChild(cb);
                 row.appendChild(txt);
+
+                cb.addEventListener('click', e => {
+                    e.stopPropagation();
+                    toggleTodo(noteId, t.idx);
+                });
 
                 row.addEventListener('click', () => {
                     overlay.classList.remove('open');
