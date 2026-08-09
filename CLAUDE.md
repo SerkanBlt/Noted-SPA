@@ -6,10 +6,14 @@ Türkçe bir not alma SPA'sı. Kullanıcıya dönük tüm metin (UI, commit, bel
 
 | Dosya | Ne |
 |---|---|
-| `Noted.html` | **Uygulamanın tamamı** — HTML + CSS + JS tek dosyada (~18.5k satır) |
+| `Noted.html` | Markup + `<script src>`/`<link>` yükleme sırası (~1.4k satır) — mantık artık burada değil |
+| `noted.css` | Tüm stiller (Faz 2'de `Noted.html`'den ayrıldı) |
+| `js/01-*.js` … `js/09-*.js` | Uygulama mantığı, yükleme sırasına göre numaralı (Faz 3'te bölündü, klasik `<script src>` — global scope paylaşılır) |
+| `js/context-menu.js`, `js/float-panel.js`, `js/help-modal.js`, `js/pwa-register.js` | Bağımsız IIFE'ler, yalnızca `window.*` üzerinden konuşur |
+| `sw.js`, `manifest.json` | PWA — çevrimdışı kabuk + kurulum manifesti |
 | `Comments.json` | Kod dışı yorum veritabanı (aşağıya bak) |
 | `tools/comments-check.js` | `Comments.json` doğrulayıcı |
-| `REFACTOR_PLAN.md` | Modülerleşme iş emri (6 faz) — yapısal iş buradan yürür |
+| `REFACTOR_PLAN.md` | Modülerleşme iş emri (6 faz) — yapısal iş buradan yürür. Faz 1–4 tamamlandı; Faz 5 (Storage/IndexedDB) sürüyor |
 | `Version.md` | Sürüm geçmişi — her sürümde güncellenir |
 | `Noted_System.md` | Uygulama içi AI asistanının sistem mesajı (uygulama kodu değil) |
 | `ProgressPlan.md` | Ticari yol haritası |
@@ -71,9 +75,14 @@ bir kez karakter bozulmasına yol açtı. Commit sonrası `git log -1 --format=%
 
 ## Bu projeye özgü kısıtlar
 
-- **`<script type="module">` KULLANMA.** `file://` altında CORS nedeniyle yüklenmez ve
-  uygulamanın "tek dosyayı indir, çalıştır" özelliğini kırar. Dosya bölmek gerekiyorsa
-  klasik `<script src>` kullan — global scope'u paylaşır, `file://` altında çalışır.
+- **`file://` desteği artık gerekmiyor (karar değişti).** Eskiden uygulama "tek dosyayı indir,
+  çift tıkla, çalıştır" modeliyle dağıtılıyordu ve bu yüzden `<script type="module">` yasaktı
+  (CORS, `file://` altında modül yüklemiyor). Artık dağıtım GitHub Pages + Android/iOS/Windows
+  (PWA kurulumu) üzerinden — yani her zaman `http(s)` origin'i üzerinden çalışıyor, `file://`
+  senaryosu yok. Faz 1–4'te seçilen klasik `<script src>` yapısı (global scope paylaşımı)
+  hâlâ geçerli ve değiştirilmesi istenmedi — ama `type="module"`/`import`/`export`'u bloke eden
+  **teknik** gerekçe artık yok. Modüle geçiş ayrı, kendi başına bir karar — bu not sadece eski
+  yasağın gerekçesinin geçersiz olduğunu kayıt altına alıyor.
 - **Yeni ID tabanlı CSS selektörü ekleme.** Bu dosyada ID specificity üç ayrı bug üretti;
   detay `Comments.json` → `trap-orphan-selector-list-id-specificity`.
 - **Mevcut tasarım öğelerini onaysız değiştirme.** Renk, boşluk, tipografi, yerleşim

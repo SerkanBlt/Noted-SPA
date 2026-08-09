@@ -1242,7 +1242,8 @@ DOM.$content.addEventListener('input', () => {
 
 /* ══ INIT ══ */
 resetEditor();
-render();
+/* Faz 5: State.notes async yükleniyor (IndexedDB/localStorage) — ilk render bu promise'i bekler */
+window._notesReadyPromise.then(render);
 
 /* Başlık veya içeriğe odaklanınca pristine moddan çık */
 DOM.$title.addEventListener('focus',   () => document.body.classList.remove('editor-pristine'));

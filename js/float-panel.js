@@ -37,8 +37,13 @@
     /* ── Not erişimi ── */
     function getNote(id) {
         if (typeof window._fpGetNote === 'function') return window._fpGetNote(id);
-        try { const a = JSON.parse(localStorage.getItem('noted_v1') || '[]'); return a.find(n => String(n.id) === String(id)) || null; }
-        catch (_) { return null; }
+        /* Faz 5: localStorage['noted_v1'] artık her zaman güncel olmayabilir (IndexedDB
+           kalıcılık arka ucu) — window._fpGetAllNotes bellekteki State.notes'u döndürür */
+        if (typeof window._fpGetAllNotes === 'function') {
+            const a = window._fpGetAllNotes();
+            return a.find(n => String(n.id) === String(id)) || null;
+        }
+        return null;
     }
     let _fpResetZoom = null; /* zoom IIFE tarafından doldurulur */
 
@@ -82,11 +87,10 @@
         return true;
     }
     function loadLatest() {
-        try {
-            const a = JSON.parse(localStorage.getItem('noted_v1') || '[]');
-            if (!a.length) return false;
-            return loadNote(a.slice().sort((x, y) => (y.updatedAt || 0) - (x.updatedAt || 0))[0].id);
-        } catch (_) { return false; }
+        if (typeof window._fpGetAllNotes !== 'function') return false;
+        const a = window._fpGetAllNotes();
+        if (!a || !a.length) return false;
+        return loadNote(a.slice().sort((x, y) => (y.updatedAt || 0) - (x.updatedAt || 0))[0].id);
     }
     function ensureNote() {
         if (_fpNoteId) return true;

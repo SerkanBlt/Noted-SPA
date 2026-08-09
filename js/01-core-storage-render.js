@@ -130,12 +130,39 @@ StorageHealth.requestPersist();
    özellik-yerel durumu da bu nesneye taşındı; js/02 sadece kullanır. */
 const EditorState = {};
 
+/* ══ NOT DEPOLAMA — arka uç (Faz 5 adım 2: async iskelet, arka uç hâlâ localStorage) ══ */
+const Storage = {
+    async getNotes() { return safeLoadJSON('noted_v1', []); },
+    async setNotes(arr) { localStorage.setItem('noted_v1', JSON.stringify(arr)); },
+};
+
 /* ══ UYGULAMA DURUMU (Faz 4d — Global Konsolidasyonu) ══ */
 const State = {};
-State.notes = safeLoadJSON('noted_v1', []); State.openGroups = getContentCfg().groups || [];
-if (!Array.isArray(State.notes)) State.notes = []; if (!Array.isArray(State.openGroups)) State.openGroups = [];
-/* ══ contentMd migration (existing State.notes — re-runs if contentMd is empty) ══ */
-(function() {
+State.notes = [];    /* async yükleme tamamlanana kadar güvenli varsayım */
+State.openGroups = getContentCfg().groups || [];
+if (!Array.isArray(State.openGroups)) State.openGroups = [];
+
+/* ══ Not yükleme + tek seferlik göç işleri — tek async blokta (Faz 5).
+   Boot gate: js/06'daki INIT render() bu promise'i .then() ile bekler. ══ */
+window._notesReadyPromise = (async function _bootNotes() {
+    let notes;
+    try {
+        notes = await Storage.getNotes();
+    } catch (e) {
+        console.error('[Noted] Not yükleme başarısız, localStorage yedeğine dönülüyor:', e);
+        notes = safeLoadJSON('noted_v1', []);
+    }
+    State.notes = Array.isArray(notes) ? notes : [];
+
+    /* v1.1: Mevcut notlara eksik alanları ekle (backward compat) */
+    State.notes = State.notes.map(n => ({
+        pinned:     false,
+        colorLabel: null,
+        tags:       [],
+        ...n
+    }));
+
+    /* contentMd migration (existing State.notes — re-runs if contentMd is empty) */
     let dirty = false;
     State.notes.forEach(n => {
         if (n.content && (n.contentMd === undefined || n.contentMd === '')) {
@@ -143,7 +170,7 @@ if (!Array.isArray(State.notes)) State.notes = []; if (!Array.isArray(State.open
             dirty = true;
         }
     });
-    if (dirty) try { localStorage.setItem('noted_v1', JSON.stringify(State.notes)); } catch(_) {}
+    if (dirty) saveNotes();
 })();
 /* ══ SABİTLER (Faz 4 — Global Konsolidasyonu) ══ */
 const Const = {};
@@ -189,16 +216,6 @@ function debounce(fn, ms) {
 }
 EditorState._idSeed = Date.now();
 function genId() { return ++EditorState._idSeed; }
-
-
-/* v1.1: Mevcut notlara eksik alanları ekle (backward compat) */
-State.notes = State.notes.map(n => ({
-    pinned:     false,
-    colorLabel: null,
-    tags:       [],
-    ...n
-}));
-
 
 /* ══ DOM CACHE ══ */
 const $ = id => document.getElementById(id);
@@ -353,9 +370,9 @@ function sanitize(html) {
         FORCE_BODY: false,
     });
 }
-function saveNotes() {
+async function saveNotes() {
     try {
-        localStorage.setItem('noted_v1', JSON.stringify(State.notes));
+        await Storage.setNotes(State.notes);
         try { recordActivityToday(); } catch(_e) {}
         try { StorageHealth.check(); } catch(_e) {}
     } catch (e) {
@@ -366,6 +383,9 @@ function saveNotes() {
 /* ── Float panel helpers (State.notes scope'u gerektirir) ── */
 window._fpGetNote = function(id) {
     return State.notes.find(n => String(n.id) === String(id)) || null;
+};
+window._fpGetAllNotes = function() {
+    return State.notes;
 };
 window._fpUpdateNote = function(id, title, content, silent) {
     const idx = State.notes.findIndex(n => String(n.id) === String(id));
