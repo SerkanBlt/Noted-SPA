@@ -16,6 +16,20 @@
   },
   "entries": [
     {
+      "id": "trap-storage-v-key-shared-by-two-migrations",
+      "level": "critical",
+      "type": "trap",
+      "file": "js/01-core-storage-render.js",
+      "line": 80,
+      "anchor": "if (parseInt(localStorage.getItem('noted_storage_v') || '0', 10) >= 2) return;",
+      "symbol": "_migrateStorageV2",
+      "title": "noted_storage_v iki AYRI migration sistemi tarafindan paylasiliyor — tam esitlik kontrolu sonsuz dongu uretir",
+      "body": "Bu IIFE (config birlestirme, v1.15.x) VE Storage'in not-depolama migration'i (Faz 5, IndexedDB) AYNI anahtari (noted_storage_v) kullaniyor: bu IIFE '2' bekliyordu, Storage.FLAG_VALUE ise '3'. Guard eskiden '=== 2' idi — Storage flag'i '3'e yukselttiginde bu IIFE'nin kontrolu FALSE donuyor, IIFE HER BOOT'ta yeniden calisiyor ve sonunda localStorage.setItem('noted_storage_v','2') ile bayragi '3'ten '2'ye DUSURUYORDU. Sonuc: Storage.getNotes() de flag'i '3' goremiyor, migration'ini HER BOOT'ta yeniden tetikliyordu — localStorage['noted_v1']'deki (artik yalnizca best-effort ayna olan, IndexedDB'nin kendisi kadar guvenilir olmayan) veriyi IndexedDB'nin uzerine yaziyordu. Bu, probe testiyle (localStorage'a elle sahte not enjekte edip reload) somut olarak yakalandi — konsolda hicbir hata yoktu. Cozum: guard artik '>=2' (parseInt ile sayisal karsilastirma) — gelecekte bayrak baska bir migration tarafindan daha da ileri tasinirsa (>3) bu IIFE yine dogru sekilde atlanir. YENI bir migration sistemi eklenecekse noted_storage_v'yi PAYLASMA, ayri bir anahtar kullan.",
+      "refs": [
+        "REFACTOR_PLAN.md#faz-5"
+      ]
+    },
+    {
       "id": "trap-sw-cached-redirect-breaks-navigation",
       "level": "critical",
       "type": "trap",
@@ -41,6 +55,62 @@
       "body": "Eski davranis yalnizca setItem HATA FIRLATTIKTAN sonra alert gosteriyordu — o noktada yazilmak istenen veri zaten diske gitmemisti. StorageHealth.check() her kayitta (30sn throttle ile) toplam localStorage yukunu olcup %80'de bir kez uyarir, yani kullanicinin hala yer acma sansi varken. LIMIT_CHARS=5MB tarayicilarin yaygin localStorage tavanidir; navigator.storage.estimate() BU tavani gostermez (o, origin'in genel kotasini — genelde GB'lar — dondurur), bu yuzden elle olculur. requestPersist(): navigator.storage.persist() izni verilirse tarayici, cihaz depolamasi azaldiginda bu origin'in verisini TAHLIYE ETMEZ; koruma IndexedDB'ye degil TUM origin'e (localStorage dahil) uygulanir — mobilde asil veri kaybi korumasi budur. Chrome izni etkilesim olcutlerine gore verir (yer imi, ana ekrana ekleme, PWA kurulumu); localhost'ta genelde false doner, bu normaldir ve hata degildir.",
       "refs": [
         "v1.15.126",
+        "REFACTOR_PLAN.md#faz-5"
+      ]
+    },
+    {
+      "id": "trap-notesreadypromise-must-be-awaited",
+      "level": "critical",
+      "type": "trap",
+      "file": "js/01-core-storage-render.js",
+      "line": 248,
+      "anchor": "window._notesReadyPromise = (async function _bootNotes() {",
+      "symbol": "_bootNotes / window._notesReadyPromise",
+      "title": "State.notes async yukleniyor (IndexedDB) — bunu bilmeden State.notes'a erisen HER YENI parse-ani kod sessizce bos dizi gorur",
+      "body": "Klasik <script> ile top-level await YOK, o yuzden State.notes yuklemesi bir promise'e sarilip window._notesReadyPromise olarak disari aciliyor. Bu promise cozulene kadar State.notes = [] (guvenli varsayim, cokme yerine bos liste). Script yukleme sirasinda (Noted.html:868-876,1286,1392,1396-1397) State.notes'u parse-aninda (bir fonksiyon govdesinin DISINDA, sayfa yuklenirken hemen calisan) okuyan TEK yer js/06-bookmark-settings-ccb.js'teki INIT render() cagrisidir — tum script dosyalarinda render/updateBadge/renderList/collectTodos icin top-level cagri taramasi yapilip dogrulandi. Yeni boyle bir kod eklenirse (ornegin baska bir panelin acilista hemen State.notes'tan bir sey render etmesi) mutlaka window._notesReadyPromise.then(...) ile gate'lenmeli — aksi halde konsolda hicbir hata olmadan surekli bos veri gosterir. Hoisting sayesinde (ayni dosyadaki/sonraki script'lerdeki function bildirimleri parse aninda tanimlanir) bu promise'in icinden htmlToMd/saveNotes gibi sonradan tanimli fonksiyonlar guvenle cagrilabilir.",
+      "refs": [
+        "REFACTOR_PLAN.md#faz-5"
+      ]
+    },
+    {
+      "id": "trap-render-init-must-stay-gated",
+      "level": "critical",
+      "type": "trap",
+      "file": "js/06-bookmark-settings-ccb.js",
+      "line": 1246,
+      "anchor": "window._notesReadyPromise.then(render);",
+      "symbol": "INIT",
+      "title": "'gereksiz async' sanip senkron render()'a geri cevirme — her acilista bos not listesi gosterir",
+      "body": "Bu satir eskiden cikplak render() idi. State.notes artik async yuklendigi (IndexedDB) icin render()'in State.notes'u okuyabilmesi icin window._notesReadyPromise'in cozulmesini beklemesi sart. Bir refactor sirasinda 'basitlestirme' adina senkron render()'a geri cevrilirse: uygulama HER acilista bos not listesiyle render olur, konsolda hicbir hata basmaz, kullanici tum notlarinin silindigini sanir. resetEditor() (js/03-search-format-shortcuts.js) State.notes'a dokunmadigi icin senkron kalabilir — yalnizca render() gate'lenmis olmali.",
+      "refs": [
+        "REFACTOR_PLAN.md#faz-5"
+      ]
+    },
+    {
+      "id": "why-storage-migration-flag-set-only-after-verify",
+      "level": "critical",
+      "type": "why",
+      "file": "js/01-core-storage-render.js",
+      "line": 210,
+      "anchor": "async getNotes() {",
+      "symbol": "Storage",
+      "title": "noted_storage_v='3' bayragi yalnizca yedek+yazma+dogrulama BASARILI olduktan sonra set edilir",
+      "body": "Storage._migrate() localStorage['noted_v1']'i once noted_backup_pre_idb'ye kopyalar (yazip geri okuyarak dogrular), sonra IndexedDB'ye yazar, sonra IndexedDB'den geri okuyup uzunluk karsilastirir — bu ucu adimdan HERHANGI biri basarisiz olursa hata firlatilir ve FLAG_KEY hic set edilmez, kaynak (localStorage['noted_v1']) dokunulmamis kalir. Sonuc: migration basarisiz olursa bir sonraki boot'ta OTOMATIK olarak yeniden denenir (kalici 'pes etme' bayragi yok — ortam duzelirse kendiliginden iyilesir). Migration basarili olduktan sonra noted_v1 KASITLI olarak silinmez; setNotes() migrated durumda hem IndexedDB'ye (yetkili) hem noted_v1'e (best-effort guvenlik agi, kota hatasinda sessizce yutulur) yazmaya devam eder — bu ikisi elle silinirse veya bayrak elle degistirilirse geri-donus yolu kapanir. Sekmeler-arasi 15sn'lik yumusak kilit (LOCK_KEY) yalnizca gereksiz tekrar isini onler, dogruluk icin sart degildir çünkü migration kaynagina dokunmadigi icin dogasi geregi idempotenttir.",
+      "refs": [
+        "REFACTOR_PLAN.md#faz-5"
+      ]
+    },
+    {
+      "id": "why-floatpanel-uses-state-not-localstorage",
+      "level": "important",
+      "type": "why",
+      "file": "js/float-panel.js",
+      "line": 38,
+      "anchor": "function getNote(id) {",
+      "symbol": "getNote / loadLatest",
+      "title": "Once dogrudan localStorage['noted_v1'] okuyordu — IndexedDB gecisiyle bayat veri donduren sessiz bug olurdu",
+      "body": "getNote()'un fallback dali ve loadLatest() eskiden JSON.parse(localStorage.getItem('noted_v1')) yapiyordu. Bu, saveNotes() localStorage'i SENKRON guncelledigi surece zararsizdi. IndexedDB arka uca gecince (js/01 Storage nesnesi) localStorage['noted_v1'] artik yalnizca best-effort bir ayna (bkz. why-storage-migration-flag-set-only-after-verify) — güncel olma garantisi yok. Artik ikisi de window._fpGetAllNotes() (js/01) uzerinden bellekteki State.notes'u okuyor, bu her zaman anlik guncel. Bu koprüyü kaldirip yeniden dogrudan localStorage okumaya donme.",
+      "refs": [
         "REFACTOR_PLAN.md#faz-5"
       ]
     },
@@ -78,7 +148,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/01-core-storage-render.js",
-      "line": 286,
+      "line": 387,
       "anchor": "function startPointerDrag(onMove, onEnd) {",
       "symbol": "startPointerDrag",
       "title": "pointer surukleme CSS touch-action:none olmadan dokunmatikte SESSIZCE calismaz",
@@ -93,7 +163,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/01-core-storage-render.js",
-      "line": 328,
+      "line": 429,
       "anchor": "if (/(^|\\s)ng-/.test(el.className)) return;",
       "symbol": "normalizeHtml",
       "title": "Bos blok temizligi grid hucrelerini yiyebilir",
@@ -135,7 +205,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/01-core-storage-render.js",
-      "line": 360,
+      "line": 461,
       "anchor": "'srcdoc','sandbox',",
       "symbol": "sanitize (ALLOWED_ATTR)",
       "title": "srcdoc/sandbox allowlist'te olmazsa CCB icerigi kayittan sonra bos kalir",
@@ -223,7 +293,7 @@
       "level": "info",
       "type": "why",
       "file": "js/01-core-storage-render.js",
-      "line": 404,
+      "line": 505,
       "anchor": "const text = (html || '').replace(/<[^>]+>/g, ' ')",
       "symbol": "parseTagsFromContent",
       "title": "HTML etiketleri BOSLUKLA degistirilir, bos string ile degil",
@@ -237,7 +307,7 @@
       "level": "info",
       "type": "why",
       "file": "js/01-core-storage-render.js",
-      "line": 527,
+      "line": 628,
       "anchor": "if (node.parentElement && node.parentElement.closest('a, code, pre, .wikilink')) continue;",
       "symbol": "convertWikiSyntax",
       "title": "[[Baslik]] donusumu zaten a/code/pre icindeyse atlanir",
@@ -251,7 +321,7 @@
       "level": "info",
       "type": "why",
       "file": "js/01-core-storage-render.js",
-      "line": 1018,
+      "line": 1119,
       "anchor": "full.querySelectorAll('a[href]:not(.wikilink)').forEach(a => { a.target='_blank'; a.rel='noopener noreferrer'; });",
       "symbol": "buildNoteItem",
       "title": ".wikilink baglantilari target=_blank almaz",
@@ -266,7 +336,7 @@
       "level": "info",
       "type": "why",
       "file": "js/01-core-storage-render.js",
-      "line": 1312,
+      "line": 1413,
       "anchor": "if (!wl || !wl.dataset.noteId) return;",
       "symbol": "DOM.$content mousedown (wikilink navigasyonu)",
       "title": "Wikilink navigasyonu mousedown'da yakalanir, native <a> click'ine guvenilmez",

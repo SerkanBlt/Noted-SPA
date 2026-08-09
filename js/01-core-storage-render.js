@@ -71,9 +71,13 @@ const StorageHealth = {
 };
 StorageHealth.requestPersist();
 
-/* ── Tek seferlik migration: eski çok-anahtar yapısı → yeni birleşik yapı ── */
+/* ── Tek seferlik migration: eski çok-anahtar yapısı → yeni birleşik yapı ──
+   'noted_storage_v' Faz 5'te not depolama migration bayrağı olarak da kullanılıyor
+   (bkz. Storage.FLAG_VALUE='3') — bu yüzden guard tam eşleşme değil, >=2 olmalı;
+   aksi halde '3' bu IIFE'yi her boot'ta yeniden tetikler ve bayrağı '2'ye
+   düşürüp Storage'ın kendi migration'ını da sonsuz döngüye sokar. */
 (function _migrateStorageV2() {
-    if (localStorage.getItem('noted_storage_v') === '2') return;
+    if (parseInt(localStorage.getItem('noted_storage_v') || '0', 10) >= 2) return;
     const _ls  = k => { try { return localStorage.getItem(k); } catch(_) { return null; } };
     const _lsj = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(_) { return null; } };
     const _ss  = k => { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch(_) { return null; } };
@@ -130,10 +134,107 @@ StorageHealth.requestPersist();
    özellik-yerel durumu da bu nesneye taşındı; js/02 sadece kullanır. */
 const EditorState = {};
 
-/* ══ NOT DEPOLAMA — arka uç (Faz 5 adım 2: async iskelet, arka uç hâlâ localStorage) ══ */
+/* ══ NOT DEPOLAMA — arka uç: IndexedDB, localStorage geri-dönüş yoluyla (Faz 5 adım 3) ══ */
 const Storage = {
-    async getNotes() { return safeLoadJSON('noted_v1', []); },
-    async setNotes(arr) { localStorage.setItem('noted_v1', JSON.stringify(arr)); },
+    DB_NAME: 'noted_idb', DB_VERSION: 1, STORE: 'notes_store', KEY: 'all',
+    FLAG_KEY: 'noted_storage_v', FLAG_VALUE: '3',
+    BACKUP_KEY: 'noted_backup_pre_idb',
+    LOCK_KEY: 'noted_idb_migration_lock', LOCK_TTL_MS: 15000,
+    _db: null,
+
+    _openDb() {
+        return new Promise((resolve, reject) => {
+            if (typeof indexedDB === 'undefined') { reject(new Error('indexedDB yok')); return; }
+            const req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+            req.onupgradeneeded = () => {
+                if (!req.result.objectStoreNames.contains(this.STORE)) req.result.createObjectStore(this.STORE);
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror   = () => reject(req.error);
+            req.onblocked = () => reject(new Error('IndexedDB blocked'));
+        });
+    },
+
+    async _idbGetAll() {
+        const db = this._db || (this._db = await this._openDb());
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.STORE, 'readonly');
+            const rq = tx.objectStore(this.STORE).get(this.KEY);
+            rq.onsuccess = () => resolve(rq.result || []);
+            rq.onerror   = () => reject(rq.error);
+        });
+    },
+
+    async _idbPutAll(arr) {
+        const db = this._db || (this._db = await this._openDb());
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.STORE, 'readwrite');
+            tx.objectStore(this.STORE).put(arr, this.KEY);
+            tx.oncomplete = () => resolve();
+            tx.onerror    = () => reject(tx.error);
+            tx.onabort    = () => reject(tx.error || new Error('tx aborted'));
+        });
+    },
+
+    /* Sekmeler-arası yumuşak kilit — migration doğası gereği idempotent olduğu için
+       doğruluk için şart değil, yalnızca gereksiz eş-zamanlı tekrar işini önler. */
+    _tryLock() {
+        const now = Date.now();
+        const held = parseInt(localStorage.getItem(this.LOCK_KEY) || '0', 10);
+        if (held && now - held < this.LOCK_TTL_MS) return false;
+        try { localStorage.setItem(this.LOCK_KEY, String(now)); } catch(_) {}
+        return true;
+    },
+    _unlock() { try { localStorage.removeItem(this.LOCK_KEY); } catch(_) {} },
+
+    /* Tek yönlü, tek seferlik localStorage → IndexedDB göçü. Bayrak yalnızca
+       yedekleme + yazma + doğrulama başarıyla bittikten SONRA set edilir —
+       herhangi bir adım başarısız olursa kaynak dokunulmamış kalır ve
+       sonraki boot'ta otomatik tekrar denenir. */
+    async _migrate() {
+        const raw = localStorage.getItem('noted_v1');
+        const source = safeLoadJSON('noted_v1', []);
+        try {
+            localStorage.setItem(this.BACKUP_KEY, raw || '[]');
+            if (localStorage.getItem(this.BACKUP_KEY) !== (raw || '[]')) throw new Error('yedek doğrulanamadı');
+        } catch (e) {
+            throw new Error('backup-failed: ' + e.message);
+        }
+        await this._idbPutAll(source);
+        const back = await this._idbGetAll();
+        if (back.length !== source.length) throw new Error('doğrulama uyuşmadı: ' + back.length + ' != ' + source.length);
+        localStorage.setItem(this.FLAG_KEY, this.FLAG_VALUE);
+        return source;
+    },
+
+    async getNotes() {
+        if (localStorage.getItem(this.FLAG_KEY) === this.FLAG_VALUE) {
+            try { return await this._idbGetAll(); }
+            catch (e) {
+                console.warn('[Noted] IndexedDB okunamadı, yedeğe dönülüyor:', e);
+                return safeLoadJSON(this.BACKUP_KEY, null) || safeLoadJSON('noted_v1', []);
+            }
+        }
+        if (!this._tryLock()) return safeLoadJSON('noted_v1', []); /* başka sekme migrate ediyor */
+        try {
+            return await this._migrate();
+        } catch (e) {
+            console.warn('[Noted] IndexedDB migration bu oturumda tamamlanamadı, localStorage kullanılıyor:', e);
+            return safeLoadJSON('noted_v1', []);
+        } finally {
+            this._unlock();
+        }
+    },
+
+    async setNotes(arr) {
+        const migrated = localStorage.getItem(this.FLAG_KEY) === this.FLAG_VALUE;
+        if (migrated) {
+            await this._idbPutAll(arr);                                    /* yetkili yazma */
+            try { localStorage.setItem('noted_v1', JSON.stringify(arr)); } catch(_) {}  /* best-effort güvenlik ağı aynası */
+        } else {
+            localStorage.setItem('noted_v1', JSON.stringify(arr));
+        }
+    },
 };
 
 /* ══ UYGULAMA DURUMU (Faz 4d — Global Konsolidasyonu) ══ */
