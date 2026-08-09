@@ -2,6 +2,14 @@
 
 ---
 
+## v1.16.3
+**Fix — "Sütun Ekle"/"Panel Ekle"/"Kolon Ekle" konsola ReferenceError basıyordu (önceki turda bulunup ayrı görev olarak işaretlenmişti)**
+- **Kök neden:** `_gridAddCol()` (`js/08-noted-grid-system.js:494`), `requestAnimationFrame(() => _positionGridAddBtn(table));` çağırıyordu — bu fonksiyon "toolbar üstlendi" gerekçesiyle bir önceki iyileştirmede kaldırılmıştı (yorum satırı hâlâ duruyor: `/* _positionGridAddBtn kaldırıldı — toolbar üstlendi */`) ama bu **çağrı sitesi** silinmeyi unutulmuştu. Sonuç: Tablo/Panel/Kolon fark etmeksizin her "sütun ekle" tıklamasında `requestAnimationFrame` callback'i içinde `ReferenceError: _positionGridAddBtn is not defined` fırlıyordu — kullanıcı akışını görünür şekilde bozmadığı için (rAF callback hatası sessizce yutuluyor) şimdiye kadar fark edilmemişti
+- **Düzeltme:** Ölü satır kaldırıldı, `_gridAddCol()`'un geri kalanına dokunulmadı
+- Doğrulama: Gerçek uygulamada önce hatayı **temiz bir sekmede** somut olarak yakaladım (`ReferenceError`, `js/08-noted-grid-system.js:494:33`); düzeltme sonrası Tablo/Panel/Kolon türü üç blok da gerçek toolbar butonu tıklamasıyla (`Sütun Ekle`/`Panel Ekle`/`Kolon Ekle`) test edildi — üçünde de sütun sayısı doğru arttı (2→3) ve **temiz bir sekmede** konsolda hiçbir hata kalmadığı doğrulandı
+
+---
+
 ## v1.16.2
 **Fix — Geniş Tablo/Panel/Kolon bloğu editörün tamamını yatay kaydırıyordu (kullanıcı bildirimi)**
 - **Kullanıcı bildirimi:** "Tablo eğer sağa doğru gidiyorsa scroll tablo içinde olmalı editörde değil"

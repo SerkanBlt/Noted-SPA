@@ -491,7 +491,6 @@ function _gridAddCol(table) {
 
     table.dataset.cols = colIdx + 1;
     _bindGridResize(table);
-    requestAnimationFrame(() => _positionGridAddBtn(table));
 
     const newFirst = table.querySelector('thead tr:last-child th:last-child .ng-title, tbody tr:first-child td:last-child .ng-cell');
     if (newFirst) requestAnimationFrame(() => newFirst.focus());
