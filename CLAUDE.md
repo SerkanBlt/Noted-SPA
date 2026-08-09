@@ -13,7 +13,7 @@ Türkçe bir not alma SPA'sı. Kullanıcıya dönük tüm metin (UI, commit, bel
 | `sw.js`, `manifest.json` | PWA — çevrimdışı kabuk + kurulum manifesti |
 | `Comments.json` | Kod dışı yorum veritabanı (aşağıya bak) |
 | `tools/comments-check.js` | `Comments.json` doğrulayıcı |
-| `REFACTOR_PLAN.md` | Modülerleşme iş emri (6 faz) — yapısal iş buradan yürür. Faz 1–4 tamamlandı; Faz 5 (Storage/IndexedDB) sürüyor |
+| `REFACTOR_PLAN.md` | Modülerleşme iş emri (6 faz) — **tamamı tamamlandı** (Faz 6 v1.15.120'de, Faz 5/IndexedDB v1.15.131'de bitti). Yeni yapısal iş için hâlâ referans/emsal olarak okunur |
 | `Version.md` | Sürüm geçmişi — her sürümde güncellenir |
 | `Noted_System.md` | Uygulama içi AI asistanının sistem mesajı (uygulama kodu değil) |
 | `ProgressPlan.md` | Ticari yol haritası |
