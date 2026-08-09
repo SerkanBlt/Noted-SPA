@@ -603,7 +603,15 @@ function _showAiGutterInd(savedRange) {
             const cr = document.createRange();
             cr.setStartAfter(lastInserted.parentNode ? lastInserted : (savedEt.lastChild || savedEt)); cr.collapse(true);
             s.removeAllRanges(); s.addRange(cr);
-            DOM.$content.dispatchEvent(new Event('input', { bubbles: true }));
+            /* DOM.$content DEĞİL savedEt'e dispatch et — AI yanıtı asenkron geldiği için
+               (ağ isteği), kullanıcı bu sürede float panele geçmiş olabilir ve DOM.$content
+               artık BAYAT olabilir (fpContent'i gösterir). İçerik zaten doğru yere (savedEt)
+               eklendi ama event YANLIŞ elemente giderse #content'in dirty-listener'ı hiç
+               tetiklenmez — _contentDirty false kalır, _doSave() erken return eder, AI
+               içeriği DOM'da görünür ama HİÇBİR ZAMAN kaydedilmez (sessiz veri kaybı). savedEt
+               zaten doğru elemana işaret ediyor (veya onun içindeki bir hücre — input bubble
+               ile yine #content'e ulaşır), bu yüzden DOM.$content'e hiç güvenilmemeli. */
+            savedEt.dispatchEvent(new Event('input', { bubbles: true }));
             /* ng-wrap içeriyorsa toolbar + resize handle'ları bağla */
             if (gridsRestored && typeof _restoreGrids === 'function') _restoreGrids();
             ind.success();

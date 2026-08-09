@@ -16,6 +16,34 @@
   },
   "entries": [
     {
+      "id": "trap-ai-insert-dispatch-must-use-savedet",
+      "level": "critical",
+      "type": "trap",
+      "file": "js/02-toolbar-panel-column.js",
+      "line": 614,
+      "anchor": "savedEt.dispatchEvent(new Event('input', { bubbles: true }));",
+      "symbol": "_runAiFlow",
+      "title": "DOM.$content'e dispatch etmek SESSIZ VERI KAYBI uretiyordu — icerik dogru yere eklenip HIC KAYDEDILMIYORDU",
+      "body": "AI eylemi (Genislet/Ozetle/Duzelt) agir bir istektir — kullanici tetikledikten sonra yanit gelene kadar baska bir yere (orn. float panele) odaklanabilir. Icerik EKLEME zaten savedEt'i (tetiklenme anindaki EditorState._activeEditTarget) kullaniyordu — DOGRU. Ama SONRAKI 'input' event dispatch'i DOM.$content'e (o anki, BAYAT olabilecek referansa) yapiliyordu. Reprodüksiyonla kanitlandi: ana editorde metin secilip AI eylemi tetiklendi, yanit gelmeden once float panele odaklanildi (DOM.$content artik fpContent'i gosteriyor), yanit geldi — icerik savedEt sayesinde DOGRU yere (ana editore) eklendi AMA input event YANLIS elemente (fpContent) gitti. Sonuc: #content'in dirty-listener'i (js/03 _bindDirtyListeners) hic tetiklenmedi, EditorState._contentDirty false kaldi, _doSave() 'if (!_contentDirty && baslik degismemis) return' guard'inda sessizce erken donup KAYDETMEDI. Kullanici AI icerigini EKRANDA goruyor ama sayfa yenilenince/not kapatilip acilinca icerik KAYBOLUYOR — konsolda hicbir hata yok. Duzeltme: dispatch DOM.$content yerine savedEt'e yapiliyor — savedEt zaten dogru elemani (veya onun icindeki hucreyi, input bubble ile yine dogru #content'e ulasir) gosteriyor.",
+      "refs": [
+        "kullanici-bildirimi-2026-08-09"
+      ]
+    },
+    {
+      "id": "why-ai-insert-targets-main-editor",
+      "level": "important",
+      "type": "why",
+      "file": "js/05-ai-chat-panel.js",
+      "line": 688,
+      "anchor": "function _insertToEditor(bubble) {",
+      "symbol": "_insertToEditor",
+      "title": "AI sohbet paneli float panelden habersiz tasarlandi — 'Editore Ekle' artik once ana editoru hedefe zorluyor",
+      "body": "AI sohbet paneli (#ai-chat-panel) float panelin varligindan tamamen habersiz — dosyada _fpNoteId/fp-content/activeInstance referansi HIC yok. 'Editore Ekle' butonu eskiden dogrudan DOM.$content'e yaziyordu; float panel odaklanip (DOM.$content fpContent'i gosterir hale gelip) SONRA kapatilmadan sohbet paneline gecilip bir yanit 'Editore Ekle' ile eklenirse, icerik YANLIS nota (float panelinkine) sessizce yaziliyordu — DOM.$editId hala ana notu gosterdigi icin kullanici bunu fark etmiyordu. Duzeltme: _insertToEditor() artik baslangicta activateInstance(window._mainEditorInstance) cagirip DOM.$content'i ana editore geri donduruyor — editNote()'un zaten kullandigi ayni desen. AI sohbet paneli tasarim geregi HER ZAMAN ana editoru hedefler, float panel icin ayri bir AI entegrasyonu yok.",
+      "refs": [
+        "kullanici-bildirimi-2026-08-09"
+      ]
+    },
+    {
       "id": "why-grid-wide-scrolls-in-own-wrapper",
       "level": "important",
       "type": "why",
@@ -467,7 +495,7 @@
       "level": "info",
       "type": "history",
       "file": "js/02-toolbar-panel-column.js",
-      "line": 948,
+      "line": 956,
       "anchor": "if (block === _et || !_et.contains(block)) {",
       "symbol": "toolbar block-level selection helper",
       "title": "Secim #content'in disina cikarsa ilk bloga veya yeni bos paragrafa duser",
@@ -481,7 +509,7 @@
       "level": "important",
       "type": "why",
       "file": "js/02-toolbar-panel-column.js",
-      "line": 1352,
+      "line": 1360,
       "anchor": "if (typeof window._undoLockForSave === 'function') window._undoLockForSave();",
       "symbol": "saveNote",
       "title": "Kayit oncesi undo gozlemcisi kilitlenir",
@@ -608,7 +636,7 @@
       "level": "info",
       "type": "why",
       "file": "js/05-ai-chat-panel.js",
-      "line": 874,
+      "line": 881,
       "anchor": "const _isAuthErr = _s === 401 || _s === 403;",
       "symbol": "AI istek hata isleyicisi",
       "title": "Sadece auth/ag hatasi OLMAYAN durumlarda bir sonraki modelle tekrar denenir",

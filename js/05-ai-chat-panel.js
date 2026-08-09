@@ -686,6 +686,13 @@
 
     /* ── Editöre Ekle ── */
     function _insertToEditor(bubble) {
+        /* AI sohbet paneli float panelden habersiz tasarlandı (bkz. Comments.json ->
+           why-ai-insert-targets-main-editor) — DOM.$content sohbete geçmeden önce float
+           panele odaklanıldıysa hâlâ fpContent'i gösterebilir. Eklemeden önce ana editörü
+           hedefe zorla, aksi halde AI yanıtı yanlış nota (float panelinkine) yazılır. */
+        if (typeof activateInstance === 'function' && window._mainEditorInstance) {
+            activateInstance(window._mainEditorInstance);
+        }
         const cl = bubble.cloneNode(true);
         cl.querySelector('.ai-stream-cursor')?.remove();
         cl.querySelector('.ai-think')?.remove();
