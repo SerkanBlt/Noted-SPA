@@ -2,6 +2,15 @@
 
 ---
 
+## v1.16.2
+**Fix — Geniş Tablo/Panel/Kolon bloğu editörün tamamını yatay kaydırıyordu (kullanıcı bildirimi)**
+- **Kullanıcı bildirimi:** "Tablo eğer sağa doğru gidiyorsa scroll tablo içinde olmalı editörde değil"
+- **Kök neden:** Sütun ekleme (`_gridAddCol`, Tablo/Panel/Kolon aynı fonksiyonu paylaşır) her seferinde son sütunu ikiye böler; çok sütun eklenince 60px taban genişliğe çarpıp **toplam** tablo genişliğini büyütmeye başlar. `.noted-grid`'in `width:100%`/`max-width:100%`'u `table-layout:fixed` + açık `<col>` px genişlikleriyle birlikte güvenilir şekilde uygulanmıyor — tablo sütunlarının toplamı kadar geniş render oluyor, kendi konteynerine sığmıyor. `#content`'in **kendi** `overflow-y:auto`'su CSS gereği `overflow-x`'i de otomatik `'auto'` hesaplatıyor (`trap-ng-toolbar-clipped-by-overflow`'daki aynı mekanizmanın tersi yönde işleyen hâli) — sonuç: geniş tablo **tüm not içeriğini** (başlıklar, diğer bloklar dahil) yatay kaydırılabilir yapıyordu, yalnızca tablo değil
+- **Düzeltme:** Tablo/Kolon tipleri artık `<table>`'ı yeni bir `.ng-table-scroll` div'ine sarıyor; Panel zaten var olan `.ng-panel-frame`'i kullanıyor (boş bir "yalnızca layout" kuralıydı, artık dolduruldu). İkisine de `overflow-x:auto; max-width:100%;` verildi — **`.ng-wrap`'e değil** (oraya vermek `.ng-toolbar`'ın negatif-top konumlandırmasını kırpardı, zaten belgelenmiş bir tuzak). Mevcut (kayıtlı) notlar için `_upgradeGridWraps()` bu sarmalayıcıyı geriye dönük ekliyor — `.ng-panel-frame` yükseltmesinin zaten kullandığı aynı `:scope >` deseniyle
+- Doğrulama: Gerçek `applyGridTable`/`applyGridPanel` ile blok oluşturulup sütunlar 400px'e zorlandı — düzeltme öncesi davranış ölçüldü (`#content.scrollWidth 1229 > clientWidth 957`, yani editör kaydırılabilirdi), düzeltme sonrası tablo hâlâ doğal (geniş, 1200px) genişliğinde render oluyor ama **yalnızca `.ng-table-scroll`** kaydırılabilir (`scrollWidth 1201 > width 912`), `#content.scrollWidth === clientWidth` (**artık kaydırılamıyor**) doğrudan ölçüldü; eski format (sarmalayıcısız) bir not elle oluşturulup `editNote()` ile açıldığında `_upgradeGridWraps()`'in geriye dönük doğru şekilde sardığı ve içeriğin kaybolmadığı doğrulandı; Panel tipi hem ana editörde hem float panelde (`.ng-panel-frame` üzerinden) aynı şekilde test edildi; ekran görüntüsüyle iç kaydırma çubuğunun blok altında göründüğü, editör kartının sabit kaldığı doğrulandı; konsolda yeni hata yok; `node tools/comments-check.js` temiz
+
+---
+
 ## v1.16.1
 **Fix — Float panelde Tablo/Panel/Kolon blokları çalışmıyordu (kullanıcı bildirimi)**
 - **Kök neden 1 — araç çubuğu hiç üretilmiyordu:** `saveNote()` `.ng-toolbar`/`.ng-add-col` elementlerini kayıttan HER ZAMAN çıkarır (`note.content`'te hiç saklanmazlar) — yalnızca editörde GÖRÜNTÜLENİRKEN `_restoreGrids()` tarafından yeniden üretilirler. Ana editörün `editNote()`'u bunu çağırıyordu, float panelin `loadNote()`'u (`js/float-panel.js`) ise `_upgradeGridWraps()`/`_restoreGrids()`/`initShapeOverlays()`'i **hiç çağırmıyordu** — sonuç: float panelde tablo/panel/kolon bloklarının araç çubuğu **hiç yoktu** (bozuk değil, YOKTU)

@@ -4285,8 +4285,21 @@ input[type="file"] { display:none; }
         .noted-grid td:focus, .noted-grid th:focus { outline: none; }
 
         /* ── Panel (her kolon bağımsız, yuvarlak köşeli kart) ── */
-        /* ng-panel-frame: sadece layout container — kendi border/shadow'u yok, kartlar bağımsız görünür */
-        .ng-panel-frame { }
+        /* ng-panel-frame: sadece layout container — kendi border/shadow'u yok, kartlar bağımsız görünür.
+           overflow-x/max-width: cok kolon eklenince (60px taban genislik asilinca) tablo kendi
+           konteynerinden tasabiliyor — bkz. why-grid-wide-scrolls-in-own-wrapper. .ng-wrap'e DEGIL
+           buraya (ve .ng-table-scroll'a) veriliyor — .ng-wrap'e vermek toolbar'i kirpar (bkz.
+           trap-ng-toolbar-clipped-by-overflow). */
+        .ng-panel-frame { overflow-x: auto; max-width: 100%; }
+        .ng-panel-frame, .ng-table-scroll {
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .ng-panel-frame::-webkit-scrollbar, .ng-table-scroll::-webkit-scrollbar { height: 5px; }
+        .ng-panel-frame::-webkit-scrollbar-track, .ng-table-scroll::-webkit-scrollbar-track { background: transparent; }
+        .ng-panel-frame::-webkit-scrollbar-thumb, .ng-table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        /* ng-table-scroll: Tablo/Kolon bloğu için ng-panel-frame'in eşdeğeri — panelin aksine bu
+           iki tip tabloyu doğrudan sarmalıyordu (ara katman yoktu), bu yüzden yeni bir sarmalayıcı. */
+        .ng-table-scroll { overflow-x: auto; max-width: 100%; }
         /* #content table:not(.noted-grid) artık grid tablolarıyla eşleşmiyor (bkz. Faz 1) — ek scope gerekmiyor. */
         .noted-grid.grid-panel {
             border: none; border-radius: 0; overflow: visible;

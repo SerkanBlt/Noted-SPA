@@ -36,6 +36,16 @@ function _upgradeGridWraps(root) {
             frame.appendChild(tbl);
         }
     });
+    /* Tablo/Kolon: mevcut notlarda ng-table-scroll yoksa ekle — bkz. why-grid-wide-scrolls-in-own-wrapper */
+    root.querySelectorAll('.ng-wrap-table, .ng-wrap-column').forEach(wrap => {
+        const tbl = wrap.querySelector(':scope > table.noted-grid');
+        if (tbl) {
+            const scroll = document.createElement('div');
+            scroll.className = 'ng-table-scroll';
+            wrap.insertBefore(scroll, tbl);
+            scroll.appendChild(tbl);
+        }
+    });
     /* Panel: mevcut panellere data-col + col-active focus handler ekle */
     root.querySelectorAll('.noted-grid.grid-panel').forEach(table => {
         if (table.dataset.colFocusBound) return;
@@ -165,7 +175,13 @@ function createGrid(type, cols, rows, colWidths) {
         frame.appendChild(table);
         wrap.appendChild(frame);
     } else {
-        wrap.appendChild(table);
+        /* ng-table-scroll: cok kolon eklenince (60px taban genislik asilinca) tablo kendi
+           genisligini asip editorun tamamini yatay kaydirilabilir yapiyordu — artik yalnizca
+           bu sarmalayici kaydiriliyor. bkz. why-grid-wide-scrolls-in-own-wrapper. */
+        const scroll = document.createElement('div');
+        scroll.className = 'ng-table-scroll';
+        scroll.appendChild(table);
+        wrap.appendChild(scroll);
     }
 
     _bindGridResize(table);
