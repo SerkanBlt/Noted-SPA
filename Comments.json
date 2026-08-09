@@ -16,6 +16,36 @@
   },
   "entries": [
     {
+      "id": "why-editnote-resets-activeedittarget",
+      "level": "important",
+      "type": "why",
+      "file": "js/03-search-format-shortcuts.js",
+      "line": 632,
+      "anchor": "EditorState._activeEditTarget = DOM.$content;",
+      "symbol": "editNote",
+      "title": "Hemen ustundeki activateInstance() cagrisiyla ayni amaca hizmet eden AYRI bir satir — silinirse toolbar formatlama yanlis hedefe gidebilir",
+      "body": "Bu satir bir ustteki activateInstance(window._mainEditorInstance) ile 'zaten yapiliyor' gibi gorunup 'gereksiz' sanilabilir ama DEGIL: activateInstance yalnizca DOM.$content/EditorState.activeInstance'i tasir, EditorState._activeEditTarget TAMAMEN AYRI bir sistemdir (js/02, toolbar Kalin/Italik/liste butonlarinin hangi elemente uygulanacagini belirler) ve yalnizca gercek focus event'leriyle guncellenir. Bir grid hucresi veya float panel son odaklanan yerdiyse, buraya gelmeden bu satir olmazsa _activeEditTarget takili kalir ve yeni acilan notta toolbar butonlari yanlis (belki artik DOM'da olmayan) elemente uygulanmaya calisir. Detay: Comments.json -> trap-floatpanel-close-must-restore-domcontent.",
+      "refs": [
+        "kullanici-bildirimi-2026-08-09",
+        "v1.16.0"
+      ]
+    },
+    {
+      "id": "trap-ctx-menu-undo-redo-needs-explicit-instance",
+      "level": "important",
+      "type": "trap",
+      "file": "js/context-menu.js",
+      "line": 86,
+      "anchor": "function buildItems(c, inst) {",
+      "symbol": "buildItems",
+      "title": "Sag-tik menusundeki Geri Al/Yinele artik hedef instance'i acikca aliyor — dogal odaklanmaya orutuk guvenmiyor",
+      "body": "Bu menu hem ana editorde (#content) hem float panelde (#fp-content) ayni buildItems() ile kuruluyor. Geri Al/Yinele eskiden dogrudan window.editorUndo()/editorRedo() cagiriyordu — bu, EditorState.activeInstance'in (js/09'daki undo sistemi buna bakar) sag-tikin GERCEKTEN dogru elemente focus tasidigina orutuk olarak guveniyordu. Cogu tarayicida sag-tik contenteditable'i odaklar ama bu garanti degil ve fp-undo-btn/fp-redo-btn butonlarinin zaten yaptigi gibi acikca garanti etmek daha saglam. Artik cagiran (ana veya float contextmenu listener'i) window._mainEditorInstance/window._fpEditorInstance'i buildItems'a geciyor, Geri Al/Yinele tiklaninca once activateInstance(inst) cagriliyor.",
+      "refs": [
+        "kullanici-bildirimi-2026-08-09",
+        "v1.16.0"
+      ]
+    },
+    {
       "id": "trap-undo-debounce-fires-after-instance-switch",
       "level": "critical",
       "type": "trap",
@@ -37,10 +67,12 @@
       "line": 187,
       "anchor": "function doClose() {",
       "symbol": "doClose",
-      "title": "Kapatma _fpNoteId'i ve paylasilan DOM.$content referansini eski haline getirmezse: yanlis 'zaten acik' uyarisi + CAPRAZ-NOT VERI KAYBI",
-      "body": "js/01'deki activateInstance() her contentEditable'in odaklanmasinda (createInstance ile kayitli olanlarda) paylasilan DOM.$content referansini o alana YONLENDIRIR — fpContent de createInstance(fpContent,'') ile kayitli. Kullanici float panele odaklanip kapatirsa (X/menu/vazgec — hepsi doClose()'a cikar) DOM.$content fpContent'te KALIR; ana editorde hicbir sey degismemis gibi gorunur (gercek #content elementi dokunulmadi) ama saveNote() (Kaydet butonu/Ctrl+Enter/kaydet-onay diyalogu 'Evet') DOM.$content.innerHTML okur — bu artik fpContent'in BAYAT icerigidir. Sonuc: ana editordeki notun ustune float panelin icerigi yazilir, DOM.$editId hala ana notun id'sini gosterdigi icin bu SESSIZCE olur (konsolda hata yok). Ayrica _fpNoteId sifirlanmazsa editNote() 'bu not zaten ikinci editorde acik' uyarisini KAPATILDIKTAN SONRA bile vermeye devam eder (window._fpGetCurrentNoteId() hala eski id'yi dondurur). Duzeltme: doClose() artik _fpNoteId=null yapiyor, fpTitle/fpContent'i bosaltiyor, ve EditorState.activeInstance float panelin instance'iysa activateInstance(window._mainEditorInstance) ile DOM.$content'i ana editore geri donduruyor — editNote()'un zaten yaptigi ayni savunma deseni (bkz. 'editNote her zaman ana editoru hedeflemeli' yorumu, js/03).",
+      "title": "Kapatma _fpNoteId'i, DOM.$content'i VE EditorState._activeEditTarget'i eski haline getirmezse: yanlis 'zaten acik' uyarisi + CAPRAZ-NOT VERI KAYBI + yanlis hedefe uygulanan toolbar formatlama",
+      "body": "js/01'deki activateInstance() her contentEditable'in odaklanmasinda (createInstance ile kayitli olanlarda) paylasilan DOM.$content referansini o alana YONLENDIRIR — fpContent de createInstance(fpContent,'') ile kayitli. Kullanici float panele odaklanip kapatirsa (X/menu/vazgec — hepsi doClose()'a cikar) DOM.$content fpContent'te KALIR; ana editorde hicbir sey degismemis gibi gorunur (gercek #content elementi dokunulmadi) ama saveNote() (Kaydet butonu/Ctrl+Enter/kaydet-onay diyalogu 'Evet') DOM.$content.innerHTML okur — bu artik fpContent'in BAYAT icerigidir. Sonuc: ana editordeki notun ustune float panelin icerigi yazilir, DOM.$editId hala ana notun id'sini gosterdigi icin bu SESSIZCE olur (konsolda hata yok). Ayrica _fpNoteId sifirlanmazsa editNote() 'bu not zaten ikinci editorde acik' uyarisini KAPATILDIKTAN SONRA bile vermeye devam eder. UCUNCU (ayri) bir sistem daha var: EditorState._activeEditTarget (js/02) toolbar formatlama (Kalin/Italik/liste vb.) icin hangi elemente uygulanacagini tutar, YALNIZCA gercek focus event'leriyle guncellenir — activateInstance() BUNU TASIMAZ. fp-content odaklanip kapatilinca _activeEditTarget orada takili kalirsa, ana editorun toolbar butonlari _restoreToolbarSel() uzerinden (artik bos/gizli) float panel elementine odaklanmaya calisir — panel acikken (henuz kapatilmadan) bu DAHA CIDDI: gercekten gorunur/odaklanabilir float panel icerigine yanlislikla formatlama uygulanir. Duzeltme: doClose() artik _fpNoteId=null yapiyor, fpTitle/fpContent'i bosaltiyor, EditorState.activeInstance float panelin instance'iysa activateInstance(window._mainEditorInstance) ile DOM.$content'i ana editore geri donduruyor, VE EditorState._activeEditTarget fpContent'e esitse ana #content'e geri donduruyor + _savedToolbarSel'i temizliyor. editNote() de (js/03) ayni sekilde _activeEditTarget'i DOM.$content'e sifirliyor — bu hem float panel hem grid-hucresi kaynakli eskimislige karsi ekstra guvenlik.",
       "refs": [
-        "kullanici-bildirimi-2026-08-09"
+        "kullanici-bildirimi-2026-08-09",
+        "v1.15.132",
+        "v1.16.0"
       ]
     },
     {
@@ -464,7 +496,7 @@
       "level": "info",
       "type": "why",
       "file": "js/03-search-format-shortcuts.js",
-      "line": 684,
+      "line": 690,
       "anchor": "requestAnimationFrame(() => { EditorState._contentDirty = false; if (typeof window._undoSetupEnd === 'function') window._undoSetupEnd(); });",
       "symbol": "editNote (kapanis)",
       "title": "_contentDirty sifirlama render() sonrasina requestAnimationFrame ile ertelenir",
@@ -675,7 +707,7 @@
       "level": "important",
       "type": "why",
       "file": "js/context-menu.js",
-      "line": 250,
+      "line": 258,
       "anchor": "function _buildSubPanel(items, parentPanel) {",
       "symbol": "_buildSubPanel",
       "title": "Alt menu hover durum makinesinin kurallari",
@@ -689,7 +721,7 @@
       "level": "important",
       "type": "why",
       "file": "js/float-panel.js",
-      "line": 322,
+      "line": 332,
       "anchor": "if (typeof editNote === 'function') editNote(fpId);",
       "symbol": "float panel (masaüstüne sürükleme sonrası ana editörde açma)",
       "title": "editNote() cagrisindan once _fpNoteId sifirlanir",
@@ -703,7 +735,7 @@
       "level": "info",
       "type": "why",
       "file": "js/float-panel.js",
-      "line": 1164,
+      "line": 1174,
       "anchor": "tb.addEventListener('mousedown', e => {",
       "symbol": "float panel toolbar",
       "title": "Float panel toolbar butonlari mousedown kullanir, click degil",

@@ -79,14 +79,22 @@
     }
 
     /* ── Build items ── */
-    function buildItems(c) {
+    /* inst: bu menü hangi editörde açıldıysa (ana veya float) o instance — Geri Al/Yinele
+       tıklanmadan önce activateInstance ile kesinleşir. Sağ-tıkın kendisi zaten hedef
+       elementi odaklıyor (native davranış) ama buna örtük olarak güvenmek yerine burada
+       açıkça garanti ediyoruz — fp-undo-btn/fp-redo-btn'in kullandığı desenle aynı. */
+    function buildItems(c, inst) {
         const S   = { type:'sep' };
         const grp = label => ({ type:'grp', label });
         const it  = (icon, label, action, opts={}) => ({ type:'item', icon, label, action, ...opts });
+        const _activateThenUndo = fn => () => {
+            if (inst && typeof activateInstance === 'function') activateInstance(inst);
+            if (typeof fn === 'function') fn();
+        };
 
         const items = [
-            it('↺', 'Geri Al',  () => window.editorUndo && window.editorUndo(), { shortcut:'Ctrl+Z' }),
-            it('↻', 'Yinele',   () => window.editorRedo && window.editorRedo(), { shortcut:'Ctrl+Y' }),
+            it('↺', 'Geri Al',  _activateThenUndo(window.editorUndo), { shortcut:'Ctrl+Z' }),
+            it('↻', 'Yinele',   _activateThenUndo(window.editorRedo), { shortcut:'Ctrl+Y' }),
             S,
             it('✂', 'Kes',                   () => document.execCommand('cut'),   { shortcut:'Ctrl+X', disabled:!c.hasSel }),
             it('⿻', 'Kopyala',               () => document.execCommand('copy'),  { shortcut:'Ctrl+C', disabled:!c.hasSel }),
@@ -402,14 +410,14 @@
     /* ── Bind events ── */
     $content.addEventListener('contextmenu', e => {
         e.preventDefault();
-        openAt(e.clientX, e.clientY, buildItems(detect(e.target, $content)));
+        openAt(e.clientX, e.clientY, buildItems(detect(e.target, $content), window._mainEditorInstance));
     });
 
     const $fpContent = document.getElementById('fp-content');
     if ($fpContent) {
         $fpContent.addEventListener('contextmenu', e => {
             e.preventDefault();
-            openAt(e.clientX, e.clientY, buildItems(detect(e.target, $fpContent)));
+            openAt(e.clientX, e.clientY, buildItems(detect(e.target, $fpContent), window._fpEditorInstance));
         });
         $fpContent.addEventListener('scroll', close, { passive:true });
     }

@@ -625,6 +625,12 @@ function editNote(id) {
     if (typeof activateInstance === 'function' && window._mainEditorInstance) {
         activateInstance(window._mainEditorInstance);
     }
+    /* EditorState._activeEditTarget ayrı bir sistemdir (toolbar formatlama) — yalnızca
+       gerçek focus event'leriyle güncellenir, activateInstance onu taşımaz. Float panel
+       veya bir grid hücresi son odaklanan yerdiyse burada takılı kalabilir; ana editör
+       toolbar'ı (Kalın/İtalik/liste) o zaman yanlış elemente uygulanmaya çalışır. */
+    EditorState._activeEditTarget = DOM.$content;
+    EditorState._savedToolbarSel = null;
     if (typeof window._undoSetupStart === 'function') window._undoSetupStart();
     const n=State.notes.find(x=>String(x.id)===String(id)); if(!n) return;
     document.body.classList.remove('editor-pristine');

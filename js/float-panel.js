@@ -201,6 +201,16 @@
             EditorState.activeInstance === _fpInst) {
             activateInstance(window._mainEditorInstance);
         }
+        /* activateInstance yalnızca DOM.$content'i taşır — EditorState._activeEditTarget
+           ayrı bir sistemdir (toolbar formatlama, bkz. js/02 _restoreToolbarSel) ve yalnızca
+           gerçek focus event'leriyle güncellenir. fp-content kapanışta gizlense de bu değer
+           takılı kalabilir; kalırsa ana editörün Kalın/İtalik/liste vb. butonları
+           _restoreToolbarSel() üzerinden yanlışlıkla (artık boş de olsa) float panelin
+           elementine odaklanmaya çalışır. */
+        if (EditorState._activeEditTarget === fpContent) {
+            EditorState._activeEditTarget = document.getElementById('content');
+        }
+        EditorState._savedToolbarSel = null;
     }
     window._fpClose = doClose;
 
