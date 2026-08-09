@@ -413,6 +413,12 @@
         _attach(newEl);
     };
 
+    /* activateInstance() tarafından ESKİ instance hâlâ aktifken çağrılır — bekleyen
+       500ms'lik debounce'u ESKİ instance'a ait doğru şekilde flush eder. Aksi halde
+       zamanlayıcı instance geçişinden SONRA ateşlenip düzenlemeyi YANLIŞ (yeni aktif)
+       instance'ın undo yığınına yazar; eski instance'ın kendi geçmişinden de kaybolur. */
+    window._undoFlushPending = _flushDebounce;
+
     if (DOM.$content) _attach(DOM.$content);
 })();
 

@@ -369,6 +369,9 @@ function createInstance(contentEl, noteId) {
 function activateInstance(inst) {
     if (!inst || inst === EditorState.activeInstance) return;
     if (EditorState.activeInstance) saveContext(EditorState.activeInstance);
+    /* ESKİ instance hâlâ aktifken bekleyen undo debounce'unu flush et — yoksa
+       zamanlayıcı geçişten SONRA ateşlenip düzenlemeyi YANLIŞ instance'a yazar */
+    if (typeof window._undoFlushPending === 'function') window._undoFlushPending();
     EditorState.activeInstance = inst;
     DOM.$content = inst.$el;
     if (typeof window._undoSwitchTarget === 'function') window._undoSwitchTarget(inst.$el);

@@ -2,6 +2,17 @@
 
 ---
 
+## v1.15.133
+**Fix — Undo geçmişi float panel/ana editör arasında çapraz sızdırıyordu (kullanıcı sorusu üzerine bulundu)**
+- v1.15.132'nin `DOM.$content` çapraz-not sorununu araştırırken kullanıcı "undo history de aynı sorunu yaşıyor mu" diye sordu — evet, **ilişkili ama ayrı bir kök nedenle**
+- **Kök neden:** `js/09-search-undo-bridge.js`'teki `_debouncePush()`, karakter-düzeyinde her değişiklikte 500ms'lik bir `setTimeout` kuruyor; zamanlayıcı ateşlendiğinde `_pushState()` `DOM.$content.innerHTML`'i (kapanışa doğru alınmış) kullanıyor ama **`EditorState.activeInstance`'i o anda hangisi aktifse onu** kullanıyor. Kullanıcı ana editörde yazıp 500ms içinde float panele (veya tam tersi) geçerse, zamanlayıcı geçişten **sonra** ateşlenip düzenlemeyi **yanlış (yeni aktif) notun** undo yığınına yazıyordu — eski notun kendi geçmişinden o adım sessizce kayboluyordu
+- Bu, kaydedilen not **içeriğini** bozmuyor (kayıt işlemleri undo yığınından değil canlı DOM'dan okuyor) ama undo geçmişini gerçek şekilde kirletiyor: kullanıcı float panelde Ctrl+Z'ye basınca ana editördeki alakasız bir notun içeriği görünebilirdi
+- **Düzeltme:** `js/09` artık `window._undoFlushPending` (mevcut `_flushDebounce`'a eşit) olarak dışa açıyor; `activateInstance()` (`js/01`) `EditorState.activeInstance`'i değiştirmeden **önce** bunu çağırıyor — bekleyen zamanlayıcı hâlâ doğru (eski) instance aktifken senkron olarak flush edilip iptal ediliyor. Aynı düzeltme hem ana→float hem float→ana yönünde geçerli
+- `Comments.json` → `trap-undo-debounce-fires-after-instance-switch` (critical)
+- Doğrulama: karakter-düzeyinde (characterData, `_debouncePush`'ın gerçek yolu — `childList` mutasyonları zaten anında flush oluyor) bir düzenleme yapılıp 500ms debounce penceresi içinde diğer editöre geçildi — düzeltme öncesi düzenleme yanlış instance'ın yığınına sızıyordu (somut olarak reprodüksiyonla gösterildi), düzeltme sonrası geçiş anında doğru instance'a flush olduğu, karşı tarafın hiç etkilenmediği hem ana→float hem float→ana yönünde ayrı ayrı doğrulandı; ek olarak instance değiştirmeden normal undo/redo döngüsünün (v1→v2→undo→v1→redo→v2) bozulmadığı doğrulandı; konsolda yeni hata yok; `node tools/comments-check.js` temiz
+
+---
+
 ## v1.15.132
 **Fix — Float panel kapatınca çapraz-not veri kaybı (kullanıcı bildirimi)**
 - **Kök neden:** `js/01-core-storage-render.js`'teki çoklu-editör "instance" sistemi, hangi contenteditable alanı odaklanırsa paylaşılan `DOM.$content` referansını oraya yönlendiriyor (`activateInstance()`). Float panelin `fp-content`'i de bu sisteme kayıtlı. Kullanıcı float panele odaklanıp (okumak/düzenlemek için tıklayıp) sonra paneli kapatınca (X / menü / vazgeç — hepsi `doClose()`'a çıkıyor), `DOM.$content` **`fp-content`'te kalıyordu** — ana editörün kendi `#content` elementi görsel olarak hiç değişmemiş gibi duruyordu ama paylaşılan referans yanlış yere işaret ediyordu
