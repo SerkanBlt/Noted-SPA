@@ -65,6 +65,15 @@
         fpTitle.value = n.title || 'Not';
         fpContent.innerHTML = sanitize(n.content || '');
         if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
+        /* editNote() ile aynı restore zinciri — eskiden burada eksikti: not içeriği kaydedilirken
+           .ng-toolbar/.ng-add-col her zaman çıkarılır (saveNote), yalnızca editör içinde
+           GÖRÜNTÜLENİRKEN _restoreGrids() tarafından yeniden üretilir. Bu çağrılar olmadan
+           float panelde tablo/panel/kolon blokları toolbar'sız kalıyor + eski notlarda
+           .ng-v-wrap sarmalayıcısı eklenmediği için başlık hücresinin arka planı .ng-v-wrap
+           kartının rengi yerine th'nin kendi rengini gösteriyordu (bkz. Comments.json). */
+        if (typeof _upgradeGridWraps === 'function') _upgradeGridWraps(fpContent);
+        if (typeof _restoreGrids === 'function') _restoreGrids(fpContent);
+        if (typeof initShapeOverlays === 'function') initShapeOverlays(fpContent);
         if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks(fpContent);
         if (_fpInst) { _fpInst._stack = [{ html: n.content || '', cursor: null }]; _fpInst._idx = 0; _fpInst.noteId = String(id); }
         if (_fpResetZoom) _fpResetZoom();

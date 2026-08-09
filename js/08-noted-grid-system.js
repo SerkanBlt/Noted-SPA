@@ -206,11 +206,19 @@ function _createGridToolbar(wrap, table) {
 
     function deleteBlock() {
         const w = getWrap();
+        /* Bu araç çubuğu hem ana editörde hem float panelde kullanılabiliyor — DOM.$content
+           yerine bloğun GERÇEK sahibi contentEditable'ı bul (silmeden önce, node DOM'dan
+           kopmadan). Sentetik 'input' event'i her iki editörün de kendi kirli-işaret/otomatik
+           kaydet mekanizmasını (ana: _bindDirtyListeners + MutationObserver; float: fpContent
+           input debounce) doğru şekilde tetikler. */
+        const owner = w.closest('[contenteditable="true"]') || DOM.$content;
         const p = document.createElement('p'); p.innerHTML = '<br>';
         w.parentNode.insertBefore(p, w); w.remove();
         const r = document.createRange(); r.setStart(p,0); r.collapse(true);
         const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-        DOM.$content.focus(); _markDirty(); updateFooterVisibility();
+        owner.focus();
+        owner.dispatchEvent(new Event('input', { bubbles: true }));
+        updateFooterVisibility();
     }
 
     function equalizeWidths() {
@@ -220,7 +228,7 @@ function _createGridToolbar(wrap, table) {
         const tableW = tbl.getBoundingClientRect().width; if (!tableW) return;
         const n = cgCols.length, w = Math.floor(tableW / n);
         cgCols.forEach((col, i) => { col.style.width = (i === n - 1 ? tableW - w * (n - 1) : w) + 'px'; });
-        _markDirty();
+        (tbl.closest('[contenteditable="true"]') || DOM.$content).dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     if (type === 'table') {
@@ -263,6 +271,17 @@ function _createGridToolbar(wrap, table) {
     return bar;
 }
 
+/* Grid hücre/satır/kolon eylemleri hem ana editörde hem float panelde çalışabiliyor.
+   DOM.$content'e asla güvenilmez: bunlar toolbar mousedown (odak kaybı önlenir, yeni focus
+   event'i üretilmez) veya klavye kısayoluyla tetiklenebilir; ikisinde de DOM.$content
+   tıklama anında GÜNCEL olmayabilir. Elementin gerçek sahibi contentEditable'dan bulunur,
+   sentetik 'input' event'i ana editörün kendi dirty-listener'ini (js/03) veya float
+   panelin kendi 1.2sn debounce'unu (js/float-panel.js) doğru şekilde tetikler. */
+function _gridMarkDirty(el) {
+    const owner = (el && el.closest && el.closest('[contenteditable="true"]')) || DOM.$content;
+    owner.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 /* Tablo/panele satır ekle */
 
 /* Seçili satırı sil */
@@ -282,7 +301,7 @@ function _gridDeleteRow(table) {
     if (tr.parentElement.tagName === 'THEAD') { _showSnack('Başlık satırı silinemez.', 'warn'); return; }
     const rows = [...(table.querySelector('tbody')||{querySelectorAll:()=>[]}).querySelectorAll('tr')];
     if (rows.length <= 1) { _showSnack('Son içerik satırı silinemez.', 'warn'); return; }
-    tr.remove(); _markDirty(); updateFooterVisibility();
+    tr.remove(); _gridMarkDirty(table); updateFooterVisibility();
 }
 
 /* Seçili kolonu sil */
@@ -308,7 +327,7 @@ function _gridDeleteCol(table) {
         if (cells[colIdx]) cells[colIdx].remove();
     });
     table.dataset.cols = String(Math.max(1, parseInt(table.dataset.cols || 3) - 1));
-    _bindGridResize(table); _markDirty(); updateFooterVisibility();
+    _bindGridResize(table); _gridMarkDirty(table); updateFooterVisibility();
 }
 
 function _gridAddRow(table) {
@@ -334,7 +353,7 @@ function _gridAddRow(table) {
     tbody.appendChild(tr);
     _bindGridResize(table);
     tr.querySelector('.ng-cell').focus();
-    _markDirty(); updateFooterVisibility();
+    _gridMarkDirty(table); updateFooterVisibility();
 }
 
 /* Resize handle DOM'a ekle */
@@ -393,7 +412,7 @@ function _startGridResize(e, table, colIdx) {
     }
     startPointerDrag(onMove, function onUp() {
         handle.classList.remove('resizing');
-        _markDirty(); updateFooterVisibility();
+        _gridMarkDirty(table); updateFooterVisibility();
     });
 }
 
@@ -460,7 +479,7 @@ function _gridAddCol(table) {
 
     const newFirst = table.querySelector('thead tr:last-child th:last-child .ng-title, tbody tr:first-child td:last-child .ng-cell');
     if (newFirst) requestAnimationFrame(() => newFirst.focus());
-    _markDirty(); updateFooterVisibility();
+    _gridMarkDirty(table); updateFooterVisibility();
 }
 
 /* Resize handle'larını yenile — kolon index'ini data-col'dan değil DOM pozisyonundan okur */
@@ -490,7 +509,7 @@ function _gridMoveRow(table, dir) {
     if (targetIdx < 0 || targetIdx >= rows.length) return;
     if (dir === -1) tbody.insertBefore(tr, rows[targetIdx]);
     else tbody.insertBefore(rows[targetIdx], tr);
-    active.focus(); _markDirty(); updateFooterVisibility();
+    active.focus(); _gridMarkDirty(table); updateFooterVisibility();
 }
 
 /* İmlecin bulunduğu kolonu sola/sağa taşı */
@@ -523,7 +542,7 @@ function _gridMoveCol(table, dir) {
     }
 
     _bindGridResize(table);
-    active.focus(); _markDirty(); updateFooterVisibility();
+    active.focus(); _gridMarkDirty(table); updateFooterVisibility();
 }
 
 /* ── Hizalama popup ── */
@@ -877,8 +896,9 @@ function _makeShapeInteractive(el) {
     });
 }
 
-function initShapeOverlays() {
-    DOM.$content.querySelectorAll('.note-shape-overlay').forEach(el => {
+function initShapeOverlays(root) {
+    root = root || DOM.$content;
+    root.querySelectorAll('.note-shape-overlay').forEach(el => {
         _applyShapeStyles(el);
         _ensureShapeText(el);
         _updateRoundedCorners(el);
@@ -996,9 +1016,12 @@ document.addEventListener('keydown', function ngTabNav(e) {
     }
 }, true);
 
-/* ── editNote restore: noted-grid tablolarını yenile ── */
-function _restoreGrids() {
-    DOM.$content.querySelectorAll('.ng-wrap').forEach(wrap => {
+/* ── editNote restore: noted-grid tablolarını yenile ──
+   root: hangi contentEditable üzerinde çalışılacağı — varsayılan DOM.$content (ana editör),
+   float panel için fpContent geçilir (bkz. why-restoregrids-shapes-accept-root). */
+function _restoreGrids(root) {
+    root = root || DOM.$content;
+    root.querySelectorAll('.ng-wrap').forEach(wrap => {
         const table = wrap.querySelector('.noted-grid');
         if (!table) return;
         /* data-gridType sync: dataset'ten veya class'tan çıkar */
@@ -1041,7 +1064,7 @@ function _restoreGrids() {
     });
 
     /* Callout sil butonlarını yenile */
-    DOM.$content.querySelectorAll('.callout').forEach(callout => {
+    root.querySelectorAll('.callout').forEach(callout => {
         let btn = callout.querySelector('.callout-del');
         if (!btn) {
             btn = document.createElement('button');
@@ -1059,13 +1082,13 @@ function _restoreGrids() {
             if (callout.parentNode) { callout.parentNode.insertBefore(p, callout); callout.remove(); }
             const r = document.createRange(); r.setStart(p,0); r.collapse(true);
             const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-            DOM.$content.focus(); _markDirty(); updateFooterVisibility();
+            root.focus(); _markDirty(); updateFooterVisibility();
         });
         btn.parentNode.replaceChild(fresh, btn);
     });
 
     /* Eski col-block ve layout-block'ları migrate et */
-    DOM.$content.querySelectorAll('.col-block').forEach(blk => {
+    root.querySelectorAll('.col-block').forEach(blk => {
         const cols = blk.querySelectorAll('.col-panel').length || 2;
         const wrap = createGrid('panel', cols, 1);
         const grid = wrap.querySelector('.noted-grid');
@@ -1080,7 +1103,7 @@ function _restoreGrids() {
         });
         blk.parentNode.replaceChild(wrap, blk);
     });
-    DOM.$content.querySelectorAll('.layout-block').forEach(blk => {
+    root.querySelectorAll('.layout-block').forEach(blk => {
         const cols = blk.querySelectorAll('.layout-col').length || 2;
         const wrap2 = createGrid('column', cols, 1);
         const grid2 = wrap2.querySelector('.noted-grid');

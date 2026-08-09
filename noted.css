@@ -2867,9 +2867,16 @@ input[type="file"] { display:none; }
         .fp-editor-content pre { background:var(--pre-bg,var(--surface-2)); color:var(--pre-text,var(--text)); border:1px solid var(--pre-border,var(--border)); padding:12px 14px; border-radius:10px; margin:6px 0; overflow-x:auto; font-family:var(--font-mono); font-size:.8em; line-height:1.6; }
         .fp-editor-content code { background:var(--code-bg,var(--surface-2)); color:var(--code-text,var(--text)); border:1px solid var(--code-border,var(--border)); padding:2px 5px; border-radius:4px; font-family:var(--font-mono); font-size:.76em; }
         .fp-editor-content a { color:var(--accent); }
-        .fp-editor-content table { border-collapse:collapse; width:100%; margin:8px 0; }
-        .fp-editor-content td,.fp-editor-content th { border:1px solid var(--border); padding:5px 10px; font-size:.88rem; }
-        .fp-editor-content th { background:var(--surface-2); font-weight:600; }
+        /* :not(.noted-grid) — Faz 1'de #content için düzeltilen aynı tuzak (bkz.
+           trap-orphan-selector-list-id-specificity, Comments.json): bu kurallar yapıştırılan
+           HAM tablolar içindir; noted-grid (Panel/Tablo/Kolon bloğu) hariç tutulmazsa
+           .ng-v-wrap'in kart arka planıyla aynı renkteki th arka planı, kartın etrafındaki
+           boşlukları da kart rengiyle boyar — kart görünümü kayboluyor. .noted-grid class'ı
+           <table>'de olduğu için td/th kuralları da table:not(.noted-grid) ile nitelendi. */
+        .fp-editor-content table:not(.noted-grid) { border-collapse:collapse; width:100%; margin:8px 0; }
+        .fp-editor-content table:not(.noted-grid) td,
+        .fp-editor-content table:not(.noted-grid) th { border:1px solid var(--border); padding:5px 10px; font-size:.88rem; }
+        .fp-editor-content table:not(.noted-grid) th { background:var(--surface-2); font-weight:600; }
         /* Split mode: main-panel → row, float panel gerçek flex child olur */
         .main-panel.fp-split-mode {
             flex-direction: row;
