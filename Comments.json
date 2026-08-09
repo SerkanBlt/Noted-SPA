@@ -16,6 +16,20 @@
   },
   "entries": [
     {
+      "id": "trap-floatpanel-close-must-restore-domcontent",
+      "level": "critical",
+      "type": "trap",
+      "file": "js/float-panel.js",
+      "line": 187,
+      "anchor": "function doClose() {",
+      "symbol": "doClose",
+      "title": "Kapatma _fpNoteId'i ve paylasilan DOM.$content referansini eski haline getirmezse: yanlis 'zaten acik' uyarisi + CAPRAZ-NOT VERI KAYBI",
+      "body": "js/01'deki activateInstance() her contentEditable'in odaklanmasinda (createInstance ile kayitli olanlarda) paylasilan DOM.$content referansini o alana YONLENDIRIR — fpContent de createInstance(fpContent,'') ile kayitli. Kullanici float panele odaklanip kapatirsa (X/menu/vazgec — hepsi doClose()'a cikar) DOM.$content fpContent'te KALIR; ana editorde hicbir sey degismemis gibi gorunur (gercek #content elementi dokunulmadi) ama saveNote() (Kaydet butonu/Ctrl+Enter/kaydet-onay diyalogu 'Evet') DOM.$content.innerHTML okur — bu artik fpContent'in BAYAT icerigidir. Sonuc: ana editordeki notun ustune float panelin icerigi yazilir, DOM.$editId hala ana notun id'sini gosterdigi icin bu SESSIZCE olur (konsolda hata yok). Ayrica _fpNoteId sifirlanmazsa editNote() 'bu not zaten ikinci editorde acik' uyarisini KAPATILDIKTAN SONRA bile vermeye devam eder (window._fpGetCurrentNoteId() hala eski id'yi dondurur). Duzeltme: doClose() artik _fpNoteId=null yapiyor, fpTitle/fpContent'i bosaltiyor, ve EditorState.activeInstance float panelin instance'iysa activateInstance(window._mainEditorInstance) ile DOM.$content'i ana editore geri donduruyor — editNote()'un zaten yaptigi ayni savunma deseni (bkz. 'editNote her zaman ana editoru hedeflemeli' yorumu, js/03).",
+      "refs": [
+        "kullanici-bildirimi-2026-08-09"
+      ]
+    },
+    {
       "id": "trap-storage-v-key-shared-by-two-migrations",
       "level": "critical",
       "type": "trap",
@@ -661,8 +675,8 @@
       "level": "important",
       "type": "why",
       "file": "js/float-panel.js",
-      "line": 309,
-      "anchor": "_fpNoteId = null;",
+      "line": 322,
+      "anchor": "if (typeof editNote === 'function') editNote(fpId);",
       "symbol": "float panel (masaüstüne sürükleme sonrası ana editörde açma)",
       "title": "editNote() cagrisindan once _fpNoteId sifirlanir",
       "body": "editNote() icinde 'bu not zaten float editorde acik mi' diye kontrol eden bir guard vardir; _fpNoteId sifirlanmadan editNote(fpId) cagrilirsa guard notu zaten float'ta acik sanip erken return eder ve ana editorde acilmaz. Sifirlama bu guard'i bilerek bypass eder.",
@@ -675,7 +689,7 @@
       "level": "info",
       "type": "why",
       "file": "js/float-panel.js",
-      "line": 1152,
+      "line": 1164,
       "anchor": "tb.addEventListener('mousedown', e => {",
       "symbol": "float panel toolbar",
       "title": "Float panel toolbar butonlari mousedown kullanir, click degil",

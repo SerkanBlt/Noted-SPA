@@ -189,6 +189,18 @@
         if (_isDocked) _undock();
         FP.classList.remove('fp-open', 'fp-minimized');
         _isOpen = false;
+        /* _fpNoteId sıfırlanmazsa editNote() bu notu kalıcı olarak "ikinci editörde açık"
+           sanıp reddeder. DOM.$content de fpContent'te kalmış olabilir (kullanıcı float
+           paneldeyken oraya odaklanmışsa activateInstance onu oraya yönlendirmişti) —
+           ana editöre geri dönülmezse sonraki bir kayıt (Kaydet/Ctrl+Enter/kaydet-onay
+           diyaloğu) ana editördeki notun üzerine float panelin bayat içeriğini yazar. */
+        _fpNoteId = null;
+        fpTitle.value = '';
+        fpContent.innerHTML = '';
+        if (typeof activateInstance === 'function' && window._mainEditorInstance &&
+            EditorState.activeInstance === _fpInst) {
+            activateInstance(window._mainEditorInstance);
+        }
     }
     window._fpClose = doClose;
 
