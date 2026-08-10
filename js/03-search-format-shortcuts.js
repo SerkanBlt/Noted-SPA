@@ -48,7 +48,7 @@ DOM.searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearc
 /* ══ VOICE SEARCH ══ */
 (function() {
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return;
-    const micBtn=$('search-mic'), recognition=new SR();
+    const micBtn=$('search-mic'), recognition=new SR(), _se=$('search-expand');
     recognition.lang='tr-TR'; recognition.continuous=false; recognition.interimResults=true;
     micBtn.classList.add('available');
     recognition.onresult=e => {
@@ -61,7 +61,7 @@ DOM.searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearc
     recognition.onerror=e=>{ micBtn.classList.remove('listening'); micBtn.title='Sesle ara'; };
     micBtn.addEventListener('click', e => {
         e.stopPropagation();
-        if (!_se.classList.contains('open')) { _se.classList.add('open'); DOM.searchInput.focus(); }
+        if (_se && !_se.classList.contains('open')) { _se.classList.add('open'); DOM.searchInput.focus(); }
         if (micBtn.classList.contains('listening')) recognition.stop();
         else { recognition.start(); micBtn.classList.add('listening'); micBtn.title='Dinleniyor…'; }
     });
@@ -167,13 +167,23 @@ DOM.$tfBadge.addEventListener('click', e => {
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return;
     const micBtn=$('content-mic'), interimEl=$('voice-interim'), recognition=new SR();
     const editorEl = $('editor');
+    const vri=$('voice-record-indicator');
+    const vriPauseBtn=$('vri-pause-btn'), vriResumeBtn=$('vri-resume-btn'), vriStopBtn=$('vri-stop-btn');
     recognition.lang='tr-TR'; recognition.continuous=true; recognition.interimResults=true;
     micBtn.classList.add('available');
+    /* Web Speech API'de gerçek "duraklat" yok — Duraklat aslında recognition.stop() çağırıyor,
+       _paused bayrağı onend'in normalde yaptığı otomatik yeniden-başlatmayı (continuous mod
+       kendi kendini iyileştirir) bastırıyor. Devam Et tekrar recognition.start() çağırır. */
+    let _paused = false;
+    function setPaused(on) {
+        _paused = on;
+        if (vri) vri.classList.toggle('paused', on);
+    }
     function setListening(on) {
         micBtn.classList.toggle('listening', on);
         micBtn.title = on ? 'Dinleniyor — durdurmak için tıkla' : 'Sesle yaz';
         if (editorEl) editorEl.classList.toggle('mic-listening', on);
-        if (!on) { interimEl.textContent=''; interimEl.classList.remove('visible'); }
+        if (!on) { interimEl.textContent=''; interimEl.classList.remove('visible'); setPaused(false); }
     }
     recognition.onresult=e => {
         let interimText='';
@@ -184,12 +194,30 @@ DOM.$tfBadge.addEventListener('click', e => {
         }
         if(interimText) { interimEl.textContent='🎤 '+interimText; interimEl.classList.add('visible'); }
     };
-    recognition.onend=()=>{ if(micBtn.classList.contains('listening')) { try{recognition.start();}catch(e){} } else { setListening(false); } };
+    recognition.onend=()=>{
+        if (!micBtn.classList.contains('listening')) { setListening(false); return; }
+        if (_paused) return; /* Duraklat tarafından durduruldu — otomatik yeniden başlatma yok */
+        try{recognition.start();}catch(e){}
+    };
     recognition.onerror=e=>{ if(e.error==='aborted') return; setListening(false); };
     micBtn.addEventListener('click',e=>{
         e.stopPropagation();
         if(micBtn.classList.contains('listening')) { setListening(false); recognition.stop(); }
         else { DOM.$content.focus(); recognition.start(); setListening(true); }
+    });
+    if (vriPauseBtn) vriPauseBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!micBtn.classList.contains('listening') || _paused) return;
+        setPaused(true); recognition.stop();
+    });
+    if (vriResumeBtn) vriResumeBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!micBtn.classList.contains('listening') || !_paused) return;
+        setPaused(false); DOM.$content.focus(); try{recognition.start();}catch(err){}
+    });
+    if (vriStopBtn) vriStopBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        setListening(false); recognition.stop();
     });
 })();
 

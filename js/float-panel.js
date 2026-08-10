@@ -901,13 +901,22 @@
                 const rec = new SR();
                 rec.lang = 'tr-TR'; rec.continuous = true; rec.interimResults = true;
                 let _fpListening = false;
+                let _fpPaused = false;
                 const interimEl = document.getElementById('fp-voice-interim');
+                const fpVri = document.getElementById('fp-voice-record-indicator');
+                const fpVriPauseBtn = document.getElementById('fp-vri-pause-btn');
+                const fpVriResumeBtn = document.getElementById('fp-vri-resume-btn');
+                const fpVriStopBtn = document.getElementById('fp-vri-stop-btn');
+                function _fpSetPaused(on) {
+                    _fpPaused = on;
+                    if (fpVri) fpVri.classList.toggle('paused', on);
+                }
                 function _fpSetMicListening(on) {
                     _fpListening = on;
                     fpMicBtn.classList.toggle('listening', on);
                     fpMicBtn.title = on ? 'Dinleniyor — durdurmak için tıkla' : 'Sesle Yaz';
                     FP.classList.toggle('fp-mic-listening', on);
-                    if (!on && interimEl) { interimEl.textContent = ''; interimEl.classList.remove('visible'); }
+                    if (!on) { if (interimEl) { interimEl.textContent = ''; interimEl.classList.remove('visible'); } _fpSetPaused(false); }
                 }
                 rec.onresult = e => {
                     let interim = '';
@@ -921,12 +930,30 @@
                     }
                     if (interim && interimEl) { interimEl.textContent = '🎤 ' + interim; interimEl.classList.add('visible'); }
                 };
-                rec.onend = () => { if (_fpListening) { try { rec.start(); } catch(e) {} } else _fpSetMicListening(false); };
+                rec.onend = () => {
+                    if (!_fpListening) { _fpSetMicListening(false); return; }
+                    if (_fpPaused) return; /* Duraklat tarafından durduruldu — otomatik yeniden başlatma yok */
+                    try { rec.start(); } catch(e) {}
+                };
                 rec.onerror = e => { if (e.error === 'aborted') return; _fpSetMicListening(false); };
                 fpMicBtn.addEventListener('click', e => {
                     e.stopPropagation();
                     if (_fpListening) { _fpSetMicListening(false); rec.stop(); }
                     else { fpContent.focus(); rec.start(); _fpSetMicListening(true); }
+                });
+                if (fpVriPauseBtn) fpVriPauseBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (!_fpListening || _fpPaused) return;
+                    _fpSetPaused(true); rec.stop();
+                });
+                if (fpVriResumeBtn) fpVriResumeBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (!_fpListening || !_fpPaused) return;
+                    _fpSetPaused(false); fpContent.focus(); try { rec.start(); } catch(err) {}
+                });
+                if (fpVriStopBtn) fpVriStopBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    _fpSetMicListening(false); rec.stop();
                 });
             }
         }

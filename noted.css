@@ -137,12 +137,16 @@
            göstergeyi görünür yapıyor — ata seçici derinliğinden bağımsız çalışır. */
         .voice-record-indicator {
             position:absolute; inset:0; z-index:6;
-            display:none; align-items:center; justify-content:center;
+            display:none; flex-direction:column; align-items:center; justify-content:center; gap:18px;
             pointer-events:none;
         }
         .mic-listening .voice-record-indicator,
         .fp-mic-listening .voice-record-indicator { display:flex; }
-        .voice-record-indicator i {
+        /* vri-visual: ikon + halkalar için ayrı ortalama bağlamı — kontrol düğmeleri (Duraklat/Devam Et/Durdur)
+           de .voice-record-indicator'ın descendant'ı olduğundan, ikon seçicisi .vri-visual'a taraflı olmalı,
+           yoksa küçük buton ikonları da dev boyut+nefes animasyonunu miras alır. */
+        .vri-visual { position:relative; display:flex; align-items:center; justify-content:center; }
+        .vri-visual i {
             position:relative; z-index:2;
             font-size:clamp(40px, 11vw, 84px); color:rgba(239,68,68,.4);
             animation:vriIconBreathe 2.4s ease-in-out infinite;
@@ -164,9 +168,32 @@
             0%,100% { opacity:.28; transform:scale(1); }
             50%     { opacity:.55; transform:scale(1.08); }
         }
+        /* Duraklatılınca (JS: .paused sınıfı) halka/ikon animasyonu da donar — gerçekten kayıt yapılmadığını yansıtır */
+        .voice-record-indicator.paused .vri-ring,
+        .voice-record-indicator.paused .vri-visual i { animation-play-state:paused; }
         @media (prefers-reduced-motion: reduce) {
-            .voice-record-indicator i, .vri-ring { animation:none; opacity:.4; }
+            .vri-visual i, .vri-ring { animation:none; opacity:.4; }
         }
+
+        /* ── Sesle yazma kontrolleri: Duraklat / Devam Et / Durdur ── */
+        /* .voice-record-indicator'ın geri kalanı pointer-events:none (dekoratif overlay) ama
+           bu satır .vri-controls'u tekrar tıklanabilir yapıyor — CSS pointer-events soydan gelir
+           ama bir alt element kendi degeriyle bunu ezebilir. */
+        .vri-controls { display:flex; gap:14px; pointer-events:auto; }
+        .vri-ctrl-btn {
+            width:44px; height:44px; border-radius:50%; border:none;
+            background:var(--surface); color:var(--text-muted); cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            font-size:1rem; box-shadow:0 3px 12px var(--shadow);
+            transition:color .15s, transform .12s;
+        }
+        .vri-ctrl-btn:hover { color:var(--accent); transform:scale(1.08); }
+        .vri-ctrl-btn:active { transform:scale(.92); }
+        .vri-stop-btn:hover { color:var(--danger,#ef4444); }
+        /* Varsayılan: dinliyor (duraklatılmamış) — Duraklat + Durdur görünür, Devam Et gizli */
+        .vri-resume-btn { display:none; }
+        .voice-record-indicator.paused .vri-pause-btn  { display:none; }
+        .voice-record-indicator.paused .vri-resume-btn { display:flex; }
 
         /* Group filter badge */
         .gf-wrap { position:relative; flex-shrink:0; }
