@@ -3847,12 +3847,18 @@ input[type="file"] { display:none; }
         #main-list.view-pill .pinned-notes-container { display:flex; flex-wrap:wrap; gap:5px 8px; padding:4px 2px 14px; margin-bottom:16px !important; }
         #main-list.view-pill .note-item {
             padding:3px 10px; margin:0; border-radius:20px;
-            border-left:none !important; border:1.5px solid var(--border);
+            /* border-left'i AYRI "none !important" ile kapatıp ardından border shorthand'ı
+               important OLMADAN yazmak solu görünmez bırakıyordu: .note-item[data-cl] ve
+               .selected zaten border-left-color'u !important veriyor, bu yalnızca !important
+               bir bildirimle yenilebilir — ama important vs important eşitliğinde specificity
+               kazanır ve #main-list ID'si olan bu seçici zaten üstün, tek bir "border...!important"
+               shorthand ile 4 kenar birden atomik şekilde ayarlanmalı (bkz. Comments.json). */
+            border:1.5px solid var(--border) !important;
             animation:none; box-shadow:none;
             display:flex; align-items:center;
             width:auto; max-width:220px; min-width:0; flex-shrink:0;
         }
-        #main-list.view-pill .note-item:hover { border-color:var(--accent); }
+        #main-list.view-pill .note-item:hover { border-color:var(--accent) !important; }
         #main-list.view-pill .note-summary,
         #main-list.view-pill .note-tags,
         #main-list.view-pill .note-date,
@@ -4353,14 +4359,22 @@ input[type="file"] { display:none; }
         .ng-panel-frame .noted-grid.grid-panel .ng-resize.resizing::after { background: transparent !important; }
 
         /* ── Tablo (standart tablo) ── */
-        /* bg: var(--tbl-header-bg) → header'daki clip gap'leri header bg ile örtülür */
+        /* border/border-radius/box-shadow artık .ng-table-scroll'da, table'da DEĞİL:
+           border-collapse:collapse + border-radius + overflow:hidden AYNI <table>'de
+           birlikte güvenilir çalışmıyor — collapse edilmiş hücre kenarları köşe
+           yuvarlamasını "silik"/çentikli gösteriyordu (eskiden header bg'sini tabloyla
+           aynı yapıp gizlenmeye çalışılmıştı, kök neden değil). .ng-table-scroll düz bir
+           div olduğu için (table-layout kuralları yok) overflow-x:auto'nun zaten tetiklediği
+           clip bağlamı köşeyi TEMİZ kesiyor. */
         .noted-grid.grid-table {
-            border: 1px solid var(--tbl-border);
-            border-radius: 8px; overflow: hidden;
             background: var(--tbl-header-bg);
+        }
+        .ng-wrap-table .ng-table-scroll {
+            border: 1px solid var(--tbl-border);
+            border-radius: 8px;
             box-shadow: 0 1px 4px var(--shadow);
         }
-        .noted-grid.grid-table:focus-within {
+        .ng-wrap-table .ng-table-scroll:focus-within {
             border-color: var(--accent);
             box-shadow: 0 0 0 2px var(--accent-dim);
         }
