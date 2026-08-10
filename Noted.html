@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.16.5 — fix: iki stil hatasi. (1) Tablo dis cercevesinin kose yuvarlamasi silik/centikliydi - border-collapse+border-radius+overflow:hidden ayni <table>'de guvenilir calismiyordu, kural artik table'i saran .ng-table-scroll div'inde. (2) Not listesi pil (pill) gorunumunde hover'da SOL kenar hic gorunmuyordu - border-left'i once "none !important" ile kapatip ardindan border shorthand'ini important olmadan yeniden yazmak solu kalici olarak gizliyordu, artik tek "border...!important" shorthand'i 4 kenari birden ayarliyor -->
+<!-- Noted v1.16.6 — stil: (1) Panel header ikon dugmeleri (Baglanti Haritasi zoom butonlari, Hatirlatici "+" dugmesi, AI/Todo/Ayarlar/Yardim kapat dugmeleri vb.) .cf-btn/.side-icon-btn mantigina getirildi - cerceve/dolgu zemin kaldirildi, hover artik yalnizca ikon rengini accent'e ceviriyor (kirmizi hover'lar da dahil, sticky #stb-close'un zemin ihtiyaci haric). (2) Ust cekmece (#stb-trigger) varsayilan opacity'si .06 idi, alt cekmeceyle (#cf-trigger, .55) tutarsizdi - esitlendi. (3) Sesle yazma aktifken editor ortasinda buyuk, transparan, uc halka ile yumusakca soluklasip-koyulasan bir mikrofon gostergesi eklendi (main editor + float panel), mevcut .mic-listening/.fp-mic-listening sinif-tabanli mekanizmayi kullaniyor, yeni JS gerekmedi -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.16.5</title>
+    <title>Noted v1.16.6</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -43,7 +43,7 @@
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.16.5</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.16.6</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -313,6 +313,13 @@
                 <button id="save-btn" class="cf-btn cf-save" title="Kaydet (Ctrl+Enter)"><i class="fas fa-check"></i></button>
                 <div id="content" contenteditable="true" data-placeholder="Notunuzu buraya yazın… (#etiket ekleyebilirsiniz)" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Not içeriği"></div>
                 <!-- col-block'lar #content içine JS ile eklenir -->
+                <!-- v1.16.6: sesle yazma aktifken editör ortasında büyük, transparan, soft yanıp sönen gösterge -->
+                <div id="voice-record-indicator" class="voice-record-indicator" aria-hidden="true">
+                    <span class="vri-ring vri-ring-1"></span>
+                    <span class="vri-ring vri-ring-2"></span>
+                    <span class="vri-ring vri-ring-3"></span>
+                    <i class="fas fa-microphone"></i>
+                </div>
                 <div id="voice-interim" class="voice-interim"></div>
                 <!-- v1.6: İçindekiler paneli -->
                 <div id="editor-toc" class="toc-panel" style="display:none">
@@ -883,7 +890,7 @@
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.16.5</span>
+      <span class="hm-ver">v1.16.6</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -915,7 +922,7 @@
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.16.5</h2>
+          <h2>Noted v1.16.6</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>
@@ -1368,6 +1375,12 @@
         <div id="fp-cf-trigger" title="Araç çubuğu (hover ile aç)"></div>
         <button id="fp-save-btn" class="cf-btn cf-save" title="Kaydet"><i class="fas fa-check"></i></button>
         <div id="fp-content" class="fp-editor-content" contenteditable="true" spellcheck="false" data-placeholder="Notunuzu buraya yazın… (#etiket ekleyebilirsiniz)"></div>
+        <div id="fp-voice-record-indicator" class="voice-record-indicator" aria-hidden="true">
+            <span class="vri-ring vri-ring-1"></span>
+            <span class="vri-ring vri-ring-2"></span>
+            <span class="vri-ring vri-ring-3"></span>
+            <i class="fas fa-microphone"></i>
+        </div>
         <div id="fp-voice-interim" class="voice-interim"></div>
         <div class="content-footer" id="fp-footer">
             <div class="cf-group cf-group-left">
