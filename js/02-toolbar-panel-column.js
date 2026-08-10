@@ -1181,6 +1181,40 @@ document.addEventListener('keydown', e => {
     sel.removeAllRanges(); sel.addRange(r);
 }, true);
 
+/* Not içeriği bir liste (<ul>/<ol>) ile başlıyorsa, imleç mutlak başta (ilk satırın ilk
+   karakterinden önce) iken ArrowDown'ın hiçbir şey yapmadığı bilinen bir tarayıcı garipliği
+   (Chromium'un liste işaretçisiyle satır-altı konumunu hesaplayamaması) — yukarıdaki Enter
+   düzeltmesiyle aynı köşe durumu. preventDefault YOK: native davranış önce çalışsın, yalnızca
+   imleç GERÇEKTEN hareket etmediyse (bir sonraki tick'te aynı konumdaysa) Selection.modify()
+   ile bir satır aşağı itiyoruz — native zaten çalışıyorsa bu kod tamamen no-op kalır. */
+document.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowDown' || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
+    const node = sel.anchorNode;
+    if (!node) return;
+    const el = node.nodeType === 3 ? node.parentElement : node;
+    if (!el) return;
+    const container = el.closest('#content, .col-panel-content, .layout-col');
+    if (!container) return;
+
+    const range = sel.getRangeAt(0);
+    const testRange = document.createRange();
+    testRange.setStart(container, 0);
+    testRange.setEnd(range.startContainer, range.startOffset);
+    if (testRange.toString() !== '') return; /* mutlak başta değiliz, native'e karışma */
+
+    const beforeContainer = range.startContainer, beforeOffset = range.startOffset;
+    setTimeout(() => {
+        const sel2 = window.getSelection();
+        if (!sel2.rangeCount) return;
+        const r2 = sel2.getRangeAt(0);
+        if (r2.startContainer === beforeContainer && r2.startOffset === beforeOffset) {
+            sel2.modify('move', 'forward', 'line');
+        }
+    }, 0);
+});
+
 /* ══ TOOLBAR KONUMLANDIRMA ══ */
 DOM.$toolbar = $('toolbar');
 EditorState.toolbarHideTimer = null; EditorState.toolbarDragged = false; EditorState._fsizeApplying = false;

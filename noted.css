@@ -1021,10 +1021,15 @@
         /* İçerik footer — [Ses] [Sil] [Kaydet] [İptal] eşit aralıklı */
         .content-footer {
             display:flex; align-items:center;
-            justify-content:space-between;
+            justify-content:center;
+            gap:22px;
             padding:8px 12px 10px; width:100%;
         }
-        .cf-group { display:flex; align-items:center; gap:8px; }
+        .cf-group { display:flex; align-items:center; gap:11px; }
+        /* .cf-group-left/.cf-group-right eskiden flex:1 ile content-footer'ın iki ucuna
+           itiliyordu (justify-content:space-between) — artık content-footer kendi
+           gap'iyle ortalıyor, bu yüzden gruplar doğal genişliklerinde kalmalı. */
+        .cf-group-left, .cf-group-right { flex:0 0 auto; }
         .cf-btn.hidden { display:none; }
         .cf-divider { width:1px; height:20px; background:var(--border); border-radius:1px; }
         .cf-divider.hidden { display:none; }
@@ -4126,7 +4131,7 @@ input[type="file"] { display:none; }
         /* ── Tablo satır seçimi (Shift+click) ── */
         .ng-row-selected td { background: var(--accent-dim) !important; }
         /* Utility: B2 refactor */
-        .hbtn--relative{position:relative}.editor-badge-wrap{position:relative;flex-shrink:0}.editor-inner-wrap{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;overflow:visible}.stb.stb--heading{font-size:.7rem;font-weight:700}.icon-xs{font-size:.65rem}.icon-xxs{font-size:.6rem}.icon-sm{font-size:.75rem}.icon-accent{color:var(--accent)}.icon-mr{margin-right:8px}.color-btn-inner--sm{font-size:.75rem}.cl-badge-label--muted{color:var(--text-muted)}.tbtn--neutral{background:var(--surface-2);color:var(--text);border:1px solid var(--border)!important}.tbtn--neutral:hover{background:var(--border);color:var(--text)}.tbtn--confirm-green{background:#22c55e;color:#fff}.tbtn--confirm-green:hover{background:#16a34a}.sr-only-btn{display:none!important}.stab-icon{font-size:1.5rem;opacity:.3;display:block;margin-bottom:10px}.is-hidden{display:none}.qc-modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:10px 16px;border-top:1px solid var(--border)}.cl-badge-pill--dark{color:#1a1a1a!important}.cf-group-left{flex:1;justify-content:flex-start}.cf-group-right{flex:1;justify-content:flex-end}
+        .hbtn--relative{position:relative}.editor-badge-wrap{position:relative;flex-shrink:0}.editor-inner-wrap{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;overflow:visible}.stb.stb--heading{font-size:.7rem;font-weight:700}.icon-xs{font-size:.65rem}.icon-xxs{font-size:.6rem}.icon-sm{font-size:.75rem}.icon-accent{color:var(--accent)}.icon-mr{margin-right:8px}.color-btn-inner--sm{font-size:.75rem}.cl-badge-label--muted{color:var(--text-muted)}.tbtn--neutral{background:var(--surface-2);color:var(--text);border:1px solid var(--border)!important}.tbtn--neutral:hover{background:var(--border);color:var(--text)}.tbtn--confirm-green{background:#22c55e;color:#fff}.tbtn--confirm-green:hover{background:#16a34a}.sr-only-btn{display:none!important}.stab-icon{font-size:1.5rem;opacity:.3;display:block;margin-bottom:10px}.is-hidden{display:none}.qc-modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:10px 16px;border-top:1px solid var(--border)}.cl-badge-pill--dark{color:#1a1a1a!important}
 
         /* ── Not kilitleme ── */
         #lock-btn.locked { color:var(--accent); border:none; background:transparent; }

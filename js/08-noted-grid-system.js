@@ -1215,9 +1215,20 @@ document.addEventListener('keydown', function clearRowSelKey(e) {
             const cs = window.getComputedStyle(anchorEl);
             fmt.fontFamily = cs.fontFamily || '';
             fmt.fontSize   = cs.fontSize   || '';
-            fmt.color      = cs.color      || '';
             fmt.fontWeight = cs.fontWeight || '';
             fmt.fontStyle  = cs.fontStyle  || '';
+
+            /* color: getComputedStyle HER ZAMAN somut bir deger döner (tema varsayılanını
+               bile) — backgroundColor'daki gibi yalnızca ATALARDAN birinde AÇIKÇA inline
+               style.color varsa kopyala, yoksa boş bırak. Aksi halde açık temada rengi hiç
+               değiştirilmemiş (yalnızca tema varsayılanını miras alan) bir metin kopyalanıp
+               koyu temaya yapıştırılınca koyu-üzerine-koyu okunmaz hale geliyordu — boş
+               bırakınca yapıştırılan span color'suz kalıp hedefin tema rengini miras alıyor. */
+            let cNode = anchorEl;
+            while (cNode && cNode !== DOM.$content && cNode !== document.body) {
+                if (cNode.style && cNode.style.color) { fmt.color = cNode.style.color; break; }
+                cNode = cNode.parentElement;
+            }
 
             let n = anchorEl;
             while (n && n !== DOM.$content && n !== document.body) {
