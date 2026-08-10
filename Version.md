@@ -2,6 +2,17 @@
 
 ---
 
+## v1.16.10
+**Fix — Footer düğmeleri yanlışlıkla yatayda da ortalanmıştı, geri alındı (kullanıcı düzeltmesi: "eski yerlerine geri dönsün, yatayda ortalama değil dikeyde ortalanmış olmalarını istemiştim")**
+- v1.16.9'da "aralarını açalım ve yatayda ortalanmış olsun" isteği `justify-content:center` (tüm düğme grubunu footer genişliğinde ortalama) olarak yorumlanmıştı — kullanıcı bunun yanlış olduğunu belirtti: düğmeler **eski konumlarında** (sol grup sola, tek başına duran "Notu Kapat" sağa yaslı) kalmalıydı, yalnızca **dikeyde** ortalı olmaları isteniyordu
+- `align-items:center` (dikey ortalama) zaten `.content-footer`'da baştan beri vardı, v1.16.9'da da hiç değişmedi — geri alınması gereken tek şey `justify-content:center`'dı
+- `.content-footer` tekrar `justify-content:space-between`'e, `.cf-group-left`/`.cf-group-right` tekrar `flex:1` + kendi `justify-content:flex-start`/`flex-end`'ine döndürüldü (v1.16.9 öncesi orijinal davranış — bkz. `trap-cf-buttons-ghost-slots-space-between`, hayalet-slot koruması bu iki-grup yapısına bağlı, bozulmadı)
+- Grup **içi** boşluk artışı (8px→11px) korundu — kullanıcının orijinal "çok sıkışık duruyor" şikayeti pozisyon tartışmasından bağımsızdı ve hâlâ geçerliydi
+- `Comments.json`'daki `trap-cf-buttons-ghost-slots-space-between` girdisi bu geri alışı yansıtacak şekilde güncellendi
+- Doğrulama: `getComputedStyle` ile `justify-content:space-between` ve `align-items:center` doğrudan ölçüldü, ekran görüntüsüyle düğmelerin eski (sol küme + sağda tek X) konumuna döndüğü ve dikeyde hizalı kaldığı görsel olarak da doğrulandı; `node tools/comments-check.js` temiz
+
+---
+
 ## v1.16.9
 **Fix — Footer düğme aralığı/ortalama, liste-başı ArrowDown, Biçim Kopyalayıcı renk mirası (kullanıcı bildirimi: 3 ayrı düzeltme)**
 - **Footer düğmeleri sıkışıktı, sola yaslıydı:** `.content-footer` eskiden `justify-content:space-between` ile iki grubu (ikincil eylemler solda, "Notu Kapat" sağda) zıt uçlara itiyordu — sol grup içindeki 9 düğme `gap:8px` ile sıkışık dururken sağda tek bir düğme yalnız kalıyordu. `justify-content:center` + `gap:22px` (gruplar arası) + grup içi `gap:11px`'e geçildi; `.cf-group-left`/`.cf-group-right`'ın eski `flex:1` özelliği kaldırıldı (`flex:0 0 auto`) ki `justify-content:center` gerçekten ortalayabilsin. Bu değişiklik, `Comments.json`'daki dokümante edilmiş `trap-cf-buttons-ghost-slots-space-between` uyarısının (gizli düğmelerin `space-between`'de hayalet boşluk bırakması) altında yatan İKİ-GRUP yapısını bozmadı — yalnızca gruplar arası boşluk dağıtım yöntemi değişti, gizlenen düğmeler hâlâ `display:none` kullanıyor (hayalet slot riski yok)

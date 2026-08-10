@@ -1021,15 +1021,17 @@
         /* İçerik footer — [Ses] [Sil] [Kaydet] [İptal] eşit aralıklı */
         .content-footer {
             display:flex; align-items:center;
-            justify-content:center;
-            gap:22px;
+            justify-content:space-between;
             padding:8px 12px 10px; width:100%;
         }
         .cf-group { display:flex; align-items:center; gap:11px; }
-        /* .cf-group-left/.cf-group-right eskiden flex:1 ile content-footer'ın iki ucuna
-           itiliyordu (justify-content:space-between) — artık content-footer kendi
-           gap'iyle ortalıyor, bu yüzden gruplar doğal genişliklerinde kalmalı. */
-        .cf-group-left, .cf-group-right { flex:0 0 auto; }
+        /* v1.16.9'da yatayda da ortalanmıştı (justify-content:center), kullanıcı bunu
+           istemedi — düğmeler ESKİ yerlerinde (sol grup sola, sağ grup sağa yaslı) kalmalı,
+           yalnızca DİKEYDE ortalı olmaları isteniyordu (align-items:center zaten hep vardı,
+           hiç değişmedi). flex:1 + iç justify-content, iki grubu content-footer'ın iki ucuna
+           iter; bkz. trap-cf-buttons-ghost-slots-space-between. */
+        .cf-group-left { flex:1; justify-content:flex-start; }
+        .cf-group-right { flex:1; justify-content:flex-end; }
         .cf-btn.hidden { display:none; }
         .cf-divider { width:1px; height:20px; background:var(--border); border-radius:1px; }
         .cf-divider.hidden { display:none; }
