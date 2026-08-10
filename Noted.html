@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.16.10 — fix: v1.16.9'da footer dugmeleri yanlislikla yatayda da ortalanmisti (justify-content:center) - kullanici bunu istemedi, dugmeler ESKI konumlarina (sol grup sola, sag grup saga yasli - justify-content:space-between) geri alindi; dikeyde ortalama (align-items:center) zaten hep vardi, hic degismedi. Grup ici bosluk artisi (8px->11px, asil "sikisik" sikayetini cozen kisim) kalici -->
+<!-- Noted v1.16.11 — feat: (1) Ayarlar'a "Versiyonlar" sekmesi eklendi - mevcut surum numarasi ve Version.md'den canli fetch+parse edilen Surum Gecmisi (son surum acik, digerleri kapali akordeon, "Daha Fazla" ile 5'er 5'er yukleniyor, ikinci bir surum listesi elle tutulmuyor). (2) Gizlilik Politikasi Ayarlar > Genel altina, tiklaninca ayni sekmede asagi dogru acilan bir akordeona eklendi - privacy.html (Play Store'un ayrica gerektirdigi bagimsiz dosya) TEK kaynak kaliyor, icerigi ilk acilista fetch edilip enjekte ediliyor -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.16.10</title>
+    <title>Noted v1.16.11</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -43,7 +43,7 @@
             <div class="hm-sep"></div>
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar"><i class="fas fa-sliders"></i><span>Ayarlar</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.16.10</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler"><i class="fas fa-circle-question"></i><span>Yardım</span><span class="hm-app-ver">v1.16.11</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -678,6 +678,7 @@
             <button class="stab" data-stab="shortcuts">Kısayollar</button>
             <button class="stab" data-stab="tab3">Gelişmiş</button>
             <button class="stab" data-stab="ai">AI</button>
+            <button class="stab" data-stab="versions">Versiyonlar</button>
             <button class="stab" data-stab="dev">Geliştirici</button>
         </div>
         <div id="settings-body">
@@ -719,6 +720,13 @@
                             <div class="stat-card"><i class="fas fa-calendar-week"></i><span class="stat-val" id="stat-week">0</span><span class="stat-lbl">bu hafta not</span></div>
                         </div>
                     </div>
+                </div>
+                <div class="settings-accordion" id="privacy-accordion">
+                    <button type="button" class="settings-accordion-toggle" id="privacy-toggle">
+                        <span><i class="fas fa-lock icon-mr"></i>Gizlilik Politikası</span>
+                        <i class="fas fa-chevron-down settings-accordion-chevron"></i>
+                    </button>
+                    <div class="settings-accordion-body" id="privacy-body"></div>
                 </div>
             </div>
             <div class="stab-panel" id="stab-tab2">
@@ -845,6 +853,17 @@
                 </div>
             </div>
 
+            <!-- Versiyonlar Sekmesi -->
+            <div class="stab-panel" id="stab-versions">
+                <div class="ver-current">
+                    <i class="fas fa-tag"></i>
+                    <span>Mevcut Sürüm: <strong id="ver-current-num">—</strong></span>
+                </div>
+                <div class="ver-history-title"><i class="fas fa-clock-rotate-left"></i> Sürüm Geçmişi</div>
+                <div id="ver-history-list"></div>
+                <button type="button" class="ver-more-btn" id="ver-more-btn" style="display:none">Daha Fazla</button>
+            </div>
+
             <!-- Geliştirici Sekmesi -->
             <div class="stab-panel" id="stab-dev">
                 <div class="dev-subtabs">
@@ -897,7 +916,7 @@
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — Yardım &amp; Özellikler
       </div>
-      <span class="hm-ver">v1.16.10</span>
+      <span class="hm-ver">v1.16.11</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)">✕</button>
     </div>
     <div class="hm-body">
@@ -929,7 +948,7 @@
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.16.10</h2>
+          <h2>Noted v1.16.11</h2>
           <p>Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l">Özellik Kategorisi</div></div>

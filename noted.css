@@ -4068,6 +4068,82 @@ input[type="file"] { display:none; }
         .stat-card:nth-child(2) i { color:#8b5cf6; }
         .stat-card:nth-child(3) i { color:#22c55e; }
         #stats-panel .stats-body { display:contents; }
+
+        /* ── Ayarlar > Genel: Gizlilik Politikası akordeonu ── */
+        .settings-accordion { border:1px solid var(--border); border-radius:9px; margin-top:14px; overflow:hidden; }
+        .settings-accordion-toggle {
+            width:100%; display:flex; align-items:center; justify-content:space-between;
+            padding:10px 14px; background:var(--surface); border:none; cursor:pointer;
+            font-family:var(--font-ui); font-size:.82rem; font-weight:600; color:var(--text);
+            text-align:left; transition:background .13s;
+        }
+        .settings-accordion-toggle:hover { background:var(--surface-2); }
+        .settings-accordion-toggle i.fa-lock { color:var(--text-muted); }
+        .settings-accordion-chevron { font-size:.72rem; color:var(--text-muted); transition:transform .15s; flex-shrink:0; }
+        .settings-accordion.open .settings-accordion-chevron { transform:rotate(180deg); }
+        .settings-accordion-body { display:none; padding:14px; border-top:1px solid var(--border); max-height:420px; overflow-y:auto; }
+        .settings-accordion.open .settings-accordion-body { display:block; }
+        .ver-loading, .ver-empty { font-size:.8rem; color:var(--text-muted); padding:12px 4px; text-align:center; }
+
+        /* privacy.html'den fetch edilip enjekte edilen içerik — o dosyanın kendi <style>'ı
+           (Noted uygulamasının içinde olmadığı için) gelmiyor, bu yüzden aynı --degiskenleri
+           (privacy.html de aynı isimleri kullanıyor: --bg/--surface/--text/--border/--accent)
+           kullanan kapsamlı bir eşleniği burada tanımlı. */
+        .privacy-embed { font-size:.85rem; line-height:1.65; color:var(--text); }
+        .privacy-embed h1 { font-size:1.05rem; margin:0 0 4px; color:var(--text); }
+        .privacy-embed .updated { color:var(--text-muted); font-size:.74rem; margin-bottom:16px; }
+        .privacy-embed h2 { font-size:.88rem; margin:20px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border); color:var(--text); }
+        .privacy-embed h3 { font-size:.84rem; margin:14px 0 6px; }
+        .privacy-embed p, .privacy-embed li { color:var(--text); }
+        .privacy-embed ul { padding-left:20px; margin:8px 0; }
+        .privacy-embed li { margin:4px 0; }
+        .privacy-embed .box { background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin:10px 0; }
+        .privacy-embed .ok::before { content:"✓ "; color:var(--success,#22c55e); font-weight:700; }
+        .privacy-embed .warn::before { content:"⚠ "; color:#f59e0b; font-weight:700; }
+        .privacy-embed table { width:100%; border-collapse:collapse; margin:10px 0; font-size:.8rem; }
+        .privacy-embed th, .privacy-embed td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+        .privacy-embed th { color:var(--text-muted); font-weight:600; }
+        .privacy-embed code { background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:1px 5px; font-size:.85em; }
+        .privacy-embed .placeholder { background:#fef3c7; color:#92400e; padding:2px 7px; border-radius:4px; font-weight:600; }
+        [data-theme="dark"] .privacy-embed .placeholder { background:#451a03; color:#fbbf24; }
+        .privacy-embed a { color:var(--accent); }
+        .privacy-embed footer { margin-top:24px; padding-top:12px; border-top:1px solid var(--border); color:var(--text-muted); font-size:.72rem; }
+
+        /* ── Ayarlar > Versiyonlar ── */
+        .ver-current {
+            display:flex; align-items:center; gap:8px;
+            padding:10px 14px; background:var(--surface); border:1px solid var(--border);
+            border-radius:9px; margin-bottom:16px; font-size:.85rem; color:var(--text-muted);
+        }
+        .ver-current i { color:var(--accent); }
+        .ver-current strong { color:var(--accent); font-size:.95rem; }
+        .ver-history-title {
+            font-size:.72rem; font-weight:700; letter-spacing:.08em; color:var(--text-muted);
+            text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:6px;
+        }
+        .ver-item { border:1px solid var(--border); border-radius:9px; margin-bottom:8px; overflow:hidden; background:var(--surface); }
+        .ver-item-header {
+            width:100%; display:flex; align-items:center; gap:10px;
+            padding:10px 14px; background:transparent; border:none; cursor:pointer;
+            text-align:left; font-family:var(--font-ui); transition:background .13s;
+        }
+        .ver-item-header:hover { background:var(--surface-2); }
+        .ver-item-num { font-weight:700; font-size:.82rem; color:var(--accent); flex-shrink:0; }
+        .ver-item-summary { flex:1; font-size:.78rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+        .ver-chevron { font-size:.7rem; color:var(--text-muted); transition:transform .15s; flex-shrink:0; }
+        .ver-item.open .ver-chevron { transform:rotate(180deg); }
+        .ver-item-body { display:none; padding:0 14px 14px; }
+        .ver-item.open .ver-item-body { display:block; }
+        .ver-item-body ul { padding-left:18px; margin:0; }
+        .ver-item-body li { margin:6px 0; font-size:.78rem; line-height:1.55; color:var(--text); }
+        .ver-item-body code { background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:1px 5px; font-size:.85em; }
+        .ver-more-btn {
+            display:block; margin:12px auto 0; font-size:.78rem; padding:7px 18px;
+            border:1px solid var(--border); border-radius:8px; background:transparent;
+            cursor:pointer; color:var(--text-muted); font-family:var(--font-ui);
+            transition:color .13s, border-color .13s;
+        }
+        .ver-more-btn:hover { color:var(--accent); border-color:var(--accent); }
         /* v1.9 güncelleme: İstatistikler ve Hızlı Git için yuvarlak ikon düğmeler */
         .list-header-row { position:relative; }
         .side-icon-btn {

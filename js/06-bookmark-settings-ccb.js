@@ -572,7 +572,7 @@ DOM.$content.addEventListener('input', () => {
     }, true);
 
     /* Sekme geçişi */
-    const tabMap = { tab1:'stab-tab1', tab2:'stab-tab2', shortcuts:'stab-shortcuts', tab3:'stab-tab3', ai:'stab-ai', dev:'stab-dev' };
+    const tabMap = { tab1:'stab-tab1', tab2:'stab-tab2', shortcuts:'stab-shortcuts', tab3:'stab-tab3', ai:'stab-ai', versions:'stab-versions', dev:'stab-dev' };
     if (modal) {
         modal.querySelectorAll('.stab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -583,9 +583,129 @@ DOM.$content.addEventListener('input', () => {
                 const panel = panelId ? $(panelId) : null;
                 if (panel) panel.classList.add('active');
                 if (tab.dataset.stab === 'tab2') _thcInitUI();
+                if (tab.dataset.stab === 'versions' && typeof window._versionsInitUI === 'function') window._versionsInitUI();
             });
         });
     }
+})();
+
+/* ── Versiyonlar Sekmesi: Version.md'den canlı okuma ── */
+/* Tek kaynak Version.md — burada AYRI bir sürüm listesi elle tutulmuyor, her sürüm
+   artırımında zaten güncellenen Version.md fetch+parse edilip gösteriliyor. Format
+   sabit: "## vX.Y.Z" başlığı, hemen altında "**Tip — Başlık (...)**" kalın özet satırı,
+   ardından "- " ile başlayan madde satırları, bloklar "\n---\n" ile ayrılıyor. */
+(function() {
+    const PAGE_SIZE = 5;
+    let _versions = null;   /* parse edilmiş tam liste, ilk sekme açılışında lazy-fetch */
+    let _shown = 0;
+
+    function _escHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+    /* Version.md'de yalnızca **kalın** ve `kod` kullanılıyor — tam markdown motoru gerekmiyor.
+       HTML önce kaçılır (XSS/kırık markup'a karşı), ardından bu iki basit kalıp dönüştürülür. */
+    function _mdInline(text) {
+        return _escHtml(text)
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }
+    function _parseVersionMd(md) {
+        const blocks = md.split(/\n---\n/).map(b => b.trim()).filter(Boolean);
+        const out = [];
+        for (const block of blocks) {
+            const m = block.match(/^##\s+(v[\d.]+)\s*\n+\*\*(.+?)\*\*\s*\n([\s\S]*)$/);
+            if (!m) continue; /* dosyanın en üstündeki "# Noted — Sürüm Geçmişi" başlığı bloğu */
+            const bullets = m[3].split('\n').map(l => l.trim()).filter(l => l.startsWith('- ')).map(l => l.slice(2).trim());
+            out.push({ version: m[1], summary: m[2], bullets });
+        }
+        return out;
+    }
+    function _renderItem(v, openByDefault) {
+        const item = document.createElement('div');
+        item.className = 'ver-item' + (openByDefault ? ' open' : '');
+        item.innerHTML =
+            '<button type="button" class="ver-item-header">' +
+                '<span class="ver-item-num">' + _escHtml(v.version) + '</span>' +
+                '<span class="ver-item-summary">' + _mdInline(v.summary) + '</span>' +
+                '<i class="fas fa-chevron-down ver-chevron"></i>' +
+            '</button>' +
+            '<div class="ver-item-body"><ul>' +
+                v.bullets.map(b => '<li>' + _mdInline(b) + '</li>').join('') +
+            '</ul></div>';
+        item.querySelector('.ver-item-header').addEventListener('click', () => {
+            item.classList.toggle('open');
+        });
+        return item;
+    }
+    function _renderMore() {
+        const list = document.getElementById('ver-history-list');
+        const moreBtn = document.getElementById('ver-more-btn');
+        if (!list || !_versions) return;
+        const next = _versions.slice(_shown, _shown + PAGE_SIZE);
+        next.forEach((v, i) => {
+            /* Yalnızca EN İLK açılışta EN ÜSTTEKİ (en son sürüm) açık gelir; "Daha Fazla"
+               ile gelen 5'lik yeni gruplar her zaman kapalı — kullanıcı isterse tıklayıp açar. */
+            const openByDefault = _shown === 0 && i === 0;
+            list.appendChild(_renderItem(v, openByDefault));
+        });
+        _shown += next.length;
+        if (moreBtn) moreBtn.style.display = _shown < _versions.length ? '' : 'none';
+    }
+    async function _init() {
+        if (_versions) return; /* bu oturumda zaten yüklendi */
+        const list = document.getElementById('ver-history-list');
+        if (list) list.innerHTML = '<div class="ver-loading">Yükleniyor…</div>';
+        try {
+            const res = await fetch('Version.md', { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            _versions = _parseVersionMd(await res.text());
+        } catch (e) {
+            _versions = [];
+        }
+        const curEl = document.getElementById('ver-current-num');
+        if (curEl) curEl.textContent = _versions[0] ? _versions[0].version : '—';
+        if (list) list.innerHTML = '';
+        if (!_versions.length) {
+            if (list) list.innerHTML = '<div class="ver-empty">Sürüm geçmişi yüklenemedi.</div>';
+            return;
+        }
+        _renderMore();
+    }
+    const moreBtn = document.getElementById('ver-more-btn');
+    if (moreBtn) moreBtn.addEventListener('click', _renderMore);
+    window._versionsInitUI = _init;
+})();
+
+/* ── Genel Sekmesi: Gizlilik Politikası akordeonu ── */
+/* privacy.html TEK kaynak (Play Store'un ayrıca gerektirdiği bağımsız URL) — burada
+   ikinci bir kopya elle tutulmuyor, akordeon ilk açıldığında o dosya fetch edilip
+   yalnızca <body> içeriği (.privacy-embed sarmalayıcısı içine) enjekte ediliyor. */
+(function() {
+    const toggle = document.getElementById('privacy-toggle');
+    const accordion = document.getElementById('privacy-accordion');
+    const body = document.getElementById('privacy-body');
+    if (!toggle || !accordion || !body) return;
+    let _loaded = false;
+    toggle.addEventListener('click', async () => {
+        accordion.classList.toggle('open');
+        if (_loaded || !accordion.classList.contains('open')) return;
+        _loaded = true;
+        body.innerHTML = '<div class="ver-loading">Yükleniyor…</div>';
+        try {
+            const res = await fetch('privacy.html', { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const wrap = document.createElement('div');
+            wrap.className = 'privacy-embed';
+            wrap.innerHTML = doc.body ? doc.body.innerHTML : '';
+            body.innerHTML = '';
+            body.appendChild(wrap);
+        } catch (e) {
+            body.innerHTML = '<div class="ver-empty">Gizlilik politikası yüklenemedi.</div>';
+            _loaded = false;
+        }
+    });
 })();
 
 /* ── Görünüm Sekmesi: Tema Özelleştirici ── */
