@@ -480,7 +480,7 @@
       "level": "info",
       "type": "why",
       "file": "js/01-core-storage-render.js",
-      "line": 1416,
+      "line": 1482,
       "anchor": "if (!wl || !wl.dataset.noteId) return;",
       "symbol": "DOM.$content mousedown (wikilink navigasyonu)",
       "title": "Wikilink navigasyonu mousedown'da yakalanir, native <a> click'ine guvenilmez",
@@ -1052,6 +1052,34 @@
       "body": "recognition.continuous=true oldugu icin normalde onend'de otomatik recognition.start() ile kendini iyilestiriyor (aginin/sessizligin kesintiye ugratmasina karsi). Duraklat butonu recognition.stop()'u COGRAFI olarak cagiriyor (baska yontem yok) ama _paused=true bayragini once set ediyor; onend bu bayragi gorup oto-restart'i ATLIYOR, boylece gercekten durmus kaliyor. Devam Et _paused=false yapip elle recognition.start() cagiriyor. _paused'u setListening(false) (Durdur/hata/dogal bitis) icinde sifirlamayi unutursan, bir SONRAKI 'Sesle Yaz' baslatmasi sessizce hic ses toplamiyor gibi davranabilir (dinliyor gorunur ama onend'i hep 'duraklatilmis' saniyor). js/float-panel.js'teki es esdeger (_fpPaused/_fpSetPaused) aynen ayni deseni izler, bagimsiz kopyadir.",
       "refs": [
         "v1.16.7"
+      ]
+    },
+    {
+      "id": "trap-extractyoutubeid-missed-shorts-embed-live",
+      "level": "critical",
+      "type": "trap",
+      "file": "js/01-core-storage-render.js",
+      "line": 1392,
+      "anchor": "function extractYouTubeId(url) {",
+      "symbol": "Dış bağlantı hover önizleme — YouTube tanıma",
+      "title": "yalnizca ?v= okumak Shorts/embed/live linklerini YouTube olarak tanimiyordu, panel BOS aciliyordu",
+      "body": "youtube.com/shorts/{id}, /embed/{id}, /live/{id} URL'lerinde video ID path'te, ?v= parametresi YOK. Eski kod yalnizca searchParams.get('v') okuyordu, bu linkler icin null donup isYT=false oluyordu — panel GENEL web-linki koluna dusup ham youtube.com URL'ini iframe src'sine koyuyordu, YouTube bunu X-Frame-Options ile SESSIZCE reddediyor, panel aciliyor ama video hic gorunmuyordu (v1.16.8 kullanici bildirimi: 'onceden calisiyordu simdi calismiyor' — Shorts linkleri arttikca fark edildi). Yeni bir YouTube URL formati (ornegin /clip/) eklenirse ayni tuzaga dusmemesi icin path pattern listesine eklenmesi gerekir. Hostname eslesmesi de artik 'evilyoutube.com' gibi sahte alan adlarini yanlislikla kabul etmeyecek sekilde tam-etki-alani kontrolune sikilastirildi.",
+      "refs": [
+        "v1.16.8"
+      ]
+    },
+    {
+      "id": "why-extlinkpanel-verifies-before-opening",
+      "level": "important",
+      "type": "why",
+      "file": "js/01-core-storage-render.js",
+      "line": 1211,
+      "anchor": "function createExtLinkPanel(link) {",
+      "symbol": "Dış bağlantı önizleme paneli — erişilebilirlik ön kontrolü",
+      "title": "panel artik async — once erisilebilirlik/gomulebilirlik kontrol edilip SONRA aciliyor",
+      "body": "Eskiden panel SENKRON aciliyordu (3sn zamanlayici bitince direkt DOM'a ekleniyordu) — link ulasilamaz veya YouTube gomme izni kapaliysa panel bos/kirik aciliyordu, kullaniciya hicbir geri bildirim yoktu. Artik once _verifyYouTubeEmbeddable (YouTube'un CORS'a acik genel oEmbed uc noktasi — video silinmis/private/gomme-kapaliysa 400/401 doner) veya _checkUrlReachable (genel linkler icin mode:'no-cors' fetch — durumu OKUYAMAYIZ ama DNS/baglanti hatasinda REDDEDILIR, bu CORS gerektirmeyen tek guvenilir 'ulasilamiyor' sinyali) calisiyor, BASARISIZ olursa panel hic acilmiyor, yerine _showSnack('Panel acilamiyor','err') cikiyor. EditorState._extPanelPending bir Map(link->token) — kullanici kontrol SURERKEN mouseout yaparsa (_cancelExtPanelCheck) token.cancelled=true olur, kontrol daha sonra basariyla cozulse bile panel ACILMAZ (kullanicinin artik uzerinde olmadigi bir link icin panel aniden belirmesin diye). Bu akisi bozup paneli tekrar senkron acarsan hem bildirim kaybolur hem link'ten ayrilinca gec-gelen panel sorunu geri doner.",
+      "refs": [
+        "v1.16.8"
       ]
     }
   ]

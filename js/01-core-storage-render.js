@@ -1180,14 +1180,57 @@ DOM.$wlPreviewInner = document.getElementById('wl-preview-inner');
 /* ── Çoklu dış bağlantı panelleri ── */
 EditorState._extPanelTimer = null; EditorState._extPanelZ = 99999;
 EditorState._extPanelMap = new Map(); /* link → panel */
+EditorState._extPanelPending = new Map(); /* link → {cancelled} — erişilebilirlik kontrolü sürerken */
+
+/* AbortSignal.timeout() her yerde yok (eski Chromium/WebView) — elle AbortController ile taklit. */
+function _fetchWithTimeout(url, opts, ms) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    return fetch(url, Object.assign({}, opts, { signal: ctrl.signal })).finally(() => clearTimeout(t));
+}
+/* YouTube'un genel oEmbed uç noktası CORS'a açık (Access-Control-Allow-Origin: *) — video
+   silinmiş/private/gömme kapalıysa 401/400 dönüyor, biz de paneli hiç açmadan anlıyoruz. */
+function _verifyYouTubeEmbeddable(url) {
+    return _fetchWithTimeout('https://www.youtube.com/oembed?url=' + encodeURIComponent(url) + '&format=json', {}, 5000)
+        .then(r => r.ok)
+        .catch(() => false);
+}
+/* Genel web linki: mode:'no-cors' ile durumu OKUYAMAYIZ (opak yanıt) ama DNS/bağlantı
+   hatasında fetch REDDEDİLİR — bu, "ulaşılamıyor" için CORS gerektirmeyen güvenilir tek sinyal.
+   404 gibi bir HTTP hatası "ulaşılabilir" sayılır (sunucu yanıt verdi), yalnızca gerçek ağ
+   hatası/timeout "ulaşılamıyor" sayılır. */
+function _checkUrlReachable(url) {
+    return _fetchWithTimeout(url, { mode: 'no-cors' }, 5000)
+        .then(() => true)
+        .catch(() => false);
+}
+function _notifyExtPanelUnavailable() {
+    if (typeof _showSnack === 'function') _showSnack('Panel açılamıyor', 'err');
+}
 
 function createExtLinkPanel(link) {
     if (!link || !link.isConnected) return;
     if (EditorState._extPanelMap.has(link)) { EditorState._extPanelMap.get(link).style.zIndex = ++EditorState._extPanelZ; return; }
+    if (EditorState._extPanelPending.has(link)) return; /* zaten kontrol ediliyor */
     const url = link.getAttribute('href') || '';
     if (!url || url.startsWith('#') || url.startsWith('javascript')) return;
 
     const isYT = !!extractYouTubeId(url);
+    const token = { cancelled: false };
+    EditorState._extPanelPending.set(link, token);
+    const check = isYT ? _verifyYouTubeEmbeddable(url) : _checkUrlReachable(url);
+    check.then(ok => {
+        if (EditorState._extPanelPending.get(link) !== token) return; /* daha yeni bir kontrol devrede */
+        EditorState._extPanelPending.delete(link);
+        if (token.cancelled || !link.isConnected) return; /* kullanıcı mouseout yaptı ya da not kapandı */
+        if (ok) _buildExtLinkPanel(link, url, isYT);
+        else _notifyExtPanelUnavailable();
+    });
+}
+
+function _buildExtLinkPanel(link, url, isYT) {
+    if (!link.isConnected) return;
+    if (EditorState._extPanelMap.has(link)) { EditorState._extPanelMap.get(link).style.zIndex = ++EditorState._extPanelZ; return; }
     const initW = isYT ? 340 : 480;
     const initH = isYT ? Math.round(340 * 9 / 16) : 340;
     const panel = document.createElement('div');
@@ -1340,11 +1383,22 @@ function scheduleHideWlPreview() {
 }
 
 /* ── Dış bağlantı hover önizleme ── */
+/* TUZAK: sadece ?v= param'ını okumak Shorts/embed/live linklerini (ID path'te, v= yok)
+   YouTube olarak tanımayıp genel web-linki koluna düşürüyordu — orada ham youtube.com URL'i
+   iframe src'sine konuyor, YouTube bunu X-Frame-Options ile reddediyor, panel BOŞ açılıyordu
+   (v1.16.8 öncesi "video gelmiyor" şikayetinin en olası kök nedeni). hostname eşleşmesi de
+   ".youtube.com" ile bitmeyen sahte alan adlarını (ör. "evilyoutube.com") yanlışlıkla
+   eşlemesin diye tam etki alanı kontrolüne sıkılaştırıldı. */
 function extractYouTubeId(url) {
     try {
         const u = new URL(url);
-        if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0] || null;
-        if (/youtube\.com$/.test(u.hostname)) return u.searchParams.get('v');
+        if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('/')[0] || null;
+        if (u.hostname === 'youtube.com' || u.hostname.endsWith('.youtube.com')) {
+            const v = u.searchParams.get('v');
+            if (v) return v;
+            const m = u.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/);
+            if (m) return m[1];
+        }
     } catch(e) {}
     return null;
 }
@@ -1366,7 +1420,11 @@ function buildExtLinkPreview(url, text) {
     const ytId = extractYouTubeId(url);
     if (ytId) {
         const start = extractYouTubeStart(url);
-        const src = 'https://www.youtube.com/embed/' + ytId + (start ? '?start=' + start : '');
+        /* youtube-nocookie.com — youtube.com/embed'in GDPR/çerez-onayı ekranını iframe İÇİNDE
+           göstermesi (özellikle AB bölgesinde, Google onay çerezi yoksa) video yerine boş/onay
+           kutusu görünmesine yol açabiliyordu; gizlilik-geliştirilmiş domain bunu büyük ölçüde
+           atlıyor, video oynatma davranışı birebir aynı. */
+        const src = 'https://www.youtube-nocookie.com/embed/' + ytId + (start ? '?start=' + start : '');
         return '<div class="wl-preview-yt">' +
             '<iframe width="560" height="315" src="' + esc(src) + '" ' +
             'title="YouTube video player" frameborder="0" ' +
@@ -1376,6 +1434,14 @@ function buildExtLinkPreview(url, text) {
     return '<div class="wl-preview-yt"><iframe src="' + esc(url) + '" frameborder="0"></iframe></div>';
 }
 
+/* Bekleyen erişilebilirlik kontrolünü iptal eder — kullanıcı 3sn dolmadan/kontrol sürerken
+   mouseout yaparsa, kontrol daha sonra çözülüp kullanıcının artık üzerinde olmadığı bir link
+   için aniden panel açmasın diye. */
+function _cancelExtPanelCheck(a) {
+    clearTimeout(EditorState._extPanelTimer);
+    const pending = EditorState._extPanelPending.get(a);
+    if (pending) pending.cancelled = true;
+}
 
 /* mouseover/mouseout ile delegasyon — dinamik olarak eklenen .wikilink öğeleri de yakalanır */
 DOM.$mainList.addEventListener('mouseover', e => {
@@ -1388,7 +1454,7 @@ DOM.$mainList.addEventListener('mouseout', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && !wl.contains(e.relatedTarget)) { scheduleHideWlPreview(); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
-    if (a && !a.contains(e.relatedTarget)) clearTimeout(EditorState._extPanelTimer);
+    if (a && !a.contains(e.relatedTarget)) _cancelExtPanelCheck(a);
 });
 /* Liste kaydırılırsa veya not daraltılırsa paneli kapat */
 DOM.$mainList.addEventListener('scroll', () => { if (DOM.$wlPreview.classList.contains('open')) hideWlPreview(); }, { passive:true });
@@ -1409,7 +1475,7 @@ DOM.$content.addEventListener('mouseout', e => {
     const wl = e.target.closest('a.wikilink');
     if (wl && !wl.contains(e.relatedTarget)) { scheduleHideWlPreview(); return; }
     const a = e.target.closest('a[href]:not(.wikilink)');
-    if (a && !a.contains(e.relatedTarget)) clearTimeout(EditorState._extPanelTimer);
+    if (a && !a.contains(e.relatedTarget)) _cancelExtPanelCheck(a);
 });
 DOM.$content.addEventListener('mousedown', e => {
     const wl = e.target.closest('a.wikilink');
