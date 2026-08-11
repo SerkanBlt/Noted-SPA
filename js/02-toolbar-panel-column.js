@@ -906,6 +906,63 @@ function focusTodoLi(li) {
     });
 }
 
+/* v1.17.2: Kod bloğu araç çubuğu — her <pre>'e kopyala + genişlet/daralt düğmesi ekler.
+   ESKİ .cb-toolbar'ı her zaman ÖNCE kaldırıp yeniden kurar (tekrar-çalıştırılabilir/idempotent)
+   — bkz. Comments.json trap-inflatecodeblocks-must-rebuild-not-skip: undo/redo sonrası
+   innerHTML yeniden ayrıştırıldığında eski düğmeler DOM'da kalır ama dinleyicileri KAYBOLUR
+   (innerHTML string'den yeniden üretilen elementler orijinal addEventListener'ı taşımaz);
+   "zaten var, atla" kontrolü bu durumda tıklamayı sessizce çalışmaz bırakırdı. */
+function inflateCodeBlocks(root) {
+    const _r = root || document;
+    const nodes = [];
+    if (_r.tagName === 'PRE') nodes.push(_r);
+    if (_r.querySelectorAll) _r.querySelectorAll('pre').forEach(n => nodes.push(n));
+    nodes.forEach(pre => {
+        const old = pre.querySelector(':scope > .cb-toolbar');
+        if (old) old.remove();
+        const code = pre.querySelector('code') || pre;
+        const bar = document.createElement('div');
+        bar.className = 'cb-toolbar';
+        bar.setAttribute('contenteditable', 'false');
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'cb-btn cb-copy';
+        copyBtn.title = _t('ctxmenu.copycode', 'Kodu Kopyala');
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+        copyBtn.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            const text = code.innerText || code.textContent || '';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('cb.copied'), 'ok', 1500);
+                }).catch(() => {});
+            }
+        });
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'cb-btn cb-toggle';
+        function syncToggle() {
+            const collapsed = pre.classList.contains('cb-collapsed');
+            toggleBtn.title = collapsed ? _t('note.expand', 'Genişlet') : _t('note.collapse', 'Daralt');
+            toggleBtn.innerHTML = collapsed ? '<i class="fas fa-chevron-down"></i>' : '<i class="fas fa-chevron-up"></i>';
+        }
+        toggleBtn.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            pre.classList.toggle('cb-collapsed');
+            syncToggle();
+        });
+        syncToggle();
+        bar.appendChild(copyBtn);
+        bar.appendChild(toggleBtn);
+        pre.appendChild(bar);
+    });
+}
+window._inflateCodeBlocks = inflateCodeBlocks;
+setTimeout(() => {
+    inflateCodeBlocks(document.getElementById('content'));
+    inflateCodeBlocks(document.getElementById('fp-content'));
+}, 0);
+
 function runSpecial(type) {
     const _et = EditorState._activeEditTarget || DOM.$content;
     const sel = window.getSelection();
@@ -944,6 +1001,7 @@ function runSpecial(type) {
         const pre = document.createElement('pre'), code = document.createElement('code');
         if (range && !range.collapsed) code.appendChild(range.extractContents()); else code.textContent = 'kod buraya';
         pre.appendChild(code);
+        if (typeof inflateCodeBlocks === 'function') inflateCodeBlocks(pre);
         if (range) {
             range.deleteContents(); range.insertNode(pre);
             /* En başta veya hemen öncesi blok element ise üste boş satır ekle */
@@ -1406,7 +1464,7 @@ function saveNote() {
     const title   = DOM.$title.value.trim();
     if (typeof window._undoLockForSave === 'function') window._undoLockForSave();
     const _tmpRemoved = [];
-    DOM.$content.querySelectorAll('.ng-toolbar, .ng-add-col').forEach(el => {
+    DOM.$content.querySelectorAll('.ng-toolbar, .ng-add-col, .cb-toolbar').forEach(el => {
         _tmpRemoved.push({ parent: el.parentNode, next: el.nextSibling, el });
         el.remove();
     });

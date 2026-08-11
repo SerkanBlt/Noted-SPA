@@ -218,6 +218,7 @@ function applyCustomTemplate(tpl) {
     if (typeof activateInstance === 'function' && window._mainEditorInstance) activateInstance(window._mainEditorInstance);
     DOM.$title.value = tpl.title || '';
     DOM.$content.innerHTML = sanitize(tpl.content || '');
+    if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(DOM.$content);
     EditorState._snapTitle = '';
     updateFooterVisibility();
     DOM.$title.focus();

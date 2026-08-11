@@ -668,6 +668,7 @@ function editNote(id) {
     if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
     _upgradeGridWraps(DOM.$content);
     if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks(DOM.$content);
+    if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(DOM.$content);
     if (typeof window._resetEditorZoom === 'function') window._resetEditorZoom();
     initShapeOverlays();
 
@@ -833,6 +834,7 @@ function applyTemplate(tplKey) {
     if (typeof activateInstance === 'function' && window._mainEditorInstance) activateInstance(window._mainEditorInstance);
     DOM.$title.value = tpl.title();
     DOM.$content.innerHTML = sanitize(tpl.content);
+    if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(DOM.$content);
     EditorState._snapTitle = '';
     updateFooterVisibility();
     /* innerHTML atamasi native 'input' olayi FIRLATMAZ (yalnizca kullanici yazimi/execCommand

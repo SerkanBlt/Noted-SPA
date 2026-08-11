@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.17.1 — fix: v1.17.0'da statik HTML data-i18n ile etiketlendi ama JS tarafindan CALISMA ZAMANINDA uretilen/uzerine-yazilan metinler (not karti buton tooltipleri, editor footer pin/kilit dugmeleri, sirala/grupla/etiket dropdown'lari, sag-tik context menusu (~35 etiket), sablon/CCB/graph/odak-zamanlayici panelleri) atlanmisti — bunlarin tumu artik NotedI18n.t()/_t() uzerinden cevriliyor (Lang.json 541 -> 650 anahtar). Ayrica kritik bir boot-sirasi hatasi duzeltildi: bazi JS fonksiyonlari (orn. CCB gelistirici sekmesi renderList()) sayfa yuklenirken js/i18n.js daha yuklenmeden NotedI18n.t() cagirabiliyordu ve throw ediyordu (ReferenceError) — cozum: Noted.html'nin en erken inline script'inde, js/i18n.js yuklenene kadar anahtari oldugu gibi donen bir window.NotedI18n "kukla" nesnesi tanimlandi. Kapsam disi (bilinclil, degismedi): not sablonu ICERIK govdeleri (basliklar disinda), Version.md, Comments.json, commit mesajlari, arama operatoru anahtar kelimeleri (grup:/etiket:/renk:/sabit:) -->
+<!-- Noted v1.17.2 — feat: Kod bloklarina sag-ust ikonla kopyala + daralt/genislet eklendi (uzun kod parcalarinin tek tikla kisaltilip acilabilmesi); not listesinde bir notu surukleyip baska bir grubun uzerine birakarak grup degistirme eklendi; Hata Bildir panelindeki Vazgec/Gonder dugmeleri ikon yerine metin oldu, Vazgec sola dayali; Yardim modaline yeni "Dil & Ceviri" bolumu + PWA kurulum/Hata Bildir maddeleri eklendi, IndexedDB'ye tasinmis olan "localStorage tabanli depolama" iddiasi duzeltildi (v1.17.1'deki dinamik metin cevirisi bu yanlisi kapsam disi birakmisti, simdi duzeltildi). Lang.json 668 -> 679 anahtar -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.17.1</title>
+    <title>Noted v1.17.2</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -96,7 +96,7 @@
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar" data-i18n-title="hm.settings"><i class="fas fa-sliders"></i><span data-i18n="hm.settings">Ayarlar</span></button>
             <button id="hm-bugreport-btn" class="hm-item" title="Hata Bildir" data-i18n-title="hm.bugreport"><i class="fas fa-bug"></i><span data-i18n="hm.bugreport">Hata Bildir</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler" data-i18n-title="hm.help"><i class="fas fa-circle-question"></i><span data-i18n="hm.help">Yardım</span><span class="hm-app-ver">v1.17.1</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler" data-i18n-title="hm.help"><i class="fas fa-circle-question"></i><span data-i18n="hm.help">Yardım</span><span class="hm-app-ver">v1.17.2</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -288,8 +288,8 @@
             <p class="sys-modal-hint" id="bugreport-hint"></p>
         </div>
         <div class="sys-modal-foot bugreport-foot">
-            <button type="button" class="bugreport-icon-btn bugreport-cancel-btn" id="bugreport-cancel" title="Vazgeç" data-i18n-title="bugreport.cancel"><i class="fas fa-times"></i></button>
-            <button type="button" class="bugreport-icon-btn bugreport-submit-btn" id="bugreport-submit" title="Gönder" data-i18n-title="common.submit"><i class="fas fa-check"></i></button>
+            <button type="button" class="bugreport-btn bugreport-cancel-btn" id="bugreport-cancel" data-i18n="bugreport.cancel">Vazgeç</button>
+            <button type="button" class="bugreport-btn bugreport-submit-btn" id="bugreport-submit" data-i18n="common.submit">Gönder</button>
         </div>
     </div>
 </div>
@@ -1004,7 +1004,7 @@
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — <span data-i18n="help.headtitle">Yardım &amp; Özellikler</span>
       </div>
-      <span class="hm-ver">v1.17.1</span>
+      <span class="hm-ver">v1.17.2</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)" data-i18n-title="gm.closeesc">✕</button>
     </div>
     <div class="hm-body">
@@ -1028,7 +1028,8 @@
         <div class="hm-nl" data-target="hms-toc" onclick="hmNavTo('hms-toc')"><span data-i18n="hmnav.toc">📑 İçindekiler (TOC)</span><span class="hm-nc">3</span></div>
         <div class="hm-nl" data-target="hms-keys" onclick="hmNavTo('hms-keys')"><span data-i18n="hmnav.keys">⌨️ Klavye Kısayolları</span><span class="hm-nc">18</span></div>
         <div class="hm-nl" data-target="hms-theme" onclick="hmNavTo('hms-theme')"><span data-i18n="hmnav.theme">🎨 Tema &amp; Görünüm</span><span class="hm-nc">3</span></div>
-        <div class="hm-nl" data-target="hms-data" onclick="hmNavTo('hms-data')"><span data-i18n="hmnav.data">💾 Veri Kalıcılığı</span><span class="hm-nc">5</span></div>
+        <div class="hm-nl" data-target="hms-data" onclick="hmNavTo('hms-data')"><span data-i18n="hmnav.data">💾 Veri Kalıcılığı</span><span class="hm-nc">7</span></div>
+        <div class="hm-nl" data-target="hms-lang" onclick="hmNavTo('hms-lang')"><span data-i18n="hmnav.lang">🌐 Dil &amp; Çeviri</span><span class="hm-nc">4</span></div>
       </nav>
 
       <!-- Sağ içerik -->
@@ -1036,10 +1037,10 @@
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.17.1</h2>
-          <p data-i18n="help.hero.desc">Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
+          <h2>Noted v1.17.2</h2>
+          <p data-i18n="help.hero.desc">Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tarayıcıda veya kurulabilir bir uygulama (PWA) olarak çalışır.</p>
           <div class="hm-hero-stats">
-            <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l" data-i18n="help.hero.categories">Özellik Kategorisi</div></div>
+            <div class="hm-hero-stat"><div class="hm-hero-stat-n">18</div><div class="hm-hero-stat-l" data-i18n="help.hero.categories">Özellik Kategorisi</div></div>
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">60+</div><div class="hm-hero-stat-l" data-i18n="help.hero.colors">Renk Seçeneği</div></div>
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">18</div><div class="hm-hero-stat-l" data-i18n="help.hero.shortcuts">Klavye Kısayolu</div></div>
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">4</div><div class="hm-hero-stat-l" data-i18n="help.hero.exportformats">Dışa Aktarma Formatı</div></div>
@@ -1055,7 +1056,7 @@
           <div class="hm-sec-body">
             <div class="hm-fg">
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.notes.1"><div class="hm-ft"><strong>Not Oluşturma</strong></div><div class="hm-fs">Başlık ve içerikle yeni not oluşturulabilir. Hızlı yakalama ile <kbd>Ctrl+Shift+N</kbd> kısayoluyla açılan modal üzerinden anında not eklenebilir.</div></div></div>
-              <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.notes.2"><div class="hm-ft"><strong>Grup / Klasör Sistemi</strong></div><div class="hm-fs">Notlar özel gruplara atanabilir. Gruplar sol kenar çubuğunda daraltılabilir/genişletilebilir şekilde gösterilir.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.notes.2"><div class="hm-ft"><strong>Grup / Klasör Sistemi</strong></div><div class="hm-fs">Notlar özel gruplara atanabilir. Gruplar sol kenar çubuğunda daraltılabilir/genişletilebilir şekilde gösterilir. Bir notu sürükleyip başka bir grubun üzerine bırakarak notu o gruba taşıyabilirsiniz.</div></div></div>
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.notes.3"><div class="hm-ft"><strong>Sabitleme (Pin)</strong></div><div class="hm-fs">Önemli notlar listeye sabitlenebilir; sabit notlar her zaman listenin en üstünde ayrı bir bölümde görünür.</div></div></div>
               <div class="hm-fi"><div class="hm-fb"></div><div>
                 <div class="hm-ft" data-i18n="help.notes.4t"><strong>Renk Etiketleme</strong></div>
@@ -1110,7 +1111,7 @@
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.5"><div class="hm-ft"><strong>Liste Türleri</strong></div><div class="hm-fs">Madde işaretli <kbd>Ctrl+Shift+U</kbd>, numaralı <kbd>Ctrl+Shift+O</kbd> ve onay kutusu görev listesi <kbd>Ctrl+Shift+K</kbd>.</div></div></div>
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.6"><div class="hm-ft"><strong>Başlıklar</strong></div><div class="hm-fs">H1, H2 ve H3 düzeyleri desteklenir; İçindekiler paneli bu başlıklardan otomatik oluşur.</div></div></div>
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.7"><div class="hm-ft"><strong>Alıntı Bloğu (Blockquote)</strong></div><div class="hm-fs">Metinleri vurgulamak için alıntı blokları eklenebilir.</div></div></div>
-              <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.8"><div class="hm-ft"><strong>Kod Blokları</strong></div><div class="hm-fs">Sözdizimi vurgulamalı kod bloğu ve satır içi kod biçimlendirmesi.</div></div></div>
+              <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.8"><div class="hm-ft"><strong>Kod Blokları</strong></div><div class="hm-fs">Sabit genişlikli kod bloğu ve satır içi kod biçimlendirmesi. Her kod bloğunun sağ üst köşesindeki simgelerle kod tek tıkla panoya kopyalanabilir veya blok daraltılıp/genişletilebilir.</div></div></div>
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.9"><div class="hm-ft"><strong>Köprü (Hyperlink)</strong></div><div class="hm-fs">http/https/ftp/mailto protokol seçimiyle URL ekleme. Akıllı protokol algılama desteklenir.</div></div></div>
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.10"><div class="hm-ft"><strong>Hizalama &amp; Boşluk</strong></div><div class="hm-fs">Metin hizalama (sol/orta/sağ), satır yüksekliği ayarı (1×, 1.5×, 2×, özel).</div></div></div>
               <div class="hm-fi"><div class="hm-fb"></div><div data-i18n="help.editor.11"><div class="hm-ft"><strong>Zaman Damgası</strong></div><div class="hm-fs"><kbd>Ctrl+Shift+T</kbd> ile imlecin bulunduğu konuma otomatik tarih/saat eklenir.</div></div></div>
@@ -1387,16 +1388,34 @@
           </div>
           <div class="hm-sec-body">
             <ul class="hm-fl">
-              <li data-i18n="help.data.1"><strong>localStorage Tabanlı Depolama:</strong> Tüm notlar <code>noted_v1</code> anahtarıyla tarayıcının yerel deposuna kaydedilir. Sunucu veya internet bağlantısı gerekmez.</li>
+              <li data-i18n="help.data.1"><strong>Yerel Depolama (IndexedDB):</strong> Tüm notlar tarayıcının IndexedDB veritabanında saklanır; küçük yapılandırma verileri (AI ayarları, arayüz tercihleri, şablonlar) <code>localStorage</code>'da kalır. Sunucu veya internet bağlantısı gerekmez.</li>
               <li data-i18n="help.data.2"><strong>Otomatik Kayıt:</strong> Her not değişikliğinde otomatik kayıt gerçekleşir; editör altındaki "Kaydediliyor…" / "Kaydedildi" animasyonu durumu gösterir.</li>
               <li data-i18n="help.data.3"><strong>Bozuk Veri Tespiti:</strong> Uygulama açılışında veri bütünlüğü kontrol edilir; bozuk veri tespit edilirse otomatik yedek oluşturulur.</li>
               <li data-i18n="help.data.4"><strong>Grup Durum Takibi:</strong> Hangi grupların açık/kapalı olduğu <code>noted_groups_v1</code> anahtarıyla ayrıca saklanır.</li>
               <li data-i18n="help.data.5"><strong>AI Ayarları Deposu:</strong> Tüm AI verileri (provider anahtarları, model havuzu, sistem mesajı, ton, sıcaklık) <code>noted_ai_v1</code> tek anahtarında; UI tercihleri <code>noted_ui_v1</code>; içerik verileri (şablonlar, CCB, gruplar) <code>noted_content_v1</code> anahtarında saklanır. AI ayarları isteğe bağlı olarak JSON yedeğine dahil edilebilir (Gelişmiş Ayarlar).</li>
+              <li data-i18n="help.data.6"><strong>Uygulama Olarak Kurulum (PWA):</strong> Noted, Android/iOS/Windows üzerinde bağımsız bir uygulama gibi kurulabilir (tarayıcının "Yükle" seçeneği veya paylaş menüsündeki "Ana Ekrana Ekle"). Kurulu uygulama çevrimdışı da çalışır; sayfa kabuğu Service Worker ile önbelleğe alınır.</li>
+              <li data-i18n="help.data.7"><strong>Hata Bildirimi:</strong> Hamburger menüsündeki "Hata Bildir" seçeneğiyle karşılaşılan sorunlar doğrudan tarayıcıdan bir GitHub Issue olarak gönderilebilir. Kendi GitHub erişim anahtarınızı (fine-grained token) girmeniz gerekir; anahtar yalnızca cihazınızda saklanır.</li>
             </ul>
             <div class="hm-callout">
               <span class="hm-ci">🔒</span>
               <span class="hm-ct" data-i18n="help.data.callout">Notlar yalnızca sizin tarayıcınızda saklanır; hiçbir veri dışarıya gönderilmez. Gizlilik tamamen kullanıcıya aittir.</span>
             </div>
+          </div>
+        </div>
+
+        <!-- 16. DİL & ÇEVİRİ -->
+        <div class="hm-sec" id="hms-lang">
+          <div class="hm-sec-hd">
+            <div class="hm-sec-icon" style="background:#ecfeff;">🌐</div>
+            <div><div class="hm-sec-t" data-i18n="help.lang.t">Dil &amp; Çeviri</div><div class="hm-sec-d" data-i18n="help.lang.d">Uygulama arayüzü için çoklu dil desteği</div></div>
+          </div>
+          <div class="hm-sec-body">
+            <ul class="hm-fl">
+              <li data-i18n="help.lang.1"><strong>5 Dil Desteği:</strong> Uygulama arayüzü İngilizce, Almanca, İtalyanca, Fransızca ve Türkçe olarak kullanılabilir. Hamburger menüsünün solundaki küre (🌐) simgesinden dil seçilir.</li>
+              <li data-i18n="help.lang.2"><strong>Anında Uygulanır:</strong> Dil değişikliği sayfa yenilenmeden anında tüm arayüze (menüler, düğmeler, not listesi, bildirimler) uygulanır.</li>
+              <li data-i18n="help.lang.3"><strong>Kalıcı Tercih:</strong> Seçilen dil tarayıcıda saklanır ve bir sonraki açılışta hatırlanır. İlk açılışta varsayılan dil İngilizce'dir.</li>
+              <li data-i18n="help.lang.4"><strong>Kapsam:</strong> Uygulama arayüzü ve Gizlilik Politikası tamamen çevrilidir; not şablonu içerikleri ve arama operatör anahtar kelimeleri (<code>grup:</code>, <code>etiket:</code> vb.) kasıtlı olarak Türkçe kalır.</li>
+            </ul>
           </div>
         </div>
 

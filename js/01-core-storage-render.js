@@ -1037,6 +1037,56 @@ function render() {
     if (typeof window._todoUpdateBadge === 'function') window._todoUpdateBadge();
 }
 
+/* v1.17.2: Not listesi sürükle-bırak — bir notu başka bir gruba taşı.
+   DOM.$mainList'in kendisi render()'da yeniden OLUŞTURULMUYOR (yalnızca .innerHTML
+   temizlenip yeniden dolduruluyor) — bu yüzden delegasyon TEK SEFER burada kurulur,
+   .group-box'lar/.note-item'lar her render'da yeniden yaratılsa da dinleyici hayatta kalır
+   (AI model havuzu sürükle-bırak'ıyla aynı desen, bkz. js/05 _poolDragHandlers). */
+function _setupNoteDragDrop() {
+    if (!DOM.$mainList) return;
+    let dragId = null;
+    DOM.$mainList.addEventListener('dragstart', e => {
+        const item = e.target.closest('.note-item');
+        if (!item) return;
+        dragId = item.dataset.id;
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', dragId); } catch (_) {}
+        setTimeout(() => item.classList.add('dragging'), 0);
+    });
+    DOM.$mainList.addEventListener('dragend', e => {
+        const item = e.target.closest('.note-item');
+        if (item) item.classList.remove('dragging');
+        DOM.$mainList.querySelectorAll('.drag-over').forEach(g => g.classList.remove('drag-over'));
+        dragId = null;
+    });
+    DOM.$mainList.addEventListener('dragover', e => {
+        if (!dragId) return;
+        const box = e.target.closest('.group-box');
+        if (!box) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        DOM.$mainList.querySelectorAll('.drag-over').forEach(g => g.classList.remove('drag-over'));
+        const gh = box.querySelector('.group-header');
+        if (gh) gh.classList.add('drag-over');
+    });
+    DOM.$mainList.addEventListener('drop', e => {
+        const box = e.target.closest('.group-box');
+        DOM.$mainList.querySelectorAll('.drag-over').forEach(g => g.classList.remove('drag-over'));
+        if (!box || !dragId) { dragId = null; return; }
+        e.preventDefault();
+        const targetGroup = box.querySelector('.group-header')?.dataset.group;
+        const n = State.notes.find(x => String(x.id) === String(dragId));
+        if (n && targetGroup && n.group !== targetGroup) {
+            n.group = targetGroup;
+            saveNotes();
+            render();
+            if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('note.movedtogroup').replace('{group}', targetGroup), 'ok', 1800);
+        }
+        dragId = null;
+    });
+}
+_setupNoteDragDrop();
+
 /* v1.1: Not kartı oluşturma — ayrı fonksiyon */
 function buildNoteItem(n) {
     const exp    = State.expandedNotes.has(n.id);
@@ -1048,6 +1098,7 @@ function buildNoteItem(n) {
     item.className = 'note-item' + (n.pinned ? ' is-pinned' : '');
     if (DOM.$editId.value && String(n.id) === String(DOM.$editId.value)) item.classList.add('selected');
     item.dataset.id = String(n.id);
+    item.draggable = true;
 
     /* v1.1: colorLabel yoksa grup rengini kullan */
     if (!n.colorLabel) {

@@ -259,6 +259,7 @@
         DOM.$content.innerHTML = state.html;
         if (typeof _restoreGrids === 'function') _restoreGrids();
         if (typeof initShapeOverlays === 'function') initShapeOverlays();
+        if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(DOM.$content);
         requestAnimationFrame(() => {
             _locked = false;
             DOM.$content.focus();
@@ -279,6 +280,7 @@
         DOM.$content.innerHTML = state.html;
         if (typeof _restoreGrids === 'function') _restoreGrids();
         if (typeof initShapeOverlays === 'function') initShapeOverlays();
+        if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(DOM.$content);
         requestAnimationFrame(() => {
             _locked = false;
             DOM.$content.focus();
