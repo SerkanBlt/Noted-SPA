@@ -91,7 +91,7 @@
 
     /* ── Yardımcılar ── */
     function now() {
-        return new Date().toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
+        return new Date().toLocaleTimeString(_notedLocale(), { hour:'2-digit', minute:'2-digit' });
     }
     function resize() {
         input.style.height = 'auto';
@@ -130,7 +130,7 @@
     }
 
     function _buildTokenChips(usage, remaining, limit) {
-        const fmt  = n => (n != null && n >= 0) ? Number(n).toLocaleString('tr-TR') : '–';
+        const fmt  = n => (n != null && n >= 0) ? Number(n).toLocaleString(_notedLocale()) : '–';
         const pct  = (remaining >= 0 && limit > 0) ? remaining / limit : 1;
         const warn = pct < 0.2 && remaining >= 0;
         const remChip = remaining >= 0
@@ -424,7 +424,7 @@
 
         const lastDate = pool.reduce((max, n) => Math.max(max, n.updatedAt || 0), 0);
         const lastStr  = lastDate
-            ? new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' }).format(new Date(lastDate))
+            ? new Intl.DateTimeFormat(_notedLocale(), { day:'2-digit', month:'long', year:'numeric' }).format(new Date(lastDate))
             : null;
 
         /* Tüm not başlıkları — AI semantik çıkarım yapabilsin */
@@ -463,7 +463,7 @@
         const raw   = (query || '').toLowerCase().split(/\s+/).filter(w => w.length >= 2);
         const words = [...new Set(raw.flatMap(w => [w, _trNorm(w)]))];
 
-        const fmt        = new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
+        const fmt        = new Intl.DateTimeFormat(_notedLocale(), { day:'2-digit', month:'long', year:'numeric' });
         const NOTE_LIMIT = 1500;
         const parts = [];
         const ids   = new Set();
@@ -557,7 +557,7 @@
 
         if (!result.length) return '';
 
-        const fmt          = new Intl.DateTimeFormat('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
+        const fmt          = new Intl.DateTimeFormat(_notedLocale(), { day:'2-digit', month:'long', year:'numeric' });
         const NOTE_LIMIT   = 1500; /* karakter — ~375 token */
         const CTX_LIMIT    = 7000; /* toplam context — ~1750 token */
 
@@ -885,7 +885,7 @@
                     _markModelLimited(_entry.providerId, _m, _s);
                     const _next = _modelsQueue[qi + 1]?.modelId || '';
                     if (typeof _showSnack === 'function')
-                        _showSnack(`${_m} yanıt veremedi — ${_next} ile deneniyor…`, 'warn', 3500);
+                        _showSnack(NotedI18n.t('msg.modelfallback').replace('{model}', _m).replace('{next}', _next), 'warn', 3500);
                     showTyping();
                     _attempt(qi + 1);
                     return;

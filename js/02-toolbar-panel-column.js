@@ -11,8 +11,8 @@ function updateReminderBtn(reminders, reminderNote) {
         const next = active.slice().sort((a, b) => a.at - b.at)[0];
         const d = new Date(next.at);
         DOM.$reminderBtn.title = 'Hatırlatıcı (' + active.length + '): '
-            + d.toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'})
-            + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+            + d.toLocaleDateString(_notedLocale(), {day:'2-digit',month:'long',year:'numeric'})
+            + ' ' + d.toLocaleTimeString(_notedLocale(), {hour:'2-digit',minute:'2-digit'});
     } else {
         DOM.$reminderBtn.title = 'Hatırlatıcı Kur';
     }
@@ -141,8 +141,8 @@ function formatReminderShort(at) {
     const d = new Date(at);
     const today = new Date();
     const sameDay = d.toDateString() === today.toDateString();
-    const time = d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
-    return sameDay ? ('Bugün ' + time) : (d.toLocaleDateString('tr-TR',{day:'2-digit',month:'short'}) + ' ' + time);
+    const time = d.toLocaleTimeString(_notedLocale(), {hour:'2-digit',minute:'2-digit'});
+    return sameDay ? ('Bugün ' + time) : (d.toLocaleDateString(_notedLocale(),{day:'2-digit',month:'short'}) + ' ' + time);
 }
 function showReminderToast(note, reminder) {
     if (!DOM.$reminderToastOverlay) return;
@@ -242,7 +242,7 @@ function exportNoteAsMarkdown(noteId) {
     let n = noteId ? State.notes.find(x => String(x.id) === String(noteId)) : null;
     if (!n) n = typeof _buildLiveNoteForExport === 'function' ? _buildLiveNoteForExport() : null;
     if (!n) return;
-    const dateStr = n.updatedAt ? new Date(n.updatedAt).toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'}) : '';
+    const dateStr = n.updatedAt ? new Date(n.updatedAt).toLocaleDateString(_notedLocale(), {day:'2-digit',month:'long',year:'numeric'}) : '';
     const tags = (n.tags && n.tags.length) ? n.tags.map(t => '#'+t).join(' ') : '';
     const md = '# ' + n.title + '\n\n'
         + (dateStr ? '_' + dateStr + (tags ? ' · ' + tags : '') + '_\n\n' : '')

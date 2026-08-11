@@ -54,7 +54,7 @@
         /* Aynı notu hem ana editörde hem float editörde aç engeli */
         const mainId = (document.getElementById('edit-id') || {}).value;
         if (mainId && String(id) === String(mainId)) {
-            if (typeof _showSnack === 'function') _showSnack('Bu not zaten ana editörde açık', 'warn', 2400);
+            if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('msg.notealreadyopenmain'), 'warn', 2400);
             return false;
         }
         if (_fpNoteId && String(id) !== String(_fpNoteId) && !_isDocked && _isOpen) {
@@ -419,7 +419,7 @@
         const fpPdfBtn = document.getElementById('fp-pdf-btn');
         if (fpPdfBtn) fpPdfBtn.addEventListener('click', () => {
             closeFpMenu();
-            if (!_fpNoteId) { alert('Yazdırmak için önce bir not açın.'); return; }
+            if (!_fpNoteId) { alert(NotedI18n.t('msg.printopenfirst')); return; }
             const n = getNote(_fpNoteId); if (!n) return;
             const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${(n.title||'').replace(/</g,'&lt;')}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:0 40px;color:#1a1a1a;line-height:1.7}h1{font-size:1.8rem;font-weight:700;margin-bottom:6px}h2{font-size:1.25rem;margin:22px 0 6px;font-weight:700}h3{font-size:1.05rem;margin:16px 0 5px;font-weight:700}p{margin:6px 0}ul,ol{padding-left:22px;margin:8px 0}li{margin:3px 0}blockquote{border-left:3px solid #3B82F6;padding:6px 14px;margin:10px 0;color:#555;font-style:italic}code{background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:.88em}pre{background:#1E293B;color:#E2E8F0;padding:14px;border-radius:6px;overflow-x:auto;margin:8px 0}@media print{body{margin:0;padding:20px}}</style></head><body><h1>${(n.title||'').replace(/</g,'&lt;')}</h1>${typeof sanitize==='function'?sanitize(n.content||''):n.content||''}</body></html>`;
             const iframe = document.createElement('iframe');
@@ -473,9 +473,9 @@
                     const title = fpTitle.value.trim();
                     const content = fpContent.innerHTML;
                     if (!title && !(typeof stripHtml === 'function' ? stripHtml(content) : content).trim()) {
-                        alert('Şablon kaydetmek için önce başlık veya içerik ekleyin.'); return;
+                        alert(NotedI18n.t('msg.tplneedcontent')); return;
                     }
-                    const name = prompt('Şablon adı:', title || 'Özel Şablon');
+                    const name = prompt(NotedI18n.t('msg.tplnameprompt'), title || NotedI18n.t('msg.tplnamedefault'));
                     if (!name || !name.trim()) return;
                     if (typeof State.customTemplates !== 'undefined' && typeof saveCustomTemplates === 'function') {
                         State.customTemplates.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name: name.trim(), title, content });
@@ -899,7 +899,7 @@
             if (SR) {
                 fpMicBtn.classList.add('available');
                 const rec = new SR();
-                rec.lang = 'tr-TR'; rec.continuous = true; rec.interimResults = true;
+                rec.lang = _notedLocale(); rec.continuous = true; rec.interimResults = true;
                 let _fpListening = false;
                 let _fpPaused = false;
                 const interimEl = document.getElementById('fp-voice-interim');

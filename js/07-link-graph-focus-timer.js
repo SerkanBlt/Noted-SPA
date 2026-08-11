@@ -813,7 +813,7 @@
         const elS = $('stat-streak'), elW = $('stat-words'), elN = $('stat-week');
         if (!elS || !elW || !elN) return;
         elS.textContent = computeStreak();
-        elW.textContent = computeTotalWords().toLocaleString('tr-TR');
+        elW.textContent = computeTotalWords().toLocaleString(_notedLocale());
         elN.textContent = computeWeekCount();
     }
 

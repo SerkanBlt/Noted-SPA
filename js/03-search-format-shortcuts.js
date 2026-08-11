@@ -49,7 +49,7 @@ DOM.searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearc
 (function() {
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return;
     const micBtn=$('search-mic'), recognition=new SR(), _se=$('search-expand');
-    recognition.lang='tr-TR'; recognition.continuous=false; recognition.interimResults=true;
+    recognition.lang=(window._notedLocale ? window._notedLocale() : 'tr-TR'); recognition.continuous=false; recognition.interimResults=true;
     micBtn.classList.add('available');
     recognition.onresult=e => {
         const raw=Array.from(e.results).map(r=>r[0].transcript).join('');
@@ -63,7 +63,7 @@ DOM.searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearc
         e.stopPropagation();
         if (_se && !_se.classList.contains('open')) { _se.classList.add('open'); DOM.searchInput.focus(); }
         if (micBtn.classList.contains('listening')) recognition.stop();
-        else { recognition.start(); micBtn.classList.add('listening'); micBtn.title='Dinleniyor…'; }
+        else { recognition.lang=(window._notedLocale ? window._notedLocale() : 'tr-TR'); recognition.start(); micBtn.classList.add('listening'); micBtn.title='Dinleniyor…'; }
     });
 })();
 
@@ -169,7 +169,7 @@ DOM.$tfBadge.addEventListener('click', e => {
     const editorEl = $('editor');
     const vri=$('voice-record-indicator');
     const vriPauseBtn=$('vri-pause-btn'), vriResumeBtn=$('vri-resume-btn'), vriStopBtn=$('vri-stop-btn');
-    recognition.lang='tr-TR'; recognition.continuous=true; recognition.interimResults=true;
+    recognition.lang=(window._notedLocale ? window._notedLocale() : 'tr-TR'); recognition.continuous=true; recognition.interimResults=true;
     micBtn.classList.add('available');
     /* Web Speech API'de gerçek "duraklat" yok — Duraklat aslında recognition.stop() çağırıyor,
        _paused bayrağı onend'in normalde yaptığı otomatik yeniden-başlatmayı (continuous mod
@@ -203,7 +203,7 @@ DOM.$tfBadge.addEventListener('click', e => {
     micBtn.addEventListener('click',e=>{
         e.stopPropagation();
         if(micBtn.classList.contains('listening')) { setListening(false); recognition.stop(); }
-        else { DOM.$content.focus(); recognition.start(); setListening(true); }
+        else { recognition.lang=(window._notedLocale ? window._notedLocale() : 'tr-TR'); DOM.$content.focus(); recognition.start(); setListening(true); }
     });
     if (vriPauseBtn) vriPauseBtn.addEventListener('click', e => {
         e.stopPropagation();
@@ -539,10 +539,10 @@ $('upload-input').addEventListener('change',e=>{
             const raw=JSON.parse(ev.target.result);
             /* Sarmalı format: { _notes: [...], _ai: {...}, _ccbs: [...] } */
             const importedNotes = Array.isArray(raw) ? raw : (Array.isArray(raw._notes) ? raw._notes : null);
-            if(!importedNotes) throw new Error('Kök eleman bir dizi olmalı.');
-            if(State.notes.length>0&&!confirm(`Mevcut ${State.notes.length} not silinecek ve içe aktarılan ${importedNotes.length} not yüklenecek.\nDevam edilsin mi?`)) return;
+            if(!importedNotes) throw new Error(NotedI18n.t('msg.rootmustbearray'));
+            if(State.notes.length>0&&!confirm(NotedI18n.t('msg.importwillreplace').replace('{n1}',State.notes.length).replace('{n2}',importedNotes.length))) return;
             State.notes=importedNotes.map((n,i)=>({
-                id:n.id??genId(), title:typeof n.title==='string'?n.title:`İçe aktarılan not ${i+1}`,
+                id:n.id??genId(), title:typeof n.title==='string'?n.title:NotedI18n.t('msg.importednotetitle').replace('{n}',i+1),
                 content:sanitize(typeof n.content==='string'?n.content:''), group:typeof n.group==='string'?n.group:'Genel',
                 pinned: n.pinned||false, colorLabel: n.colorLabel||null, tags: n.tags||[],
                 createdAt:typeof n.createdAt==='number'?n.createdAt:Date.now(),
@@ -568,7 +568,7 @@ $('upload-input').addEventListener('change',e=>{
                 window._ccbSave(raw._ccbs);
                 if(typeof window._ccbInjectSlash === 'function') window._ccbInjectSlash();
             }
-        } catch(err){ alert('Geçersiz JSON: '+err.message); }
+        } catch(err){ alert(NotedI18n.t('msg.invalidjson')+err.message); }
     };
     r.readAsText(file); e.target.value='';
 });
@@ -645,7 +645,7 @@ function editNote(id) {
     if (typeof window._fpGetCurrentNoteId === 'function') {
         const fpId = window._fpGetCurrentNoteId();
         if (fpId && String(id) === String(fpId)) {
-            if (typeof _showSnack === 'function') _showSnack('Bu not zaten ikinci editörde açık', 'warn', 2400);
+            if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('msg.notealreadyopenfp'), 'warn', 2400);
             return;
         }
     }
@@ -808,14 +808,14 @@ Const.TEMPLATES_V2 = {
     daily: {
         title: () => {
             const d = new Date();
-            return 'Günlük Not — ' + d.toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'});
+            return 'Günlük Not — ' + d.toLocaleDateString(_notedLocale(), {day:'2-digit',month:'long',year:'numeric'});
         },
         content: '<h2>Bugün Ne Yaptım?</h2><p><br></p><h2>Yarın Ne Yapacağım?</h2><p><br></p><h2>Notlar</h2><p><br></p>'
     },
     meeting: {
         title: () => {
             const d = new Date();
-            return 'Toplantı — ' + d.toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'});
+            return 'Toplantı — ' + d.toLocaleDateString(_notedLocale(), {day:'2-digit',month:'long',year:'numeric'});
         },
         content: '<h2>Katılımcılar</h2><p><br></p><h2>Gündem</h2><p><br></p><h2>Kararlar</h2><p><br></p><h2>Aksiyon Maddeleri</h2><p><br></p>'
     },
@@ -858,7 +858,7 @@ $('template-btn').addEventListener('click', e => { e.stopPropagation(); toggleTe
     btn.addEventListener('click', function() {
         const eId = DOM.$editId.value;
         const n = eId ? State.notes.find(x => String(x.id) === String(eId)) : null;
-        if (!n) { alert('Yazdırmak için önce bir not açın.'); return; }
+        if (!n) { alert(NotedI18n.t('msg.printopenfirst')); return; }
         /* Geçici print iframe ile notu izole ederek yazdır */
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>${esc(n.title)}</title>
@@ -878,7 +878,7 @@ a{color:#3B82F6;text-decoration:none}
 @media print{body{margin:0;padding:20px}}
 </style></head><body>
 <h1>${esc(n.title)}</h1>
-<div class="meta">${n.updatedAt ? new Date(n.updatedAt).toLocaleDateString('tr-TR',{day:'2-digit',month:'long',year:'numeric'}) : ''}</div>
+<div class="meta">${n.updatedAt ? new Date(n.updatedAt).toLocaleDateString(_notedLocale(),{day:'2-digit',month:'long',year:'numeric'}) : ''}</div>
 ${sanitize(n.content)}
 </body></html>`;
         const iframe = document.createElement('iframe');

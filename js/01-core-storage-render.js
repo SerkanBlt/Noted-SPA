@@ -481,7 +481,7 @@ async function saveNotes() {
         try { StorageHealth.check(); } catch(_e) {}
     } catch (e) {
         try { StorageHealth.check(true); } catch(_e) {}
-        alert('⚠️ Depolama alanı dolu! Bazı notlar kaydedilemeyebilir.\nEski notları dışa aktarıp silerek yer açabilirsiniz.');
+        alert(NotedI18n.t('msg.storagefull'));
     }
 }
 /* ── Float panel helpers (State.notes scope'u gerektirir) ── */
@@ -779,7 +779,7 @@ DOM.$content.addEventListener('keydown', e => {
 
 /* ══ v1.3: GÜNLÜK NOT ══ */
 function dailyNoteTitle(d) {
-    return 'Günlük Not — ' + d.toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' });
+    return 'Günlük Not — ' + d.toLocaleDateString(_notedLocale(), { day:'2-digit', month:'long', year:'numeric' });
 }
 
 function openOrCreateDailyNote() {
@@ -1101,8 +1101,8 @@ function buildNoteItem(n) {
     const ts = n.updatedAt || n.createdAt;
     if (ts) {
         const d = new Date(ts);
-        dateEl.textContent = d.toLocaleDateString('tr-TR', { day:'2-digit', month:'short', year:'numeric' })
-            + ' ' + d.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
+        dateEl.textContent = d.toLocaleDateString(_notedLocale(), { day:'2-digit', month:'short', year:'numeric' })
+            + ' ' + d.toLocaleTimeString(_notedLocale(), { hour:'2-digit', minute:'2-digit' });
     }
 
     item.appendChild(titleRow);
@@ -1163,7 +1163,7 @@ DOM.$mainList.addEventListener('click', e => {
             navigator.share({ title: n?.title || 'Not', url }).catch(() => {});
         } else {
             navigator.clipboard?.writeText(url).then(() => {
-                if (typeof _showSnack === 'function') _showSnack('Bağlantı kopyalandı', 'ok', 2000);
+                if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('msg.linkcopied'), 'ok', 2000);
             }).catch(() => { prompt('Bağlantıyı kopyalayın:', url); });
         }
         return;
@@ -1224,7 +1224,7 @@ function _checkUrlReachable(url) {
         .catch(() => false);
 }
 function _notifyExtPanelUnavailable() {
-    if (typeof _showSnack === 'function') _showSnack('Panel açılamıyor', 'err');
+    if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('msg.panelcantopen'), 'err');
 }
 
 function createExtLinkPanel(link) {

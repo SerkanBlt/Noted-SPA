@@ -1,7 +1,7 @@
 /* Noted — Service Worker (çevrimdışı kabuk)
    SÜRÜM: uygulama sürümüyle birlikte artırılmalı, yoksa kullanıcı eski
    önbelleğe takılı kalır (cache-first strateji). */
-const VERSION = 'v1.16.15';
+const VERSION = 'v1.17.0';
 const CACHE = 'noted-' + VERSION;
 
 const ASSETS = [
@@ -10,6 +10,8 @@ const ASSETS = [
     "./manifest.json",
     "./Version.md",
     "./privacy.html",
+    "./Lang.json",
+    "./js/i18n.js",
     "./js/01-core-storage-render.js",
     "./js/02-toolbar-panel-column.js",
     "./js/03-search-format-shortcuts.js",

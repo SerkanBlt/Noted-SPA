@@ -1,6 +1,9 @@
 # Noted-SPA — Ajan Talimatları
 
-Türkçe bir not alma SPA'sı. Kullanıcıya dönük tüm metin (UI, commit, belge) **Türkçe**dir.
+Bir not alma SPA'sı. **Uygulama arayüzü çok dillidir** (v1.17'den itibaren): İngilizce,
+Almanca, İtalyanca, Fransızca, Türkçe — bkz. "Çok dillilik (i18n)" bölümü. **Geliştirici tarafı
+Türkçe kalır**: commit mesajları, `Comments.json`, `Version.md`, kod içi yorumlar, bu dosyanın
+kendisi — bunlar kullanıcıya değil geliştiriciye/ajana dönük, dil değiştirmenin kapsamı dışında.
 
 ## Proje şekli
 
@@ -9,15 +12,25 @@ Türkçe bir not alma SPA'sı. Kullanıcıya dönük tüm metin (UI, commit, bel
 | `Noted.html` | Markup + `<script src>`/`<link>` yükleme sırası (~1.4k satır) — mantık artık burada değil |
 | `noted.css` | Tüm stiller (Faz 2'de `Noted.html`'den ayrıldı) |
 | `js/01-*.js` … `js/09-*.js` | Uygulama mantığı, yükleme sırasına göre numaralı (Faz 3'te bölündü, klasik `<script src>` — global scope paylaşılır) |
-| `js/context-menu.js`, `js/float-panel.js`, `js/help-modal.js`, `js/pwa-register.js` | Bağımsız IIFE'ler, yalnızca `window.*` üzerinden konuşur |
+| `js/context-menu.js`, `js/float-panel.js`, `js/help-modal.js`, `js/pwa-register.js`, `js/i18n.js` | Bağımsız IIFE'ler, yalnızca `window.*` üzerinden konuşur |
+| `Lang.json` | Çok dillilik sözlüğü — bkz. "Çok dillilik (i18n)" bölümü |
 | `sw.js`, `manifest.json` | PWA — çevrimdışı kabuk + kurulum manifesti |
 | `Comments.json` | Kod dışı yorum veritabanı (aşağıya bak) |
 | `tools/comments-check.js` | `Comments.json` doğrulayıcı |
 | `REFACTOR_PLAN.md` | Modülerleşme iş emri (6 faz) — **tamamı tamamlandı** (Faz 6 v1.15.120'de, Faz 5/IndexedDB v1.15.131'de bitti). Yeni yapısal iş için hâlâ referans/emsal olarak okunur |
-| `Version.md` | Sürüm geçmişi — her sürümde güncellenir |
+| `Version.md` | Sürüm geçmişi — her sürümde güncellenir. **Türkçe kalır** (geliştirici günlüğü, çeviri kapsamı dışı) |
 | `Noted_System.md` | Uygulama içi AI asistanının sistem mesajı (uygulama kodu değil) |
 | `ProgressPlan.md` | Ticari yol haritası |
+| `privacy.html` | Gizlilik Politikası — Play Store için bağımsız dosya, **çok dilli** (bkz. aşağı) |
 | `server.js`, `start_noted*.{bat,ps1}` | Yerel sunucu yardımcıları |
+
+## Çok dillilik (i18n)
+
+- **Kaynak sözlük**: `Lang.json` — üst seviye dil kodu (`en`/`de`/`it`/`fr`/`tr`) → düz `{key: metin}` haritası. `en` şemanın referansıdır; yeni bir anahtar eklerken **5 dilin hepsine** ekle, eksik bırakma (eksik anahtar sessizce İngilizce'ye düşer, fark edilmesi zor).
+- **Uygulama**: metin içeren elementler `data-i18n="anahtar"` taşır (JS `applyLanguage()` bunları `.textContent` ile doldurur); `title=`/`placeholder=` çevirisi gereken elementler `data-i18n-title`/`data-i18n-placeholder` taşır. İkon+metin düğmelerinde (`<i>...</i><span data-i18n="...">`) `data-i18n` **yalnızca `<span>`'de** olmalı — ikonu da içeren üst elemente konursa ikon silinir.
+- **Varsayılan dil**: `localStorage['noted_lang']` yoksa (ilk açılış) **İngilizce**. Kullanıcı dil değiştirince o seçim kalıcı olur, bir sonraki açılışta o dille başlar.
+- **Kapsam dışı (kasıtlı)**: `Version.md` (Ayarlar > Versiyonlar sekmesi bunu ham okuyor) ve `Comments.json`/commit mesajları — geliştirici içeriği, sürekli büyüyen bir günlüğü her sürümde 5 dile çevirmek pratik değil. `privacy.html` ise KAPSAM İÇİNDE (kullanıcıya dönük, gerçek belge) — kendi `Lang`-tabanlı çevirisini taşır.
+- Yeni kullanıcıya-dönük metin eklerken **hardcoded Türkçe (veya başka dil) string bırakma** — `Lang.json`'a anahtar ekleyip `data-i18n*` kullan.
 
 Dev sunucu: `.claude/launch.json` içindeki **"Noted SPA"** (port 5500). Uygulamayı çalıştırmak
 için `preview_start` kullan, `Bash` ile sunucu başlatma.

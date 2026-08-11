@@ -20,7 +20,14 @@
     line-height: 1.7;
   }
   h1 { font-size: 1.7rem; margin-bottom: 4px; }
-  .updated { color: var(--text-muted); font-size: .85rem; margin-bottom: 32px; }
+  .updated { color: var(--text-muted); font-size: .85rem; margin-bottom: 12px; }
+  .privlang { display: flex; gap: 4px; margin-bottom: 24px; }
+  .privlang button {
+    font: inherit; font-size: .78rem; padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+    cursor: pointer;
+  }
+  .privlang button.active { color: var(--accent); border-color: var(--accent); font-weight: 700; }
   h2 { font-size: 1.15rem; margin-top: 36px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
   h3 { font-size: 1rem; margin-top: 20px; }
   p, li { color: var(--text); }
@@ -44,104 +51,161 @@
 </head>
 <body>
 
-<h1>Noted — Gizlilik Politikası</h1>
-<p class="updated">Son güncelleme: 27 Temmuz 2026</p>
+<h1 data-i18n="priv.title">Noted — Gizlilik Politikası</h1>
+<p class="updated" data-i18n="priv.updated">Son güncelleme: 27 Temmuz 2026</p>
+<!-- Bağımsız açıldığında (Play Store linki vb.) dil seçimi için — Noted.html içine
+     akordeon olarak enjekte edildiğinde bu satır gizlenir, dil ana uygulamadan miras alınır. -->
+<div class="privlang" id="privlang">
+  <button type="button" data-lang="en">EN</button>
+  <button type="button" data-lang="de">DE</button>
+  <button type="button" data-lang="it">IT</button>
+  <button type="button" data-lang="fr">FR</button>
+  <button type="button" data-lang="tr">TR</button>
+</div>
 
 <div class="box">
-<p><strong>Kısaca:</strong> Noted'un kendi sunucusu yoktur. Notlarınız yalnızca cihazınızda tutulur.
+<p data-i18n="priv.intro"><strong>Kısaca:</strong> Noted'un kendi sunucusu yoktur. Notlarınız yalnızca cihazınızda tutulur.
 Uygulama, siz açıkça <strong>AI Sohbet</strong> özelliğini kullanmadığınız sürece hiçbir veriyi
 hiçbir yere göndermez. Reklam, analitik, izleme veya kullanıcı hesabı yoktur.</p>
 </div>
 
-<h2>1. Bu uygulamayı kim işletiyor?</h2>
-<p>Noted, bağımsız bir geliştirici tarafından geliştirilen ve işletilen, ücretsiz bir not alma
+<h2 data-i18n="priv.h1">1. Bu uygulamayı kim işletiyor?</h2>
+<p data-i18n="priv.s1p1">Noted, bağımsız bir geliştirici tarafından geliştirilen ve işletilen, ücretsiz bir not alma
 uygulamasıdır. Arkasında bir şirket, sunucu altyapısı veya veri işleyen üçüncü bir ekip yoktur.</p>
-<p>İletişim: <span class="placeholder">[serbalta@gmail.com]</span></p>
+<p><span data-i18n="priv.s1contact">İletişim:</span> <span class="placeholder">[serbalta@gmail.com]</span></p>
 
-<h2>2. Notlarınız nerede saklanır?</h2>
-<p class="ok">Tüm notlarınız, başlıklarınız, etiketleriniz ve ayarlarınız yalnızca
+<h2 data-i18n="priv.h2">2. Notlarınız nerede saklanır?</h2>
+<p class="ok" data-i18n="priv.s2p1">Tüm notlarınız, başlıklarınız, etiketleriniz ve ayarlarınız yalnızca
 <strong>cihazınızın yerel depolamasında</strong> (tarayıcı localStorage / IndexedDB) tutulur.</p>
 <ul>
-  <li>Notlarınız hiçbir sunucuya yüklenmez, hiçbir yere yedeklenmez (siz elle dışa aktarmadıkça).</li>
-  <li>Geliştirici olarak biz notlarınızı <strong>hiçbir zaman göremeyiz</strong> — bunu görebileceğimiz
+  <li data-i18n="priv.s2li1">Notlarınız hiçbir sunucuya yüklenmez, hiçbir yere yedeklenmez (siz elle dışa aktarmadıkça).</li>
+  <li data-i18n="priv.s2li2">Geliştirici olarak biz notlarınızı <strong>hiçbir zaman göremeyiz</strong> — bunu görebileceğimiz
   bir sistem (sunucu, veritabanı, panel) yoktur.</li>
-  <li>Uygulamayı silerseniz veya tarayıcı verilerini temizlerseniz notlarınız kalıcı olarak silinir.
+  <li data-i18n="priv.s2li3">Uygulamayı silerseniz veya tarayıcı verilerini temizlerseniz notlarınız kalıcı olarak silinir.
   Bu yüzden uygulama içindeki <strong>Dışa Aktar</strong> özelliğiyle düzenli yedek almanızı öneririz.</li>
-  <li>Cihazınızın depolaması azaldığında tarayıcının verilerinizi silmesini önlemek için uygulama,
+  <li data-i18n="priv.s2li4">Cihazınızın depolaması azaldığında tarayıcının verilerinizi silmesini önlemek için uygulama,
   tarayıcınızdan "kalıcı depolama" izni ister (<code>navigator.storage.persist</code>) — bu, ek bir
   veri toplama değildir, yalnızca mevcut verinizin cihazınızda daha güvende kalmasını sağlar.</li>
 </ul>
 
-<h2>3. AI Sohbet özelliğini kullanırsanız ne olur?</h2>
-<p>Noted, isteğe bağlı bir AI Sohbet özelliği sunar. Bu özellik <strong>varsayılan olarak kapalıdır</strong>
+<h2 data-i18n="priv.h3">3. AI Sohbet özelliğini kullanırsanız ne olur?</h2>
+<p data-i18n="priv.s3p1">Noted, isteğe bağlı bir AI Sohbet özelliği sunar. Bu özellik <strong>varsayılan olarak kapalıdır</strong>
 ve yalnızca siz kendi API anahtarınızı girip bir sağlayıcı seçtiğinizde çalışır.</p>
 <div class="box">
-<p class="warn"><strong>Bu özelliği kullanırsanız</strong>, sohbet penceresine yazdığınız mesaj, son birkaç
+<p class="warn" data-i18n="priv.s3box"><strong>Bu özelliği kullanırsanız</strong>, sohbet penceresine yazdığınız mesaj, son birkaç
 mesajlık sohbet geçmişi ve — sorduğunuz soruyla alakalı bulunursa — <strong>not koleksiyonunuzdaki
 ilgili notların içeriği</strong>, seçtiğiniz AI sağlayıcısına gönderilir.</p>
 </div>
 <ul>
-  <li>Bu gönderim, tarayıcınızdan <strong>doğrudan</strong> seçtiğiniz sağlayıcının sunucusuna
+  <li data-i18n="priv.s3li1">Bu gönderim, tarayıcınızdan <strong>doğrudan</strong> seçtiğiniz sağlayıcının sunucusuna
   yapılır — Noted'un kendi bir sunucusu bu veriyi görmez, işlemez veya saklamaz.</li>
-  <li>Kullandığınız API anahtarı yalnızca cihazınızda (yerel depolamada) tutulur, hiçbir yere
+  <li data-i18n="priv.s3li2">Kullandığınız API anahtarı yalnızca cihazınızda (yerel depolamada) tutulur, hiçbir yere
   gönderilmez (yalnızca seçtiğiniz sağlayıcıya kimlik doğrulama için).</li>
-  <li>Desteklenen sağlayıcılar: Groq, OpenRouter, Together AI, Fireworks AI, Mistral, veya kendi
+  <li data-i18n="priv.s3li3">Desteklenen sağlayıcılar: Groq, OpenRouter, Together AI, Fireworks AI, Mistral, veya kendi
   belirlediğiniz özel bir uç nokta. Verilerinizin bu sağlayıcılarda nasıl işlendiği, o sağlayıcının
   kendi gizlilik politikasına tabidir — kullanmadan önce incelemenizi öneririz.</li>
-  <li>Bu özelliği hiç kullanmazsanız, uygulama internet üzerinden <strong>hiçbir veri göndermez</strong>.</li>
+  <li data-i18n="priv.s3li4">Bu özelliği hiç kullanmazsanız, uygulama internet üzerinden <strong>hiçbir veri göndermez</strong>.</li>
 </ul>
 
-<h2>4. Sesli giriş</h2>
-<p>Uygulama, metin girişini kolaylaştırmak için isteğe bağlı bir sesli giriş (mikrofon) özelliği
+<h2 data-i18n="priv.h4">4. Sesli giriş</h2>
+<p data-i18n="priv.s4p1">Uygulama, metin girişini kolaylaştırmak için isteğe bağlı bir sesli giriş (mikrofon) özelliği
 sunar. Bu özellik tarayıcınızın/işletim sisteminizin kendi konuşma tanıma altyapısını
 (<code>Web Speech API</code>) kullanır. Sesinizin bu tanıma sırasında nasıl işlendiği
 (cihazda mı, tarayıcı sağlayıcısının sunucusunda mı) tamamen kullandığınız tarayıcının/cihazın
 kontrolündedir — Noted bu sürece müdahale etmez, sesinizi kaydetmez veya saklamaz.</p>
 
-<h2>5. Özel Kod Blokları (CCB)</h2>
-<p>Kendi oluşturduğunuz özel HTML/CSS/JS bloklarını notlarınıza ekleyebilirsiniz. Bu bloklar
+<h2 data-i18n="priv.h5">5. Özel Kod Blokları (CCB)</h2>
+<p data-i18n="priv.s5p1">Kendi oluşturduğunuz özel HTML/CSS/JS bloklarını notlarınıza ekleyebilirsiniz. Bu bloklar
 kısıtlı bir çerçeve (<code>sandbox</code>) içinde çalışır ve uygulamanın geri kalanına
 (diğer notlarınıza, depolamanıza) erişemez. Kendi yazdığınız bir kod bloğu bilerek bir ağ
 isteği yaparsa, bu tamamen sizin kontrolünüzdedir — Noted bunu tetiklemez veya izlemez.</p>
 
-<h2>6. Toplamadığımız veriler</h2>
+<h2 data-i18n="priv.h6">6. Toplamadığımız veriler</h2>
 <table>
-<tr><th>Kategori</th><th>Durum</th></tr>
-<tr><td>Analitik / kullanım istatistiği</td><td class="ok">Toplanmıyor</td></tr>
-<tr><td>Reklam / reklam kimliği</td><td class="ok">Toplanmıyor</td></tr>
-<tr><td>Kullanıcı hesabı, e-posta, isim</td><td class="ok">İstenmiyor, toplanmıyor</td></tr>
-<tr><td>Konum</td><td class="ok">İstenmiyor, toplanmıyor</td></tr>
-<tr><td>Kişiler, takvim, dosyalar (cihaz izinleri)</td><td class="ok">Erişilmiyor</td></tr>
-<tr><td>Çerez / izleme pikseli</td><td class="ok">Kullanılmıyor</td></tr>
-<tr><td>Üçüncü taraf yazı tipi/ikon CDN'i</td><td class="ok">Yok — tüm yazı tipleri ve ikonlar uygulamayla birlikte yerel olarak dağıtılır</td></tr>
-<tr><td>Not içeriği (AI Sohbet <em>kullanılmadığında</em>)</td><td class="ok">Cihaz dışına hiç çıkmaz</td></tr>
-<tr><td>Not içeriği (AI Sohbet <em>kullanıldığında</em>)</td><td class="warn">Yalnızca seçtiğiniz AI sağlayıcısına gönderilir — bkz. Bölüm 3</td></tr>
+<tr><th data-i18n="priv.t.category">Kategori</th><th data-i18n="priv.t.status">Durum</th></tr>
+<tr><td data-i18n="priv.t.r1c1">Analitik / kullanım istatistiği</td><td class="ok" data-i18n="priv.t.r1c2">Toplanmıyor</td></tr>
+<tr><td data-i18n="priv.t.r2c1">Reklam / reklam kimliği</td><td class="ok" data-i18n="priv.t.r2c2">Toplanmıyor</td></tr>
+<tr><td data-i18n="priv.t.r3c1">Kullanıcı hesabı, e-posta, isim</td><td class="ok" data-i18n="priv.t.r3c2">İstenmiyor, toplanmıyor</td></tr>
+<tr><td data-i18n="priv.t.r4c1">Konum</td><td class="ok" data-i18n="priv.t.r4c2">İstenmiyor, toplanmıyor</td></tr>
+<tr><td data-i18n="priv.t.r5c1">Kişiler, takvim, dosyalar (cihaz izinleri)</td><td class="ok" data-i18n="priv.t.r5c2">Erişilmiyor</td></tr>
+<tr><td data-i18n="priv.t.r6c1">Çerez / izleme pikseli</td><td class="ok" data-i18n="priv.t.r6c2">Kullanılmıyor</td></tr>
+<tr><td data-i18n="priv.t.r7c1">Üçüncü taraf yazı tipi/ikon CDN'i</td><td class="ok" data-i18n="priv.t.r7c2">Yok — tüm yazı tipleri ve ikonlar uygulamayla birlikte yerel olarak dağıtılır</td></tr>
+<tr><td data-i18n="priv.t.r8c1">Not içeriği (AI Sohbet <em>kullanılmadığında</em>)</td><td class="ok" data-i18n="priv.t.r8c2">Cihaz dışına hiç çıkmaz</td></tr>
+<tr><td data-i18n="priv.t.r9c1">Not içeriği (AI Sohbet <em>kullanıldığında</em>)</td><td class="warn" data-i18n="priv.t.r9c2">Yalnızca seçtiğiniz AI sağlayıcısına gönderilir — bkz. Bölüm 3</td></tr>
 </table>
 
-<h2>7. Verilerinizi silme</h2>
-<p>Tüm verileriniz cihazınızda olduğu için silme işlemi tamamen sizin elinizdedir:</p>
+<h2 data-i18n="priv.h7">7. Verilerinizi silme</h2>
+<p data-i18n="priv.s7p1">Tüm verileriniz cihazınızda olduğu için silme işlemi tamamen sizin elinizdedir:</p>
 <ul>
-  <li>Uygulama içinden tek tek notları veya tüm notları silebilirsiniz.</li>
-  <li>Tarayıcınızın/cihazınızın ayarlarından "site verilerini temizle" ile Noted'a ait tüm
+  <li data-i18n="priv.s7li1">Uygulama içinden tek tek notları veya tüm notları silebilirsiniz.</li>
+  <li data-i18n="priv.s7li2">Tarayıcınızın/cihazınızın ayarlarından "site verilerini temizle" ile Noted'a ait tüm
   yerel depolamayı (notlar, ayarlar, API anahtarları) tek seferde silebilirsiniz.</li>
-  <li>Uygulamayı cihazınızdan kaldırmak, kalan tüm yerel veriyi de siler.</li>
-  <li>Sildiğiniz veri geri getirilemez çünkü hiçbir yerde bizim tarafımızdan tutulan bir kopyası yoktur.</li>
+  <li data-i18n="priv.s7li3">Uygulamayı cihazınızdan kaldırmak, kalan tüm yerel veriyi de siler.</li>
+  <li data-i18n="priv.s7li4">Sildiğiniz veri geri getirilemez çünkü hiçbir yerde bizim tarafımızdan tutulan bir kopyası yoktur.</li>
 </ul>
 
-<h2>8. Çocukların gizliliği</h2>
-<p>Noted, genel amaçlı bir not alma aracıdır ve özellikle çocuklara yönelik değildir. Bilerek
+<h2 data-i18n="priv.h8">8. Çocukların gizliliği</h2>
+<p data-i18n="priv.s8p1">Noted, genel amaçlı bir not alma aracıdır ve özellikle çocuklara yönelik değildir. Bilerek
 13 yaş altı çocuklardan veri toplamıyoruz — zaten hiçbir kullanıcıdan kişisel veri toplamıyoruz.</p>
 
-<h2>9. Bu politikadaki değişiklikler</h2>
-<p>Uygulamaya yeni bir özellik eklendiğinde (örneğin veri işleme şeklini değiştiren bir özellik),
+<h2 data-i18n="priv.h9">9. Bu politikadaki değişiklikler</h2>
+<p data-i18n="priv.s9p1">Uygulamaya yeni bir özellik eklendiğinde (örneğin veri işleme şeklini değiştiren bir özellik),
 bu sayfa güncellenir ve sayfanın üstündeki "Son güncelleme" tarihi değiştirilir.</p>
 
-<h2>10. İletişim</h2>
-<p>Bu politikayla veya verilerinizle ilgili bir sorunuz varsa:
-<span class="placeholder">[serbalta@gmail.com]</span> adresinden ulaşabilirsiniz.</p>
+<h2 data-i18n="priv.h10">10. İletişim</h2>
+<p><span data-i18n="priv.s10p1">Bu politikayla veya verilerinizle ilgili bir sorunuz varsa:</span>
+<span class="placeholder">[serbalta@gmail.com]</span> <span data-i18n="priv.s10p1b">adresinden ulaşabilirsiniz.</span></p>
 
-<footer>Noted — Gizlilik Politikası. Bu belge, uygulamanın kaynak kodu incelenerek
+<footer data-i18n="priv.footer">Noted — Gizlilik Politikası. Bu belge, uygulamanın kaynak kodu incelenerek
 hazırlanmıştır ve uygulamanın gerçek veri akışını yansıtır.</footer>
+
+<script>
+/* Bağımsız açılış (Play Store linki vb.) için minik i18n önyükleyici.
+   TUZAK: Noted.html'in Settings > Genel akordeonu bu dosyayı fetch edip yalnızca
+   <body>.innerHTML'ini DOMParser ile enjekte ediyor (js/06-bookmark-settings-ccb.js) —
+   DOMParser çıktısındaki <script> etiketleri innerHTML ile taşındığında ÇALIŞMAZ (spec
+   geregi inert kalir), bu yuzden bu blok yalniz BAGIMSIZ acilista devreye girer. Enjekte
+   edilmis kopyanın cevirisi o tarafta NotedI18n.applyLanguage() yeniden cagrilarak yapiliyor. */
+(function () {
+    var STORAGE_KEY = 'noted_lang';
+    var DEFAULT_LANG = 'en';
+    var SUPPORTED = ['en', 'de', 'it', 'fr', 'tr'];
+
+    function getStored() {
+        try {
+            var v = localStorage.getItem(STORAGE_KEY);
+            if (v && SUPPORTED.indexOf(v) !== -1) return v;
+        } catch (e) {}
+        return null;
+    }
+    function setStored(lang) {
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+    }
+
+    function apply(dict, lang) {
+        var map = dict[lang] || {};
+        var fallback = dict[DEFAULT_LANG] || {};
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+            var key = el.getAttribute('data-i18n');
+            var val = map[key] != null ? map[key] : fallback[key];
+            if (val != null) el.innerHTML = val;
+        });
+        document.querySelectorAll('#privlang button').forEach(function (btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+        });
+        document.documentElement.setAttribute('lang', lang);
+        setStored(lang);
+    }
+
+    fetch('./Lang.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (dict) {
+        var lang = getStored() || DEFAULT_LANG;
+        apply(dict, lang);
+        document.querySelectorAll('#privlang button').forEach(function (btn) {
+            btn.addEventListener('click', function () { apply(dict, btn.getAttribute('data-lang')); });
+        });
+    }).catch(function () { /* Lang.json yoksa sayfa varsayılan (Türkçe) metinle kalır */ });
+})();
+</script>
 
 </body>
 </html>

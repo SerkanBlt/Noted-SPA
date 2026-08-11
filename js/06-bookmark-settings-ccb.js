@@ -673,7 +673,7 @@ DOM.$content.addEventListener('input', () => {
         setHint('Gönderiliyor…');
         try {
             const body  = typeof htmlToMd === 'function' ? htmlToMd(html) : text;
-            const title = 'Hata Bildirimi — ' + new Date().toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' });
+            const title = 'Hata Bildirimi — ' + new Date().toLocaleString(_notedLocale(), { dateStyle: 'medium', timeStyle: 'short' });
             const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/issues`, {
                 method: 'POST',
                 headers: {
@@ -687,7 +687,7 @@ DOM.$content.addEventListener('input', () => {
                 const errData = await res.json().catch(() => ({}));
                 throw new Error(_ghErrorHint(res.status, errData.message) || (errData.message || ('HTTP ' + res.status)));
             }
-            if (typeof _showSnack === 'function') _showSnack('Hata bildirimi gönderildi, teşekkürler!', 'ok');
+            if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('msg.bugreportsent'), 'ok');
             close();
         } catch (e) {
             setHint('Gönderilemedi: ' + e.message, 'bugreport-hint-err');
@@ -798,7 +798,8 @@ DOM.$content.addEventListener('input', () => {
         accordion.classList.toggle('open');
         if (_loaded || !accordion.classList.contains('open')) return;
         _loaded = true;
-        body.innerHTML = '<div class="ver-loading">Yükleniyor…</div>';
+        const _t = window.NotedI18n ? window.NotedI18n.t : function (k) { return k; };
+        body.innerHTML = '<div class="ver-loading">' + _t('common.loading') + '</div>';
         try {
             const res = await fetch('privacy.html', { cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -806,11 +807,18 @@ DOM.$content.addEventListener('input', () => {
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const wrap = document.createElement('div');
             wrap.className = 'privacy-embed';
-            wrap.innerHTML = doc.body ? doc.body.innerHTML : '';
+            /* privlang (bağımsız açılış dil seçici) enjekte edilmiş kopyada gereksiz —
+               ana uygulamanın kendi dil düğmesi zaten var, gizlenir. */
+            const src = doc.body ? doc.body.cloneNode(true) : null;
+            if (src) { const pl = src.querySelector('#privlang'); if (pl) pl.remove(); }
+            wrap.innerHTML = src ? src.innerHTML : '';
             body.innerHTML = '';
             body.appendChild(wrap);
+            /* Enjekte edilen kopyadaki data-i18n'ler DOMParser+innerHTML yolundan geçtiği
+               icin script calismadi — ana uygulamanin motoruyla elle cevriliyor. */
+            if (window.NotedI18n) window.NotedI18n.applyLanguage(window.NotedI18n.currentLang());
         } catch (e) {
-            body.innerHTML = '<div class="ver-empty">Gizlilik politikası yüklenemedi.</div>';
+            body.innerHTML = '<div class="ver-empty">' + _t('priv.loaderror') + '</div>';
             _loaded = false;
         }
     });
@@ -1173,7 +1181,7 @@ DOM.$content.addEventListener('input', () => {
                 });
                 item.querySelector('.ccb-del-btn').addEventListener('click', e => {
                     e.stopPropagation();
-                    if (confirm('"' + ccb.name + '" silinsin mi?')) {
+                    if (confirm(NotedI18n.t('msg.ccbdeleteconfirm').replace('{name}', ccb.name))) {
                         _ccbDelete(ccb.id);
                         renderList();
                     }
@@ -1255,8 +1263,8 @@ DOM.$content.addEventListener('input', () => {
                 const name   = document.getElementById('ccb-f-name').value.trim();
                 const height = parseInt(document.getElementById('ccb-f-height').value, 10) || 200;
                 const code   = document.getElementById('ccb-f-code').value;
-                if (!name) { alert('İsim zorunludur.'); return; }
-                if (!code.trim()) { alert('HTML kodu zorunludur.'); return; }
+                if (!name) { alert(NotedI18n.t('msg.namerequired')); return; }
+                if (!code.trim()) { alert(NotedI18n.t('msg.htmlrequired')); return; }
                 if (isEdit) _ccbUpdate(ccb.id, { group, name, height, code });
                 else        _ccbAdd({ group, name, height, code });
                 wrap.remove();
@@ -1284,10 +1292,10 @@ DOM.$content.addEventListener('input', () => {
                         const raw = JSON.parse(ev.target.result);
                         const list = Array.isArray(raw) ? raw : [raw];
                         const added = ccbImportFromObjects(list);
-                        if (!added) { alert('İçe aktarılabilir CCB bulunamadı — dosyada "name" ve "code" alanları olmalı.'); return; }
+                        if (!added) { alert(NotedI18n.t('msg.noimportableccb')); return; }
                         renderList();
-                        alert(added + ' CCB içe aktarıldı.');
-                    } catch (err) { alert('Geçersiz JSON: ' + err.message); }
+                        alert(NotedI18n.t('msg.ccbimported').replace('{n}', added));
+                    } catch (err) { alert(NotedI18n.t('msg.invalidjson') + err.message); }
                 };
                 r.readAsText(file);
                 e.target.value = '';

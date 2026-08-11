@@ -311,12 +311,12 @@ function _gridDeleteRow(table) {
         const f = table.querySelector(':focus');
         td = f ? f.closest('td, th') : null;
     }
-    if (!td || !table.contains(td)) { _showSnack('Önce bir hücreye tıklayın.', 'warn'); return; }
+    if (!td || !table.contains(td)) { _showSnack(NotedI18n.t('msg.clickcellfirst'), 'warn'); return; }
     const tr = td.closest('tr');
     if (!tr) return;
-    if (tr.parentElement.tagName === 'THEAD') { _showSnack('Başlık satırı silinemez.', 'warn'); return; }
+    if (tr.parentElement.tagName === 'THEAD') { _showSnack(NotedI18n.t('msg.headerrowundeletable'), 'warn'); return; }
     const rows = [...(table.querySelector('tbody')||{querySelectorAll:()=>[]}).querySelectorAll('tr')];
-    if (rows.length <= 1) { _showSnack('Son içerik satırı silinemez.', 'warn'); return; }
+    if (rows.length <= 1) { _showSnack(NotedI18n.t('msg.lastrowundeletable'), 'warn'); return; }
     tr.remove(); _gridMarkDirty(table); updateFooterVisibility();
 }
 
@@ -331,12 +331,12 @@ function _gridDeleteCol(table) {
         const f = table.querySelector(':focus');
         td = f ? f.closest('td, th') : null;
     }
-    if (!td || !table.contains(td)) { _showSnack('Önce bir hücreye tıklayın.', 'warn'); return; }
+    if (!td || !table.contains(td)) { _showSnack(NotedI18n.t('msg.clickcellfirst'), 'warn'); return; }
     const tr = td.closest('tr');
     const colIdx = [...tr.children].indexOf(td);
     if (colIdx < 0) return;
     const cols = [...table.querySelectorAll('col')];
-    if (cols.length <= 1) { _showSnack('Son kolon silinemez.', 'warn'); return; }
+    if (cols.length <= 1) { _showSnack(NotedI18n.t('msg.lastcolundeletable'), 'warn'); return; }
     if (cols[colIdx]) cols[colIdx].remove();
     table.querySelectorAll('thead tr, tbody tr').forEach(row => {
         const cells = [...row.children];
@@ -1414,12 +1414,12 @@ document.addEventListener('keydown', function ngArrowNav(e) {
         e.stopPropagation();
         const fmt = window._sharedPaintFormat;
         if (!fmt || (!fmt.fontFamily && !fmt.fontSize && !fmt.color && !fmt.backgroundColor)) {
-            _showSnack('Önce Biçim Kopyalayıcı ile bir biçim kopyalayın.'); return;
+            _showSnack(NotedI18n.t('msg.copyformatfirst')); return;
         }
         /* Mevcut seçimi kullan — restore ETME (farklı metin seçilmiş olabilir) */
         const sel = window.getSelection();
         if (!sel || !sel.rangeCount || sel.isCollapsed) {
-            _showSnack('Biçim uygulanacak metni seçin.'); return;
+            _showSnack(NotedI18n.t('msg.selecttextforformat')); return;
         }
         const range = sel.getRangeAt(0);
         const span = document.createElement('span');

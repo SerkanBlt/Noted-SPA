@@ -48,12 +48,12 @@ function exportNoteAsHtml(noteId) {
     if (!n) return;
     var safeContent = sanitize(convertWikiSyntax(n.content));
     var dateStr = n.updatedAt
-        ? new Date(n.updatedAt).toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })
+        ? new Date(n.updatedAt).toLocaleDateString(_notedLocale(), { day:'2-digit', month:'long', year:'numeric' })
         : '';
     var tagsHtml = (n.tags && n.tags.length > 0)
         ? '<span>\uD83C\uDFF7 ' + n.tags.map(function(t){ return '#'+esc(t); }).join(' ') + '</span>'
         : '';
-    var todayStr = new Date().toLocaleDateString('tr-TR');
+    var todayStr = new Date().toLocaleDateString(_notedLocale());
     var html = [
         '<!DOCTYPE html>',
         '<html lang="tr">',
@@ -180,10 +180,10 @@ function buildTemplateDropdownContent() {
             var delBtn = document.createElement('button');
             delBtn.className = 'tpl-item-del';
             delBtn.innerHTML = '<i class="fas fa-times"></i>';
-            delBtn.title = 'Şablonu Sil';
+            delBtn.title = NotedI18n.t('tpl.deletebtn');
             delBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                if (confirm('"' + tpl.name + '" şablonu silinsin mi?')) {
+                if (confirm(NotedI18n.t('msg.tpldeleteconfirm').replace('{name}', tpl.name))) {
                     deleteCustomTemplate(String(tpl.id));
                 }
             });
@@ -197,9 +197,9 @@ function saveCurrentNoteAsTemplate() {
     var title = DOM.$title.value.trim();
     var content = DOM.$content.innerHTML;
     if (!title && !stripHtml(content).trim()) {
-        alert('Şablon kaydetmek için önce başlık veya içerik ekleyin.'); return;
+        alert(NotedI18n.t('msg.tplneedcontent')); return;
     }
-    var name = prompt('Şablon adı:', title || 'Özel Şablon');
+    var name = prompt(NotedI18n.t('msg.tplnameprompt'), title || NotedI18n.t('msg.tplnamedefault'));
     if (!name || !name.trim()) return;
     State.customTemplates.push({ id: genId(), name: name.trim(), title: title, content: content });
     saveCustomTemplates();
@@ -357,8 +357,8 @@ if (State.sortOrder !== 'newest') DOM.$sortBadge.classList.add('active-sort');
 /* v1.5: ZAMAN DAMGASI — side toolbar ve kısayol ile tetiklenir */
 function insertTimestamp() {
     const now = new Date();
-    const dateStr = now.toLocaleDateString('tr-TR', { day:'numeric', month:'long', year:'numeric' });
-    const timeStr = now.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
+    const dateStr = now.toLocaleDateString(_notedLocale(), { day:'numeric', month:'long', year:'numeric' });
+    const timeStr = now.toLocaleTimeString(_notedLocale(), { hour:'2-digit', minute:'2-digit' });
     const text = '📅 ' + dateStr + ', ' + timeStr;
     (EditorState._activeEditTarget||DOM.$content).focus();
     document.execCommand('insertText', false, text);
