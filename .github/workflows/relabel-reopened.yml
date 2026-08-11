@@ -1,0 +1,28 @@
+name: Relabel reopened bug reports
+
+# "Hata Bildir" panelinden acilan issue'lar 'hata-bildirimi' + 'durum:yeni' etiketiyle
+# aciliyor (js/06-bookmark-settings-ccb.js). Bir issue kapatildiktan sonra tekrar
+# acilirsa (reopened), bunun "yeni" degil "renew" (tekrarlanan) oldugunu ayirt etmek
+# icin 'durum:yeni' etiketi kaldirilip 'durum:renew' eklenir. Yalnizca 'hata-bildirimi'
+# etiketi tasiyan issue'larda calisir — elle acilan/kapatilan alakasiz issue'lari
+# etkilemez.
+on:
+  issues:
+    types: [reopened]
+
+permissions:
+  issues: write
+
+jobs:
+  relabel:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'hata-bildirimi')
+    steps:
+      - name: Swap durum:yeni -> durum:renew
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          NUM: ${{ github.event.issue.number }}
+        run: |
+          gh issue edit "$NUM" --repo "$REPO" --add-label "durum:renew" --remove-label "durum:yeni" || \
+          gh issue edit "$NUM" --repo "$REPO" --add-label "durum:renew"
