@@ -9,6 +9,15 @@
     const floatBtn       = document.getElementById('float-btn');
     if (!FP || !fpContent) return;
 
+    /* v1.17.3: fpContent.innerHTML'i DOĞRUDAN okuyup kaydeden her nokta — js/02 saveNote()'un
+       yaptığı gibi — önce .ng-toolbar/.ng-add-col/.cb-toolbar'ı çıkarmalı, yoksa bu hover-görünür
+       araç çubukları not içeriğine kalıcı olarak gömülür (kaydedilmiş HTML'de event listener'sız,
+       işlevsiz kalıntılar). Paylaşılan yardımcı js/01'de tanımlı; script sırası her zaman ondan
+       sonra yüklendiği için burada garanti mevcuttur. */
+    function fpReadContent() {
+        return typeof window._stripUiChromeAndRead === 'function' ? window._stripUiChromeAndRead(fpContent) : fpContent.innerHTML;
+    }
+
     /* Float panel instance — her nota ait bağımsız undo/redo geçmişi */
     const _fpInst = typeof createInstance === 'function' ? createInstance(fpContent, '') : null;
     window._fpEditorInstance = _fpInst;
@@ -117,7 +126,7 @@
             const n = getNote(_fpNoteId);
             const sb = document.getElementById('fp-save-btn');
             if (sb) sb.classList.add('saving');
-            window._fpUpdateNote(_fpNoteId, n ? n.title : (fpTitle.value || 'Not'), fpContent.innerHTML, true);
+            window._fpUpdateNote(_fpNoteId, n ? n.title : (fpTitle.value || 'Not'), fpReadContent(), true);
             if (sb) setTimeout(() => {
                 sb.classList.remove('saving');
                 sb.classList.add('saved');
@@ -324,14 +333,14 @@
                 // Float editor'ı kaydet
                 if (typeof window._fpUpdateNote === 'function') {
                     const n = getNote(fpId);
-                    window._fpUpdateNote(fpId, n ? n.title : (fpTitle.value || ''), fpContent.innerHTML, true);
+                    window._fpUpdateNote(fpId, n ? n.title : (fpTitle.value || ''), fpReadContent(), true);
                 }
                 // Ana editörü dialog göstermeden kaydet
                 const _mainN = (typeof State.notes !== 'undefined') ? State.notes.find(x => String(x.id) === String(mainId)) : null;
                 if (_mainN) {
                     const $c = document.getElementById('content');
                     const $t = document.getElementById('title');
-                    if ($c) _mainN.content = $c.innerHTML;
+                    if ($c) _mainN.content = typeof window._stripUiChromeAndRead === 'function' ? window._stripUiChromeAndRead($c) : $c.innerHTML;
                     if ($t) _mainN.title = $t.value;
                     _mainN.modified = Date.now();
                     if (typeof saveNotes === 'function') saveNotes();
@@ -472,7 +481,7 @@
                 saveBtn.addEventListener('click', e => {
                     e.stopPropagation();
                     const title = fpTitle.value.trim();
-                    const content = fpContent.innerHTML;
+                    const content = fpReadContent();
                     if (!title && !(typeof stripHtml === 'function' ? stripHtml(content) : content).trim()) {
                         alert(NotedI18n.t('msg.tplneedcontent')); return;
                     }
@@ -602,14 +611,14 @@
             if (!_fpNoteId || typeof window._fpUpdateNote !== 'function') return;
             clearTimeout(_titleTimer);
             _titleTimer = setTimeout(() => {
-                window._fpUpdateNote(_fpNoteId, fpTitle.value.trim() || 'Not', fpContent.innerHTML, false);
+                window._fpUpdateNote(_fpNoteId, fpTitle.value.trim() || 'Not', fpReadContent(), false);
             }, 600);
         });
         fpTitle.addEventListener('blur', () => {
             clearTimeout(_titleTimer);
             if (!_fpNoteId || typeof window._fpUpdateNote !== 'function') return;
             if (!fpTitle.value.trim()) fpTitle.value = 'Not';
-            window._fpUpdateNote(_fpNoteId, fpTitle.value.trim(), fpContent.innerHTML, false);
+            window._fpUpdateNote(_fpNoteId, fpTitle.value.trim(), fpReadContent(), false);
         });
         fpTitle.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fpTitle.blur(); } });
     }
@@ -622,7 +631,7 @@
             clearTimeout(_saveTimer);
             const n = getNote(_fpNoteId);
             fpSaveBtn.classList.add('saving');
-            window._fpUpdateNote(_fpNoteId, n ? n.title : (fpTitle.value || 'Not'), fpContent.innerHTML, false);
+            window._fpUpdateNote(_fpNoteId, n ? n.title : (fpTitle.value || 'Not'), fpReadContent(), false);
             setTimeout(() => {
                 fpSaveBtn.classList.remove('saving');
                 fpSaveBtn.classList.add('saved');

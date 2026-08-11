@@ -484,6 +484,25 @@ async function saveNotes() {
         alert(NotedI18n.t('msg.storagefull'));
     }
 }
+/* v1.17.3: saveNote() (js/02) ve float panel (js/float-panel.js) ikisi de contenteditable
+   içine enjekte edilen geçici UI chrome'unu (.ng-toolbar/.ng-add-col/.cb-toolbar) kaydetmeden
+   önce çıkarıp sonra geri koymak zorunda — aksi halde bu elementler innerHTML'e kalıcı olarak
+   gömülür (bkz. Comments.json → why-savenote-strips-ui-chrome-classlist). Aynı deseni birden
+   fazla yerde tekrarlamamak için paylaşılan yardımcı: */
+window._stripUiChromeAndRead = function(el) {
+    if (!el) return '';
+    const _tmpRemoved = [];
+    el.querySelectorAll('.ng-toolbar, .ng-add-col, .cb-toolbar').forEach(chromeEl => {
+        _tmpRemoved.push({ parent: chromeEl.parentNode, next: chromeEl.nextSibling, el: chromeEl });
+        chromeEl.remove();
+    });
+    const html = el.innerHTML;
+    _tmpRemoved.forEach(({ parent, next, el: chromeEl }) => {
+        if (next) parent.insertBefore(chromeEl, next);
+        else parent.appendChild(chromeEl);
+    });
+    return html;
+};
 /* ── Float panel helpers (State.notes scope'u gerektirir) ── */
 window._fpGetNote = function(id) {
     return State.notes.find(n => String(n.id) === String(id)) || null;

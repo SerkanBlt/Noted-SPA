@@ -1463,17 +1463,7 @@ function setEditorLocked(locked) {
 function saveNote() {
     const title   = DOM.$title.value.trim();
     if (typeof window._undoLockForSave === 'function') window._undoLockForSave();
-    const _tmpRemoved = [];
-    DOM.$content.querySelectorAll('.ng-toolbar, .ng-add-col, .cb-toolbar').forEach(el => {
-        _tmpRemoved.push({ parent: el.parentNode, next: el.nextSibling, el });
-        el.remove();
-    });
-    const rawHtml = DOM.$content.innerHTML;
-    /* UI elementlerini geri koy */
-    _tmpRemoved.forEach(({ parent, next, el }) => {
-        if (next) parent.insertBefore(el, next);
-        else parent.appendChild(el);
-    });
+    const rawHtml = window._stripUiChromeAndRead(DOM.$content);
     const eId     = DOM.$editId.value;
     /* Başlık zorunlu — içerik olmadan da kaydedilebilir */
     if (!title) {
