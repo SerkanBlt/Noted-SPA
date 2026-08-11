@@ -583,8 +583,8 @@ function _getOrCreateAlignPopup() {
         btn.className = 'ng-align-btn';
         btn.dataset.valign = v;
         btn.dataset.halign = h;
-        const vL = v==='top'?'Üst':v==='middle'?'Orta':'Alt';
-        const hL = h==='left'?'Sol':h==='center'?'Ortala':'Sağ';
+        const vL = v==='top'?_t('align.top','Üst'):v==='middle'?_t('align.middle','Orta'):_t('align.bottom','Alt');
+        const hL = h==='left'?_t('align.left','Sol'):h==='center'?_t('align.center','Ortala'):_t('align.right','Sağ');
         btn.title = `${vL} ${hL}`;
         btn.innerHTML = _alignSvg(v, h);
         btn.addEventListener('mousedown', e => e.preventDefault());
@@ -798,16 +798,16 @@ function _buildShapeToolbar(el) {
     /* Renk seçici */
     const colorInput = document.createElement('input');
     colorInput.type = 'color'; colorInput.className = 'shape-color-swatch';
-    colorInput.title = 'Renk'; colorInput.value = el.dataset.stroke || '#1e90ff';
+    colorInput.title = _t('shape.color', 'Renk'); colorInput.value = el.dataset.stroke || '#1e90ff';
     colorInput.addEventListener('input', () => { el.dataset.stroke = colorInput.value; _updateShapeSvg(el); _markDirty(); });
     tb.appendChild(colorInput);
     const s1 = document.createElement('div'); s1.className = 'shape-tb-sep'; tb.appendChild(s1);
 
     /* Dolgu */
-    [['none','□','Transparan'],['semi','◧','Yarı Saydam'],['solid','■','Dolu']].forEach(([mode,lbl,title]) => {
+    [['none','□','shape.filltransparent','Transparan'],['semi','◧','shape.fillsemi','Yarı Saydam'],['solid','■','shape.fillsolid','Dolu']].forEach(([mode,lbl,titleKey,titleFallback]) => {
         const btn = document.createElement('button');
         btn.className = 'shape-tb-btn' + (el.dataset.fillMode === mode ? ' active' : '');
-        btn.textContent = lbl; btn.title = title;
+        btn.textContent = lbl; btn.title = _t(titleKey, titleFallback);
         btn.addEventListener('click', () => {
             el.dataset.fillMode = mode; _updateShapeSvg(el);
             tb.querySelectorAll('.shape-tb-btn').forEach(b => b.classList.remove('active'));
@@ -826,7 +826,7 @@ function _buildShapeToolbar(el) {
 
     /* Sil */
     const delBtn = document.createElement('button');
-    delBtn.className = 'shape-tb-btn'; delBtn.innerHTML = '<i class="fas fa-trash"></i>'; delBtn.title = 'Şekli Sil';
+    delBtn.className = 'shape-tb-btn'; delBtn.innerHTML = '<i class="fas fa-trash"></i>'; delBtn.title = _t('shape.delete', 'Şekli Sil');
     delBtn.addEventListener('click', () => { el.remove(); _markDirty(); });
     tb.appendChild(delBtn);
 
@@ -841,7 +841,7 @@ function _selectShape(el) {
 
     /* Döndürme kolu */
     const rotH = document.createElement('div');
-    rotH.className = 'shape-rotate-handle'; rotH.title = 'Döndür';
+    rotH.className = 'shape-rotate-handle'; rotH.title = _t('shape.rotate', 'Döndür');
     rotH.innerHTML = '<i class="fas fa-rotate"></i>';
     rotH.addEventListener('pointerdown', function(e) {
         e.preventDefault(); e.stopPropagation();
@@ -1084,7 +1084,7 @@ function _restoreGrids(root) {
         if (!btn) {
             btn = document.createElement('button');
             btn.className = 'callout-del';
-            btn.title = 'Vurgu bloğunu sil';
+            btn.title = _t('callout.deleteblock', 'Vurgu bloğunu sil');
             btn.innerHTML = '<i class="fas fa-times"></i>';
             btn.contentEditable = 'false';
             callout.appendChild(btn);

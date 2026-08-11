@@ -166,7 +166,7 @@
         if (userText) d.dataset.userText = userText;
         const thinkHtml = thinking
             ? `<details class="ai-think">
-                <summary><span class="ai-think-arrow">▶</span> Düşünme süreci</summary>
+                <summary><span class="ai-think-arrow">▶</span> ${NotedI18n.t('ai.thinking')}</summary>
                 <div class="ai-think-body">${esc(thinking)}</div>
                </details>`
             : '';
@@ -663,11 +663,11 @@
         const { thinking, reply } = _extractThinking(rawText, rawReasoning);
         const thinkHtml = thinking
             ? `<details class="ai-think">
-                   <summary><span class="ai-think-arrow">▶</span> Düşünme süreci</summary>
+                   <summary><span class="ai-think-arrow">▶</span> ${NotedI18n.t('ai.thinking')}</summary>
                    <div class="ai-think-body">${esc(thinking)}</div>
                </details>`
             : '';
-        bubble.innerHTML = thinkHtml + (mdToHtml(reply || rawText) || '(Boş yanıt geldi)');
+        bubble.innerHTML = thinkHtml + (mdToHtml(reply || rawText) || NotedI18n.t('ai.emptyreply'));
 
         /* Token + model chip'leri — mesaj üst sağ */
         const tokChips  = _buildTokenChips(usageData, remH, limH);
@@ -765,7 +765,7 @@
         _busy = true;
         _abort = new AbortController();
         sendBtn.innerHTML = '<i class="fas fa-stop"></i>';
-        sendBtn.title = 'Durdur';
+        sendBtn.title = _t('ai.stop', 'Durdur');
         sendBtn.classList.add('stopping');
         const _docAtts = _attachments.filter(a => a.type === 'doc');
         const _imgAtts = _attachments.filter(a => a.type === 'img');
@@ -906,7 +906,7 @@
                 if (_willRetry) return;
                 _busy = false; _abort = null;
                 sendBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
-                sendBtn.title = 'Gönder (Enter)';
+                sendBtn.title = _t('ai.send', 'Gönder (Enter)');
                 sendBtn.classList.remove('stopping');
             });
         }
@@ -953,13 +953,13 @@
         if (!panelSub) return;
         const pool = _getPool();
         if (pool.length > 0) {
-            panelSub.textContent = `● ${pool.length} model hazır`;
+            panelSub.textContent = `● ${pool.length} ` + NotedI18n.t('ai.status.modelsready');
             panelSub.style.color = 'var(--success, #3fb950)';
         } else if (getCfg().apiKey) {
-            panelSub.textContent = '● Bağlantı hazır';
+            panelSub.textContent = '● ' + NotedI18n.t('ai.status.connready');
             panelSub.style.color = 'var(--success, #3fb950)';
         } else {
-            panelSub.textContent = '○ API anahtarı ayarlanmadı';
+            panelSub.textContent = '○ ' + NotedI18n.t('ai.status.nokey');
             panelSub.style.color = 'var(--text-muted)';
         }
     }
@@ -1028,7 +1028,7 @@
             const hKey   = `${entry.providerId}::${entry.modelId}`;
             const health = _modelHealth[hKey];
             const healthBadge = health
-                ? `<span class="ai-pool-row-health" title="${health.http === 429 ? 'Rate limit — yakında sıfırlanır' : 'Hata — geçici devre dışı'}">${health.http === 429 ? '⚡' : '⚠'}</span>`
+                ? `<span class="ai-pool-row-health" title="${health.http === 429 ? NotedI18n.t('ai.ratelimit') : NotedI18n.t('ai.tempdisabled')}">${health.http === 429 ? '⚡' : '⚠'}</span>`
                 : `<span></span>`;
             const row = document.createElement('div');
             row.className = 'ai-pool-row';
@@ -1042,12 +1042,12 @@
                     (ctx ? `<span class="ai-pool-row-sep">|</span><span class="ai-pool-row-ctx">${ctx}</span>` : '') +
                   `</div>` +
                 `</div>` +
-                `<span class="ai-pool-row-badge ${entry.free ? 'ai-model-badge-free' : 'ai-model-badge-paid'}">${entry.free ? 'Ücretsiz' : 'Ücretli'}</span>` +
+                `<span class="ai-pool-row-badge ${entry.free ? 'ai-model-badge-free' : 'ai-model-badge-paid'}">${entry.free ? NotedI18n.t('ai.free') : NotedI18n.t('ai.paid')}</span>` +
                 healthBadge +
                 `<div class="ai-pool-row-actions">` +
-                  `<button class="ai-pool-btn" data-action="up"   data-idx="${i}" title="Yukarı">&#x25B2;</button>` +
-                  `<button class="ai-pool-btn" data-action="down" data-idx="${i}" title="Aşağı">&#x25BC;</button>` +
-                  `<button class="ai-pool-btn del" data-action="del" data-idx="${i}" title="Kaldır"><i class="fas fa-trash-can"></i></button>` +
+                  `<button class="ai-pool-btn" data-action="up"   data-idx="${i}" title="${NotedI18n.t('common.up')}">&#x25B2;</button>` +
+                  `<button class="ai-pool-btn" data-action="down" data-idx="${i}" title="${NotedI18n.t('common.down')}">&#x25BC;</button>` +
+                  `<button class="ai-pool-btn del" data-action="del" data-idx="${i}" title="${NotedI18n.t('common.remove')}"><i class="fas fa-trash-can"></i></button>` +
                 `</div>`;
             grid.appendChild(row);
         });
@@ -1125,7 +1125,7 @@
         const countEl  = document.getElementById('ai-picker-sel-count');
         const titleEl  = document.getElementById('ai-picker-title');
         if (!list) return;
-        if (titleEl) titleEl.textContent = providerName + ' Modelleri';
+        if (titleEl) titleEl.textContent = NotedI18n.t('ai.providermodels').replace('{provider}', providerName);
         _pickerModels = models;
 
         function _rebuildRows(filter) {
@@ -1134,7 +1134,7 @@
                 ? models.filter(m => m.id.toLowerCase().includes(filter) || (m.name||'').toLowerCase().includes(filter))
                 : models;
             if (!visible.length) {
-                list.innerHTML = '<div style="padding:12px;text-align:center;font-size:.8rem;color:var(--text-muted)">Model bulunamadı</div>';
+                list.innerHTML = '<div style="padding:12px;text-align:center;font-size:.8rem;color:var(--text-muted)">' + NotedI18n.t('ai.nomodelsfound') + '</div>';
                 return;
             }
             visible.forEach(m => {
@@ -1147,7 +1147,7 @@
                       `<div class="ai-model-row-name" title="${m.id}">${m.name || m.id}</div>` +
                       (ctx ? `<div class="ai-model-row-meta">${ctx}</div>` : '') +
                     `</div>` +
-                    `<span class="ai-model-badge ${m.free ? 'ai-model-badge-free' : 'ai-model-badge-paid'}">${m.free ? 'Ücretsiz' : 'Ücretli'}</span>`;
+                    `<span class="ai-model-badge ${m.free ? 'ai-model-badge-free' : 'ai-model-badge-paid'}">${m.free ? NotedI18n.t('ai.free') : NotedI18n.t('ai.paid')}</span>`;
                 list.appendChild(row);
             });
             _updateSelCount();
@@ -1156,7 +1156,7 @@
         function _updateSelCount() {
             if (!countEl) return;
             const n = list.querySelectorAll('input[type="checkbox"]:checked').length;
-            countEl.textContent = n ? `${n} seçildi` : '';
+            countEl.textContent = n ? NotedI18n.t('ai.selectedcount').replace('{n}', n) : '';
         }
 
         if (_pickerListChangeHandler) list.removeEventListener('change', _pickerListChangeHandler);
@@ -1224,7 +1224,7 @@
         if (!apiKey) { _setProvStatus('⚠ API anahtarı girin', false); return; }
         if (provId === 'custom' && !customEp) { _setProvStatus('⚠ Endpoint URL girin', false); return; }
         const base = provId === 'custom' ? customEp : cat?.endpoint;
-        if (provStatus) { provStatus.textContent = 'Bağlanıyor…'; provStatus.style.color = 'var(--text-muted)'; }
+        if (provStatus) { provStatus.textContent = NotedI18n.t('ai.status.connecting'); provStatus.style.color = 'var(--text-muted)'; }
         validateBtn.disabled = true;
         try {
             const headers = { 'Authorization': `Bearer ${apiKey}`, ...(cat?.extraHeaders || {}) };
@@ -1258,7 +1258,7 @@
         if (!list || !_pickerProvider) return;
         const checked = [...list.querySelectorAll('input[type="checkbox"]:checked')];
         if (!checked.length) {
-            if (provStatus) { provStatus.textContent = '⚠ En az bir model seçin'; provStatus.style.color = '#e5534b'; setTimeout(() => { if (provStatus) provStatus.textContent = ''; }, 2000); }
+            if (provStatus) { provStatus.textContent = '⚠ ' + NotedI18n.t('ai.status.selectmodel'); provStatus.style.color = '#e5534b'; setTimeout(() => { if (provStatus) provStatus.textContent = ''; }, 2000); }
             return;
         }
         const pool = _getPool();

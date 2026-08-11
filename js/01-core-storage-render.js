@@ -692,7 +692,7 @@ function openWlAutocomplete(query, rect) {
     if (matches.length === 0) {
         const d = document.createElement('div');
         d.className = 'wl-ac-empty';
-        d.textContent = query ? `“${query}” ile eşleşen not yok` : 'Yazmaya başlayın…';
+        d.textContent = query ? _t('wl.noresultsfor', `“${query}” ile eşleşen not yok`).replace('{q}', query) : _t('wl.starttyping', 'Yazmaya başlayın…');
         DOM.$wlAcList.appendChild(d);
     } else {
         matches.forEach((n, i) => {
@@ -904,7 +904,7 @@ function buildGroupDropdown() {
         d.addEventListener('click', () => setGroupFilter(value));
         return d;
     };
-    DOM.$gfDropdown.appendChild(mkItem('all', 'Tüm Gruplar'));
+    DOM.$gfDropdown.appendChild(mkItem('all', _t('group.all', 'Tüm Gruplar')));
     gs.forEach(g => DOM.$gfDropdown.appendChild(mkItem(g, g)));
 }
 
@@ -918,7 +918,7 @@ function buildTagDropdown() {
         d.addEventListener('click', () => setTagFilter(value));
         return d;
     };
-    const allItem = mkItem('all', 'Tüm Etiketler');
+    const allItem = mkItem('all', _t('tag.all', 'Tüm Etiketler'));
     allItem.classList.add('tf-item-all');
     DOM.$tfDropdown.appendChild(allItem);
     if (tags.length === 0) {
@@ -926,7 +926,7 @@ function buildTagDropdown() {
         d.className = 'tf-item';
         d.style.color = 'var(--text-muted)';
         d.style.fontStyle = 'italic';
-        d.textContent = 'Henüz etiket yok';
+        d.textContent = _t('tag.none', 'Henüz etiket yok');
         d.style.pointerEvents = 'none';
         DOM.$tfDropdown.appendChild(d);
     }
@@ -982,7 +982,7 @@ function render() {
     DOM.$mainList.innerHTML = '';
     if (filtered.length === 0) {
         DOM.$mainList.innerHTML = `<div class="empty-state"><i class="fas fa-file-alt"></i>
-            <p>${State.searchQuery ? 'Sonuç bulunamadı' : 'Henüz not yok'}</p></div>`;
+            <p>${State.searchQuery ? NotedI18n.t('qs.noresults') : NotedI18n.t('note.emptylist')}</p></div>`;
         return;
     }
 
@@ -995,7 +995,7 @@ function render() {
     if (pinnedNotes.length > 0) {
         const ph = document.createElement('div');
         ph.className = 'pinned-group-header';
-        ph.innerHTML = '<i class="fas fa-thumbtack" style="font-size:.65rem"></i> SABİTLENMİŞ';
+        ph.innerHTML = '<i class="fas fa-thumbtack" style="font-size:.65rem"></i> ' + _t('note.pinnedheader', 'SABİTLENMİŞ');
         DOM.$mainList.appendChild(ph);
 
         const pinnedContainer = document.createElement('div');
@@ -1020,7 +1020,7 @@ function render() {
         gh.style.color = c.main;
         gh.innerHTML = `<span>${esc(gName)}</span>
             <div style="display:flex;align-items:center;gap:9px">
-                <span style="font-size:.69rem;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">${groups[gName].length} not</span>
+                <span style="font-size:.69rem;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">${NotedI18n.t('note.groupcount').replace('{n}', groups[gName].length)}</span>
                 <i class="fas fa-chevron-${isOpen ? 'up' : 'down'}" style="font-size:.69rem"></i>
             </div>`;
 
@@ -1060,8 +1060,8 @@ function buildNoteItem(n) {
 
     const titleEl = document.createElement('div');
     titleEl.className = 'note-title' + (expand ? ' can-expand' : '');
-    titleEl.innerHTML = highlight(esc(n.title || '(Başlıksız Not)'), State.searchQuery);
-    if (expand) titleEl.title = exp ? 'Daralt' : 'Genişlet';
+    titleEl.innerHTML = highlight(esc(n.title || _t('note.untitled', '(Başlıksız Not)')), State.searchQuery);
+    if (expand) titleEl.title = exp ? _t('note.collapse', 'Daralt') : _t('note.expand', 'Genişlet');
 
     const acts = document.createElement('div');
     acts.className = 'note-actions';
@@ -1069,11 +1069,11 @@ function buildNoteItem(n) {
     const _hasRem = _rems.some(r => r && r.at && !r.fired);
     const _remOverdue = _rems.some(r => r && r.at && !r.fired && r.at <= Date.now());
     acts.innerHTML = `
-        <button class="nab fp-open" title="İkinci Editörde Aç"><i class="fas fa-columns"></i></button>
-        <button class="nab share-link" title="Bağlantıyı Kopyala"><i class="fas fa-link"></i></button>
-        <button class="nab pin ${n.pinned ? 'pinned' : ''}" title="${n.pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle'}"><i class="fas fa-thumbtack"></i></button>
-        <button class="nab reminder${_hasRem ? (_remOverdue ? ' overdue' : ' has-reminder') : ''}" title="Hatırlatıcı"><i class="fas fa-bell"></i></button>
-        <button class="nab del" title="Sil"><i class="fas fa-trash"></i></button>`;
+        <button class="nab fp-open" title="${_t('note.openinfp', 'İkinci Editörde Aç')}"><i class="fas fa-columns"></i></button>
+        <button class="nab share-link" title="${_t('note.copylink', 'Bağlantıyı Kopyala')}"><i class="fas fa-link"></i></button>
+        <button class="nab pin ${n.pinned ? 'pinned' : ''}" title="${n.pinned ? _t('cf.unpin', 'Sabitlemeyi Kaldır') : _t('cf.pin', 'Sabitle')}"><i class="fas fa-thumbtack"></i></button>
+        <button class="nab reminder${_hasRem ? (_remOverdue ? ' overdue' : ' has-reminder') : ''}" title="${_t('note.reminder', 'Hatırlatıcı')}"><i class="fas fa-bell"></i></button>
+        <button class="nab del" title="${_t('common.delete', 'Sil')}"><i class="fas fa-trash"></i></button>`;
 
     titleRow.appendChild(titleEl);
     titleRow.appendChild(acts);
@@ -1523,7 +1523,7 @@ function togglePin(id) {
 function updateEditorPinBtn(pinned) {
     State.editorPinned = pinned;
     DOM.$pinBtn.classList.toggle('pinned', pinned);
-    DOM.$pinBtn.title = pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle';
+    DOM.$pinBtn.title = pinned ? _t('cf.unpin', 'Sabitlemeyi Kaldır') : _t('cf.pin', 'Sabitle');
 }
 
 DOM.$pinBtn.addEventListener('click', () => {
@@ -1584,7 +1584,7 @@ function buildTocPanel() {
     heads.forEach((h, i) => {
         const item = document.createElement('div');
         item.className = 'toc-item' + (h.tagName === 'H3' ? ' lvl-3' : '');
-        item.textContent = stripHtml(h.innerHTML).trim() || ('Başlık ' + (i+1));
+        item.textContent = stripHtml(h.innerHTML).trim() || _t('toc.headingfallback', 'Başlık {n}').replace('{n}', i+1);
         item.dataset.idx = String(i);
         item.title = item.textContent;
         item.addEventListener('click', () => scrollToTocHeading(i));

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Noted v1.17.0 — feat: Uygulama arayuzu artik cok dilli (Ingilizce/Almanca/Italyanca/Fransizca/Turkce). Hamburger'in solunda yeni bir dil dugmesi (globe ikonu) acilir, secilen dil localStorage'a kaydedilir ve bir sonraki acilista hatirlanir; ilk acilista varsayilan Ingilizce'dir. Cok dillilik Lang.json (541 anahtar, 5 dil) + js/i18n.js motoru (data-i18n/-title/-placeholder/-tip/-dp/-aria attribute'leri, tum DOM'u tarayip innerHTML/attribute uyguluyor) ile calisiyor; privacy.html hem bagimsiz acilista (kendi mini dil secici + Lang.json fetch) hem Ayarlar > Genel akordeonuna enjekte edildiginde (ana motor yeniden cagriliyor) cevriliyor. Tarih/saat bicimlendirmeleri (26 yerde hardcoded 'tr-TR' idi) artik secili dile gore degisiyor (_notedLocale()); alert/confirm/_showSnack mesajlarinin cogu da Lang.json'a baglandi. Kapsam disi (bilinclil): not sablonu ICERIK govdeleri (basliklar disinda), Version.md, Comments.json, commit mesajlari -->
+<!-- Noted v1.17.1 — fix: v1.17.0'da statik HTML data-i18n ile etiketlendi ama JS tarafindan CALISMA ZAMANINDA uretilen/uzerine-yazilan metinler (not karti buton tooltipleri, editor footer pin/kilit dugmeleri, sirala/grupla/etiket dropdown'lari, sag-tik context menusu (~35 etiket), sablon/CCB/graph/odak-zamanlayici panelleri) atlanmisti — bunlarin tumu artik NotedI18n.t()/_t() uzerinden cevriliyor (Lang.json 541 -> 650 anahtar). Ayrica kritik bir boot-sirasi hatasi duzeltildi: bazi JS fonksiyonlari (orn. CCB gelistirici sekmesi renderList()) sayfa yuklenirken js/i18n.js daha yuklenmeden NotedI18n.t() cagirabiliyordu ve throw ediyordu (ReferenceError) — cozum: Noted.html'nin en erken inline script'inde, js/i18n.js yuklenene kadar anahtari oldugu gibi donen bir window.NotedI18n "kukla" nesnesi tanimlandi. Kapsam disi (bilinclil, degismedi): not sablonu ICERIK govdeleri (basliklar disinda), Version.md, Comments.json, commit mesajlari, arama operatoru anahtar kelimeleri (grup:/etiket:/renk:/sabit:) -->
 <html lang="tr" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Noted — hızlı, yerel ve güvenli not alma uygulaması. Gruplar, zengin metin düzenleme ve sesle giriş destekli.">
     <meta name="theme-color" content="#1e90ff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
-    <title>Noted v1.17.0</title>
+    <title>Noted v1.17.1</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; viewBox=&#39;0 0 32 32&#39;&gt;&lt;rect width=&#39;32&#39; height=&#39;32&#39; rx=&#39;8&#39; fill=&#39;%231e90ff&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;7&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;12&#39; width=&#39;16&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;rect x=&#39;8&#39; y=&#39;17&#39; width=&#39;10&#39; height=&#39;2.5&#39; rx=&#39;1.25&#39; fill=&#39;white&#39;/&gt;&lt;circle cx=&#39;22&#39; cy=&#39;24&#39; r=&#39;5&#39; fill=&#39;white&#39;/&gt;&lt;path d=&#39;M20 24l1.5 1.5L24 22&#39; stroke=&#39;%231e90ff&#39; stroke-width=&#39;1.8&#39; stroke-linecap=&#39;round&#39; stroke-linejoin=&#39;round&#39; fill=&#39;none&#39;/&gt;&lt;/svg&gt;">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -29,6 +29,32 @@
     var lang = 'en';
     try { var v = localStorage.getItem('noted_lang'); if (v && LOCALE_MAP[v]) lang = v; } catch (e) {}
     window._notedLocale = function () { return LOCALE_MAP[lang] || LOCALE_MAP.en; };
+    /* AYNI TUZAK, ikinci bir bicimi: js/01/02/04/07/08 icindeki bazi fonksiyonlar
+       (buildNoteItem, buildViewDropdown'un ust-seviye ilk cagirisi, vb.) da acilista
+       NotedI18n.t()'i js/i18n.js yuklenmeden CAGIRABILIYOR. window._t(key, fallback)
+       bu yuzden NotedI18n hazir degilse sessizce Turkce fallback'e duser (throw etmez);
+       NotedI18n hazir olunca gercek ceviriyi dondurur. Cagri sitelerinde HER ZAMAN
+       bare NotedI18n.t(...) yerine bu kullanilmali — cagrinin acilista mi yoksa yalnizca
+       kullanici etkilesiminde mi tetiklendigini kesin bilmek zor oldugu icin (bkz.
+       Comments.json trap-notedlocale-must-exist-before-js01 ile ayni aile). */
+    window._t = function (key, fallback) {
+        return (window.NotedI18n && window.NotedI18n.t) ? window.NotedI18n.t(key) : fallback;
+    };
+    /* UCUNCU bicim, en genisi: bircok yerde artik bare NotedI18n.t(key) cagriliyor
+       (fallback metni tek tek gecirmek yerine). Bu cagrilarin HANGISININ acilista
+       tetiklenebilecegini tek tek kanitlamak imkansiza yakin (buildNoteItem/renderList
+       gibi fonksiyonlar hem kullanici etkilesiminde HEM bazen dogrudan init sirasinda
+       cagriliyor — biri gercekte boyle bir crash uretti, bkz. Version.md v1.17.1).
+       Cozum: window.NotedI18n'in KENDISI en bastan (js/i18n.js yuklenmeden once) var
+       olsun — throw etmeyen, anahtari oldugu gibi donen "kukla" bicimiyle. js/i18n.js
+       yuklenince kendi tam calisan nesnesiyle USTUNE YAZAR (asagi bkz: window.NotedI18n
+       = {...} atamasi normal atama, kukla nesneyi degistirmekten cekinmez). */
+    window.NotedI18n = {
+        t: function (key) { return key; },
+        applyLanguage: function () {},
+        currentLang: function () { return lang; },
+        locale: window._notedLocale
+    };
 })();
 </script>
 
@@ -70,7 +96,7 @@
             <button id="hm-settings-btn" class="hm-item hm-settings" title="Ayarlar" data-i18n-title="hm.settings"><i class="fas fa-sliders"></i><span data-i18n="hm.settings">Ayarlar</span></button>
             <button id="hm-bugreport-btn" class="hm-item" title="Hata Bildir" data-i18n-title="hm.bugreport"><i class="fas fa-bug"></i><span data-i18n="hm.bugreport">Hata Bildir</span></button>
             <div class="hm-sep"></div>
-            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler" data-i18n-title="hm.help"><i class="fas fa-circle-question"></i><span data-i18n="hm.help">Yardım</span><span class="hm-app-ver">v1.17.0</span></button>
+            <button id="hm-help-btn" class="hm-item" title="Yardım &amp; Özellikler" data-i18n-title="hm.help"><i class="fas fa-circle-question"></i><span data-i18n="hm.help">Yardım</span><span class="hm-app-ver">v1.17.1</span></button>
         </div>
         <input type="file" id="upload-input" accept=".json">
         <!-- Gizli proxy butonlar — JS referansları için -->
@@ -978,7 +1004,7 @@
         <svg viewBox="0 0 22 22" width="18" height="18" style="flex-shrink:0"><rect width="22" height="22" rx="5" fill="var(--accent)"/><path d="M5 6h12M5 11h8M5 16h10" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
         Noted — <span data-i18n="help.headtitle">Yardım &amp; Özellikler</span>
       </div>
-      <span class="hm-ver">v1.17.0</span>
+      <span class="hm-ver">v1.17.1</span>
       <button class="hm-close" id="hm-close-btn" title="Kapat (Esc)" data-i18n-title="gm.closeesc">✕</button>
     </div>
     <div class="hm-body">
@@ -1010,7 +1036,7 @@
 
         <!-- Hero -->
         <div class="hm-hero">
-          <h2>Noted v1.17.0</h2>
+          <h2>Noted v1.17.1</h2>
           <p data-i18n="help.hero.desc">Tamamen yerel çalışan, sunucu gerektirmeyen zengin özellikli bir not alma uygulaması. Tek HTML dosyasında çalışır.</p>
           <div class="hm-hero-stats">
             <div class="hm-hero-stat"><div class="hm-hero-stat-n">17</div><div class="hm-hero-stat-l" data-i18n="help.hero.categories">Özellik Kategorisi</div></div>

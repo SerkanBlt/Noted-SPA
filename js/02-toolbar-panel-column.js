@@ -10,11 +10,11 @@ function updateReminderBtn(reminders, reminderNote) {
         DOM.$reminderBtn.classList.add(overdue ? 'overdue' : 'has-reminder');
         const next = active.slice().sort((a, b) => a.at - b.at)[0];
         const d = new Date(next.at);
-        DOM.$reminderBtn.title = 'Hatırlatıcı (' + active.length + '): '
+        DOM.$reminderBtn.title = _t('cf.reminderactive', 'Hatırlatıcı ({n}):').replace('{n}', active.length) + ' '
             + d.toLocaleDateString(_notedLocale(), {day:'2-digit',month:'long',year:'numeric'})
             + ' ' + d.toLocaleTimeString(_notedLocale(), {hour:'2-digit',minute:'2-digit'});
     } else {
-        DOM.$reminderBtn.title = 'Hatırlatıcı Kur';
+        DOM.$reminderBtn.title = _t('cf.reminder', 'Hatırlatıcı Kur');
     }
 }
 
@@ -989,15 +989,15 @@ function runSpecial(type) {
         const SCHEMES = ['https://','http://','mailto:','tel:','ftp://','file://'];
         const overlay = document.createElement('div');
         overlay.className = 'link-dialog-overlay';
-        overlay.innerHTML = `<div class="link-dialog" role="dialog" aria-modal="true" aria-label="Bağlantı ekle">
-            <h4><i class="fas fa-link" style="margin-right:6px"></i>Bağlantı Ekle</h4>
+        overlay.innerHTML = `<div class="link-dialog" role="dialog" aria-modal="true" aria-label="${esc(NotedI18n.t('link.dialogaria'))}">
+            <h4><i class="fas fa-link" style="margin-right:6px"></i>${esc(NotedI18n.t('link.dialogtitle'))}</h4>
             <div class="link-input-row">
                 <select class="link-scheme-select" id="ld-scheme">${SCHEMES.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
                 <input class="link-url-input" id="ld-url" type="text" placeholder="example.com/sayfa" autocomplete="off" spellcheck="false">
             </div>
             <div class="link-dialog-actions">
-                <button class="ldbtn-cancel" id="ld-cancel">İptal</button>
-                <button class="ldbtn-ok" id="ld-ok">Ekle</button>
+                <button class="ldbtn-cancel" id="ld-cancel">${esc(NotedI18n.t('common.cancel'))}</button>
+                <button class="ldbtn-ok" id="ld-ok">${esc(NotedI18n.t('link.add'))}</button>
             </div></div>`;
         document.body.appendChild(overlay);
         const schemeEl = overlay.querySelector('#ld-scheme'), urlEl = overlay.querySelector('#ld-url');
@@ -1379,13 +1379,13 @@ function setEditorLocked(locked) {
         DOM.$content.contentEditable = 'false';
         DOM.$title.readOnly = true;
         editor.querySelectorAll('.ng-cell,.ng-title,.col-panel-content,.col-panel-title,.layout-col').forEach(el => { el.contentEditable = 'false'; });
-        if (btn) { btn.classList.add('locked'); btn.title = 'Kilidi Aç'; btn.innerHTML = '<i class="fas fa-lock"></i>'; }
+        if (btn) { btn.classList.add('locked'); btn.title = _t('cf.unlock', 'Kilidi Aç'); btn.innerHTML = '<i class="fas fa-lock"></i>'; }
     } else {
         editor.classList.remove('editor-locked');
         DOM.$content.contentEditable = 'true';
         DOM.$title.readOnly = false;
         editor.querySelectorAll('.ng-cell,.ng-title,.col-panel-content,.col-panel-title,.layout-col').forEach(el => { el.contentEditable = 'true'; });
-        if (btn) { btn.classList.remove('locked'); btn.title = 'Notu Kilitle'; btn.innerHTML = '<i class="fas fa-lock-open"></i>'; }
+        if (btn) { btn.classList.remove('locked'); btn.title = _t('cf.lock', 'Notu Kilitle'); btn.innerHTML = '<i class="fas fa-lock-open"></i>'; }
     }
 }
 

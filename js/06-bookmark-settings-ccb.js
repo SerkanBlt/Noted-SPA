@@ -534,8 +534,8 @@ DOM.$content.addEventListener('input', () => {
         if (!hmFullscreen) return;
         const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
         hmFullscreen.querySelector('i').className = isFs ? 'fas fa-compress' : 'fas fa-expand';
-        hmFullscreen.querySelector('span').textContent = isFs ? 'Tam Ekrandan Çık' : 'Tam Ekran';
-        hmFullscreen.title = isFs ? 'Tam Ekrandan Çık' : 'Tam Ekran';
+        hmFullscreen.querySelector('span').textContent = isFs ? _t('hm.exitfullscreen', 'Tam Ekrandan Çık') : _t('hm.fullscreen', 'Tam Ekran');
+        hmFullscreen.title = isFs ? _t('hm.exitfullscreen', 'Tam Ekrandan Çık') : _t('hm.fullscreen', 'Tam Ekran');
     }
     document.addEventListener('fullscreenchange', _updateFullscreenBtn);
     document.addEventListener('webkitfullscreenchange', _updateFullscreenBtn);
@@ -762,7 +762,7 @@ DOM.$content.addEventListener('input', () => {
     async function _init() {
         if (_versions) return; /* bu oturumda zaten yüklendi */
         const list = document.getElementById('ver-history-list');
-        if (list) list.innerHTML = '<div class="ver-loading">Yükleniyor…</div>';
+        if (list) list.innerHTML = '<div class="ver-loading">' + NotedI18n.t('common.loading') + '</div>';
         try {
             const res = await fetch('Version.md', { cache: 'no-store' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -774,7 +774,7 @@ DOM.$content.addEventListener('input', () => {
         if (curEl) curEl.textContent = _versions[0] ? _versions[0].version : '—';
         if (list) list.innerHTML = '';
         if (!_versions.length) {
-            if (list) list.innerHTML = '<div class="ver-empty">Sürüm geçmişi yüklenemedi.</div>';
+            if (list) list.innerHTML = '<div class="ver-empty">' + NotedI18n.t('ver.loaderror') + '</div>';
             return;
         }
         _renderMore();
@@ -832,7 +832,7 @@ DOM.$content.addEventListener('input', () => {
 
         function refresh() {
             const badge = document.getElementById('thc-badge');
-            if (badge) badge.textContent = State.isDark ? 'Koyu Tema' : 'Açık Tema';
+            if (badge) badge.textContent = State.isDark ? NotedI18n.t('theme.dark') : NotedI18n.t('theme.light');
             const custom = _thcGetCustom();
             const defs   = State.isDark ? Const._THC_DEFS.dark : Const._THC_DEFS.light;
             panel.querySelectorAll('.thc-picker').forEach(inp => {
@@ -1005,7 +1005,7 @@ DOM.$content.addEventListener('input', () => {
             if (block.querySelector('iframe, .ccb-not-found')) return;
             const ccb = ccbById(block.dataset.ccbId);
             if (!ccb) {
-                block.innerHTML = '<div class="ccb-not-found"><i class="fas fa-triangle-exclamation"></i>&nbsp;CCB bulunamadı: <code>' + (block.dataset.ccbId||'?') + '</code></div>';
+                block.innerHTML = '<div class="ccb-not-found"><i class="fas fa-triangle-exclamation"></i>&nbsp;' + _t('ccb.notfound', 'CCB bulunamadı:') + ' <code>' + (block.dataset.ccbId||'?') + '</code></div>';
                 return;
             }
             const iframe = document.createElement('iframe');
@@ -1144,7 +1144,7 @@ DOM.$content.addEventListener('input', () => {
             _ccbInjectSlash();
             const ccbs = ccbGetAll();
             if (!ccbs.length) {
-                listEl.innerHTML = '<div class="ccb-empty">Henüz kod bloğu yok. "Yeni CCB" ile ekleyin.</div>';
+                listEl.innerHTML = '<div class="ccb-empty">' + _t('ccb.empty', 'Henüz kod bloğu yok. "Yeni CCB" ile ekleyin.') + '</div>';
                 return;
             }
             listEl.innerHTML = '';

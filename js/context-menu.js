@@ -5,10 +5,10 @@
 
     /* ── Callout meta ── */
     const CALLOUT_TYPES = [
-        { key:'info',    icon:'fa-circle-info',          label:'Bilgi'   },
-        { key:'warning', icon:'fa-triangle-exclamation', label:'Uyarı'   },
-        { key:'tip',     icon:'fa-lightbulb',            label:'İpucu'   },
-        { key:'success', icon:'fa-circle-check',         label:'Başarı'  },
+        { key:'info',    icon:'fa-circle-info',          get label() { return NotedI18n.t('cl.info'); } },
+        { key:'warning', icon:'fa-triangle-exclamation', get label() { return NotedI18n.t('ctxmenu.calloutwarning'); } },
+        { key:'tip',     icon:'fa-lightbulb',            get label() { return NotedI18n.t('ctxmenu.callouttip'); } },
+        { key:'success', icon:'fa-circle-check',         get label() { return NotedI18n.t('ctxmenu.calloutsuccess'); } },
     ];
 
     /* ── Context detection ── */
@@ -93,14 +93,14 @@
         };
 
         const items = [
-            it('↺', 'Geri Al',  _activateThenUndo(window.editorUndo), { shortcut:'Ctrl+Z' }),
-            it('↻', 'Yinele',   _activateThenUndo(window.editorRedo), { shortcut:'Ctrl+Y' }),
+            it('↺', NotedI18n.t('ctxmenu.undo'),  _activateThenUndo(window.editorUndo), { shortcut:'Ctrl+Z' }),
+            it('↻', NotedI18n.t('ctxmenu.redo'),   _activateThenUndo(window.editorRedo), { shortcut:'Ctrl+Y' }),
             S,
-            it('✂', 'Kes',                   () => document.execCommand('cut'),   { shortcut:'Ctrl+X', disabled:!c.hasSel }),
-            it('⿻', 'Kopyala',               () => document.execCommand('copy'),  { shortcut:'Ctrl+C', disabled:!c.hasSel }),
-            it('📋', 'Yapıştır',              () => document.execCommand('paste'), { shortcut:'Ctrl+V' }),
-            it('Aa', 'Düz Metin Yapıştır',    () => navigator.clipboard.readText().then(t => document.execCommand('insertText', false, t)).catch(()=>{})),
-            it('↓M', 'Markdown Yapıştır',     () => navigator.clipboard.readText().then(t => {
+            it('✂', NotedI18n.t('ctxmenu.cut'),                   () => document.execCommand('cut'),   { shortcut:'Ctrl+X', disabled:!c.hasSel }),
+            it('⿻', NotedI18n.t('ctxmenu.copy'),               () => document.execCommand('copy'),  { shortcut:'Ctrl+C', disabled:!c.hasSel }),
+            it('📋', NotedI18n.t('ctxmenu.paste'),              () => document.execCommand('paste'), { shortcut:'Ctrl+V' }),
+            it('Aa', NotedI18n.t('ctxmenu.pasteplain'),    () => navigator.clipboard.readText().then(t => document.execCommand('insertText', false, t)).catch(()=>{})),
+            it('↓M', NotedI18n.t('ctxmenu.pastemd'),     () => navigator.clipboard.readText().then(t => {
                 if (!t || typeof window._mdToHtml !== 'function') return;
                 const html = window._mdToHtml(t, true);
                 document.execCommand('insertHTML', false, html);
@@ -108,30 +108,30 @@
                 if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
             }).catch(() => {}), { shortcut:'Ctrl+Shift+V' }),
             S,
-            it('⬜', 'Tümünü Seç', () => document.execCommand('selectAll'), { shortcut:'Ctrl+A' }),
+            it('⬜', NotedI18n.t('ctxmenu.selectall'), () => document.execCommand('selectAll'), { shortcut:'Ctrl+A' }),
             S,
-            it('🖨', 'Yazdır', () => window.print(), { shortcut:'Ctrl+P' }),
+            it('🖨', NotedI18n.t('ctxmenu.print'), () => window.print(), { shortcut:'Ctrl+P' }),
         ];
 
         /* TABLE */
         if (c.table) {
-            items.push(S, grp('Tablo İşlemleri'));
-            items.push(it('⬆', 'Üstüne Satır Ekle', () => insertRow(c.tr, 'before')));
-            items.push(it('⬇', 'Altına Satır Ekle',  () => insertRow(c.tr, 'after')));
-            items.push(it('⬅', 'Sola Sütun Ekle',   () => insertCol(c.table, c.td, 'before')));
-            items.push(it('➡', 'Sağa Sütun Ekle',   () => insertCol(c.table, c.td, 'after')));
+            items.push(S, grp(NotedI18n.t('ctxmenu.tableops')));
+            items.push(it('⬆', NotedI18n.t('ctxmenu.rowabove'), () => insertRow(c.tr, 'before')));
+            items.push(it('⬇', NotedI18n.t('ctxmenu.rowbelow'),  () => insertRow(c.tr, 'after')));
+            items.push(it('⬅', NotedI18n.t('ctxmenu.colleft'),   () => insertCol(c.table, c.td, 'before')));
+            items.push(it('➡', NotedI18n.t('ctxmenu.colright'),   () => insertCol(c.table, c.td, 'after')));
             items.push(S);
-            items.push(it('🗑', 'Satırı Sil',  () => { if (c.tr && c.tr.parentNode.rows.length > 1) c.tr.remove(); }, { danger:true }));
-            items.push(it('🗑', 'Sütunu Sil',   () => deleteCol(c.table, c.td),   { danger:true }));
-            items.push(it('✕',  'Tabloyu Sil',  () => c.table.remove(),           { danger:true }));
+            items.push(it('🗑', NotedI18n.t('ctxmenu.delrow'),  () => { if (c.tr && c.tr.parentNode.rows.length > 1) c.tr.remove(); }, { danger:true }));
+            items.push(it('🗑', NotedI18n.t('ctxmenu.delcol'),   () => deleteCol(c.table, c.td),   { danger:true }));
+            items.push(it('✕',  NotedI18n.t('ctxmenu.deltable'),  () => c.table.remove(),           { danger:true }));
         }
 
         /* EXTERNAL LINK */
         if (c.link) {
-            items.push(S, grp('Bağlantı'));
-            items.push(it('🔗', 'Bağlantıyı Aç',      () => window.open(c.link.href, '_blank')));
-            items.push(it('📋', "URL'yi Kopyala",       () => navigator.clipboard.writeText(c.link.href)));
-            items.push(it('✂',  'Bağlantıyı Kaldır',  () => {
+            items.push(S, grp(NotedI18n.t('ctxmenu.linkgroup')));
+            items.push(it('🔗', NotedI18n.t('ctxmenu.openlink'),      () => window.open(c.link.href, '_blank')));
+            items.push(it('📋', NotedI18n.t('ctxmenu.copyurl'),       () => navigator.clipboard.writeText(c.link.href)));
+            items.push(it('✂',  NotedI18n.t('ctxmenu.removelink'),  () => {
                 const r = document.createRange(); r.selectNodeContents(c.link);
                 c.link.parentNode.replaceChild(r.extractContents(), c.link);
             }));
@@ -139,18 +139,18 @@
 
         /* WIKILINK */
         if (c.wikilink) {
-            items.push(S, grp('Wiki Bağlantısı'));
+            items.push(S, grp(NotedI18n.t('ctxmenu.wikilinkgroup')));
             const broken = c.wikilink.classList.contains('broken');
-            items.push(it('📝', broken ? 'Nota Git (bulunamadı)' : 'Bağlı Nota Git',
+            items.push(it('📝', broken ? NotedI18n.t('ctxmenu.gotonotenotfound') : NotedI18n.t('ctxmenu.gotolinkednote'),
                 () => c.wikilink.click(), { disabled: broken }));
-            items.push(it('📋', 'Metin Olarak Kopyala',
+            items.push(it('📋', NotedI18n.t('ctxmenu.copyastext'),
                 () => navigator.clipboard.writeText(c.wikilink.textContent.trim())));
         }
 
         /* CODE BLOCK */
         if (c.pre) {
-            items.push(S, grp('Kod Bloğu'));
-            items.push(it('📋', 'Kodu Kopyala', () => {
+            items.push(S, grp(NotedI18n.t('ctxmenu.codeblockgroup')));
+            items.push(it('📋', NotedI18n.t('ctxmenu.copycode'), () => {
                 const code = c.pre.querySelector('code') || c.pre;
                 navigator.clipboard.writeText(code.innerText || code.textContent);
             }));
@@ -158,24 +158,24 @@
 
         /* SHAPE */
         if (c.shape) {
-            items.push(S, grp('Şekil'));
-            items.push(it('⬆', 'Öne Getir', () => {
+            items.push(S, grp(NotedI18n.t('ctxmenu.shapegroup')));
+            items.push(it('⬆', NotedI18n.t('ctxmenu.bringfront'), () => {
                 const all = [...document.querySelectorAll('.note-shape-overlay')];
                 const max = Math.max(0, ...all.map(s => parseInt(s.style.zIndex) || 0));
                 c.shape.style.zIndex = max + 1;
             }));
-            items.push(it('⬇', 'Arkaya Gönder', () => {
+            items.push(it('⬇', NotedI18n.t('ctxmenu.sendback'), () => {
                 const all = [...document.querySelectorAll('.note-shape-overlay')];
                 const min = Math.min(...all.map(s => parseInt(s.style.zIndex) || 0));
                 c.shape.style.zIndex = Math.max(0, min - 1);
             }));
             items.push(S);
-            items.push(it('🗑', 'Şekli Sil', () => c.shape.remove(), { danger:true }));
+            items.push(it('🗑', NotedI18n.t('shape.delete'), () => c.shape.remove(), { danger:true }));
         }
 
         /* CALLOUT */
         if (c.callout) {
-            items.push(S, grp('Vurgu Bloğu Türü'));
+            items.push(S, grp(NotedI18n.t('ctxmenu.calloutgroup')));
             const cur = CALLOUT_TYPES.find(t => c.callout.classList.contains('callout-' + t.key));
             const icons = { info:'ℹ', warning:'⚠', tip:'💡', success:'✓' };
             CALLOUT_TYPES.forEach(t => items.push(
@@ -186,25 +186,25 @@
 
         /* HEADING */
         if (c.heading) {
-            items.push(S, grp('Başlık Düzeyi'));
+            items.push(S, grp(NotedI18n.t('ctxmenu.headinggroup')));
             const lvl = parseInt(c.heading.tagName[1]);
-            if (lvl > 1) items.push(it('↑', 'Yükselt → H' + (lvl - 1), () => changeHeading(c.heading, lvl - 1)));
-            if (lvl < 3) items.push(it('↓', 'Alçalt → H' + (lvl + 1),  () => changeHeading(c.heading, lvl + 1)));
-            items.push(it('¶', 'Normal Metne Çevir', () => changeHeading(c.heading, 0)));
+            if (lvl > 1) items.push(it('↑', NotedI18n.t('ctxmenu.raiseto').replace('{n}', lvl - 1), () => changeHeading(c.heading, lvl - 1)));
+            if (lvl < 3) items.push(it('↓', NotedI18n.t('ctxmenu.lowerto').replace('{n}', lvl + 1),  () => changeHeading(c.heading, lvl + 1)));
+            items.push(it('¶', NotedI18n.t('ctxmenu.tonormal'), () => changeHeading(c.heading, 0)));
         }
 
         /* LIST ITEM */
         if (c.li) {
-            items.push(S, grp('Liste'));
-            items.push(it('→', 'İçeri Al (Indent)',   () => document.execCommand('indent')));
-            items.push(it('←', 'Dışarı Al (Outdent)', () => document.execCommand('outdent')));
+            items.push(S, grp(NotedI18n.t('ctxmenu.listgroup')));
+            items.push(it('→', NotedI18n.t('ctxmenu.indent'),   () => document.execCommand('indent')));
+            items.push(it('←', NotedI18n.t('ctxmenu.outdent'), () => document.execCommand('outdent')));
         }
 
         /* IMAGE */
         if (c.img) {
-            items.push(S, grp('Görsel'));
-            items.push(it('📋', "URL'yi Kopyala", () => navigator.clipboard.writeText(c.img.src)));
-            items.push(it('🗑', 'Görseli Sil', () => c.img.remove(), { danger:true }));
+            items.push(S, grp(NotedI18n.t('ctxmenu.imagegroup')));
+            items.push(it('📋', NotedI18n.t('ctxmenu.copyurl'), () => navigator.clipboard.writeText(c.img.src)));
+            items.push(it('🗑', NotedI18n.t('ctxmenu.deleteimage'), () => c.img.remove(), { danger:true }));
         }
 
         /* CCB — cascaded submenu: CCB Ekle → Grup → CCB */
@@ -226,7 +226,7 @@
                         sub: groups[gName].map(mkCcbItem)
                     }));
                 }
-                items.push(S, { type:'sub', icon:'⬛', label:'CCB Ekle', sub: subItems });
+                items.push(S, { type:'sub', icon:'⬛', label: NotedI18n.t('ctxmenu.addccb'), sub: subItems });
             }
         }
 

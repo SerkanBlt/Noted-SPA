@@ -57,13 +57,13 @@ DOM.searchClear.addEventListener('click', e => { e.stopPropagation(); clearSearc
         DOM.searchInput.value=transcript; State.searchQuery=transcript;
         DOM.searchClear.classList.toggle('visible',transcript.length>0); render();
     };
-    recognition.onend=()=>{ micBtn.classList.remove('listening'); micBtn.title='Sesle ara'; };
-    recognition.onerror=e=>{ micBtn.classList.remove('listening'); micBtn.title='Sesle ara'; };
+    recognition.onend=()=>{ micBtn.classList.remove('listening'); micBtn.title=_t('lhr.searchmic', 'Sesle ara'); };
+    recognition.onerror=e=>{ micBtn.classList.remove('listening'); micBtn.title=_t('lhr.searchmic', 'Sesle ara'); };
     micBtn.addEventListener('click', e => {
         e.stopPropagation();
         if (_se && !_se.classList.contains('open')) { _se.classList.add('open'); DOM.searchInput.focus(); }
         if (micBtn.classList.contains('listening')) recognition.stop();
-        else { recognition.lang=(window._notedLocale ? window._notedLocale() : 'tr-TR'); recognition.start(); micBtn.classList.add('listening'); micBtn.title='Dinleniyor…'; }
+        else { recognition.lang=(window._notedLocale ? window._notedLocale() : 'tr-TR'); recognition.start(); micBtn.classList.add('listening'); micBtn.title=_t('mic.listening', 'Dinleniyor…'); }
     });
 })();
 
@@ -125,7 +125,7 @@ DOM.$tfBadge.addEventListener('click', e => {
     const popup=$('color-popup'), bar=$('color-bar');
     popup.innerHTML = '';
     const grid=document.createElement('div'); grid.className='color-swatches';
-    const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title='Rengi kaldır';
+    const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title=_t('color.remove', 'Rengi kaldır');
     rm.addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); applyColor(null); });
     grid.appendChild(rm);
     Const.PALETTE.forEach(c => {
@@ -134,7 +134,7 @@ DOM.$tfBadge.addEventListener('click', e => {
         grid.appendChild(s);
     });
     const customRow=document.createElement('div'); customRow.className='color-custom';
-    customRow.innerHTML='<label>Özel renk</label><input type="color" id="custom-color" value="#000000">';
+    customRow.innerHTML='<label>'+esc(_t('color.custom', 'Özel renk'))+'</label><input type="color" id="custom-color" value="#000000">';
     popup.appendChild(grid); popup.appendChild(customRow);
     const ci=$('custom-color');
     ci.addEventListener('input',e=>applyColor(e.target.value,false));
@@ -181,7 +181,7 @@ DOM.$tfBadge.addEventListener('click', e => {
     }
     function setListening(on) {
         micBtn.classList.toggle('listening', on);
-        micBtn.title = on ? 'Dinleniyor — durdurmak için tıkla' : 'Sesle yaz';
+        micBtn.title = on ? _t('mic.listeningstop', 'Dinleniyor — durdurmak için tıkla') : _t('cf.voicewrite', 'Sesle Yaz');
         if (editorEl) editorEl.classList.toggle('mic-listening', on);
         if (!on) { interimEl.textContent=''; interimEl.classList.remove('visible'); setPaused(false); }
     }
@@ -227,7 +227,7 @@ DOM.$tfBadge.addEventListener('click', e => {
     const popup=$('bg-color-popup'), bar=$('bg-color-bar');
     popup.innerHTML = '';
     const grid=document.createElement('div'); grid.className='color-swatches';
-    const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title='Arka planı kaldır';
+    const rm=document.createElement('div'); rm.className='cswatch remove'; rm.title=_t('bgcolor.remove', 'Arka planı kaldır');
     rm.addEventListener('mousedown',e=>{ e.preventDefault(); e.stopPropagation(); applyBgColor(null); });
     grid.appendChild(rm);
     Const.PALETTE.forEach(c=>{
@@ -236,7 +236,7 @@ DOM.$tfBadge.addEventListener('click', e => {
         grid.appendChild(s);
     });
     const customRow=document.createElement('div'); customRow.className='color-custom';
-    customRow.innerHTML='<label>Özel renk</label><input type="color" id="bg-custom-color" value="#ffff00">';
+    customRow.innerHTML='<label>'+esc(_t('color.custom', 'Özel renk'))+'</label><input type="color" id="bg-custom-color" value="#ffff00">';
     popup.appendChild(grid); popup.appendChild(customRow);
     const ci=$('bg-custom-color');
     ci.addEventListener('input',e=>applyBgColor(e.target.value,false));

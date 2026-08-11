@@ -176,7 +176,7 @@
         _fpOrigParent = _fpOrigNext = null;
         _isDocked = false;
         fpDockRightBtn.innerHTML = '<i class="fas fa-columns"></i>';
-        fpDockRightBtn.title = 'Sağa Yerleştir';
+        fpDockRightBtn.title = _t('fp.dockrightshort', 'Sağa Yerleştir');
     }
 
     /* ── Aç / Yüzer ── */
@@ -185,7 +185,7 @@
             if (!_isDocked) defaultGeom();
             FP.classList.add('fp-open');
             FP.classList.remove('fp-minimized');
-            if (fpMinBtn) { fpMinBtn.innerHTML = '<i class="fas fa-minus"></i>'; fpMinBtn.title = 'Küçült'; }
+            if (fpMinBtn) { fpMinBtn.innerHTML = '<i class="fas fa-minus"></i>'; fpMinBtn.title = _t('fp.minimize', 'Küçült'); }
             _isOpen = true;
         }
         const dd = document.getElementById('editor-menu-dropdown');
@@ -353,10 +353,10 @@
             _isDocked = true;
             FP.classList.add('fp-open');
             FP.classList.remove('fp-minimized');
-            if (fpMinBtn) { fpMinBtn.innerHTML = '<i class="fas fa-minus"></i>'; fpMinBtn.title = 'Küçült'; }
+            if (fpMinBtn) { fpMinBtn.innerHTML = '<i class="fas fa-minus"></i>'; fpMinBtn.title = _t('fp.minimize', 'Küçült'); }
             _isOpen = true;
             fpDockRightBtn.innerHTML = '<i class="fas fa-window-restore"></i>';
-            fpDockRightBtn.title = 'Yüzer Moda Geç';
+            fpDockRightBtn.title = _t('fp.floatmode', 'Yüzer Moda Geç');
 
             ensureNote();
         } else {
@@ -373,7 +373,7 @@
     function doToggleMin() {
         FP.classList.toggle('fp-minimized');
         const isMin = FP.classList.contains('fp-minimized');
-        if (fpMinBtn) { fpMinBtn.innerHTML = isMin ? '<i class="fas fa-window-restore"></i>' : '<i class="fas fa-minus"></i>'; fpMinBtn.title = isMin ? 'Geri Aç' : 'Küçült'; }
+        if (fpMinBtn) { fpMinBtn.innerHTML = isMin ? '<i class="fas fa-window-restore"></i>' : '<i class="fas fa-minus"></i>'; fpMinBtn.title = isMin ? _t('fp.restore', 'Geri Aç') : _t('fp.minimize', 'Küçült'); }
     }
 
     /* ── Butonlar ── */
@@ -458,16 +458,16 @@
             function buildFpTplDropdown() {
                 fpTplDrop.innerHTML = '';
                 const hdr = document.createElement('div');
-                hdr.className = 'tpl-header'; hdr.textContent = 'Hazır Şablonlar';
+                hdr.className = 'tpl-header'; hdr.textContent = _t('tpl.header', 'Hazır Şablonlar');
                 fpTplDrop.appendChild(hdr);
-                [{ key:'daily', label:'📅 Günlük Not' }, { key:'meeting', label:'🤝 Toplantı Notları' }, { key:'idea', label:'💡 Fikir' }].forEach(b => {
+                [{ key:'daily', label:_t('tpl.daily', '📅 Günlük Not') }, { key:'meeting', label:_t('tpl.meeting', '🤝 Toplantı Notları') }, { key:'idea', label:_t('tpl.idea', '💡 Fikir') }].forEach(b => {
                     const d = document.createElement('div');
                     d.className = 'tpl-item'; d.dataset.fpTpl = b.key; d.textContent = b.label;
                     fpTplDrop.appendChild(d);
                 });
                 const saveBtn = document.createElement('div');
                 saveBtn.className = 'tpl-item tpl-save-btn';
-                saveBtn.innerHTML = '<i class="fas fa-plus-circle"></i><span>Bu Notu Şablon Kaydet</span>';
+                saveBtn.innerHTML = '<i class="fas fa-plus-circle"></i><span>' + _t('tpl.savebtn', 'Bu Notu Şablon Kaydet') + '</span>';
                 saveBtn.addEventListener('click', e => {
                     e.stopPropagation();
                     const title = fpTitle.value.trim();
@@ -488,7 +488,7 @@
                 const cTpls = typeof State.customTemplates !== 'undefined' ? State.customTemplates : [];
                 if (cTpls.length > 0) {
                     const sep2 = document.createElement('div');
-                    sep2.className = 'tpl-header'; sep2.textContent = 'Özel Şablonlar'; sep2.style.marginTop = '4px';
+                    sep2.className = 'tpl-header'; sep2.textContent = _t('tpl.customheader', 'Özel Şablonlar'); sep2.style.marginTop = '4px';
                     fpTplDrop.appendChild(sep2);
                     cTpls.forEach(tpl => {
                         const row = document.createElement('div');
@@ -546,9 +546,9 @@
                 _fpTwActive = on;
                 FP.classList.toggle('fp-tw-mode', on);
                 fpTwBtn.classList.toggle('active', on);
-                fpTwBtn.title = on ? 'Daktilo Modundan Çık' : 'Daktilo Modu';
+                fpTwBtn.title = on ? _t('fp.exittypewriter', 'Daktilo Modundan Çık') : _t('em.typewriter', 'Daktilo Modu');
                 const sp = fpTwBtn.querySelector('span');
-                if (sp) sp.textContent = on ? 'Daktilo Modundan Çık' : 'Daktilo Modu';
+                if (sp) sp.textContent = on ? _t('fp.exittypewriter', 'Daktilo Modundan Çık') : _t('em.typewriter', 'Daktilo Modu');
                 if (on) _fpUpdateTwBlock();
                 else Array.prototype.forEach.call(fpContent.children, ch => ch.classList.remove('tw-active'));
             }
@@ -573,15 +573,15 @@
                         delete FP.dataset.prevGeom;
                     }
                     _fpMaximized = false;
-                    fpFocusBtn.innerHTML = '<i class="fas fa-expand-alt"></i><span>Tam Ekran</span>';
-                    fpFocusBtn.title = 'Tam Ekran';
+                    fpFocusBtn.innerHTML = '<i class="fas fa-expand-alt"></i><span>' + _t('hm.fullscreen', 'Tam Ekran') + '</span>';
+                    fpFocusBtn.title = _t('hm.fullscreen', 'Tam Ekran');
                 } else {
                     if (!FP.dataset.prevGeom) FP.dataset.prevGeom = JSON.stringify({ l: parseInt(FP.style.left)||0, t: parseInt(FP.style.top)||0, w: FP.offsetWidth, h: FP.offsetHeight });
                     FP.style.left = '8px'; FP.style.top = '8px';
                     FP.style.width = (window.innerWidth - 16) + 'px'; FP.style.height = (window.innerHeight - 16) + 'px';
                     _fpMaximized = true;
-                    fpFocusBtn.innerHTML = '<i class="fas fa-compress-alt"></i><span>Küçült</span>';
-                    fpFocusBtn.title = 'Küçült';
+                    fpFocusBtn.innerHTML = '<i class="fas fa-compress-alt"></i><span>' + _t('fp.minimize', 'Küçült') + '</span>';
+                    fpFocusBtn.title = _t('fp.minimize', 'Küçült');
                 }
                 closeFpMenu();
             }
@@ -646,7 +646,7 @@
             const n2 = getNote(_fpNoteId);
             const pinned = n2 && n2.pinned;
             fpPinBtn.classList.toggle('pinned', !!pinned);
-            fpPinBtn.title = pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle';
+            fpPinBtn.title = pinned ? _t('cf.unpin', 'Sabitlemeyi Kaldır') : _t('cf.pin', 'Sabitle');
         });
     }
 
@@ -674,7 +674,7 @@
         if (fpPinBtn) {
             const pinned = n && n.pinned;
             fpPinBtn.classList.toggle('pinned', !!pinned);
-            fpPinBtn.title = pinned ? 'Sabitlemeyi Kaldır' : 'Sabitle';
+            fpPinBtn.title = pinned ? _t('cf.unpin', 'Sabitlemeyi Kaldır') : _t('cf.pin', 'Sabitle');
         }
         if (fpColorBtn) {
             const cl = n && n.colorLabel
@@ -692,7 +692,7 @@
             const overdue = active.some(r => r.at <= Date.now());
             _fpRB.classList.toggle('has-reminder', active.length > 0 && !overdue);
             _fpRB.classList.toggle('overdue', overdue);
-            _fpRB.title = active.length ? 'Hatırlatıcı (' + active.length + ')' : 'Hatırlatıcı';
+            _fpRB.title = active.length ? _t('fp.reminderactive', 'Hatırlatıcı ({n})').replace('{n}', active.length) : _t('fp.reminder', 'Hatırlatıcı');
         }
     }
     window._fpSyncFooter = _fpSyncFooter;
@@ -779,7 +779,7 @@
             if (!_isDocked) defaultGeom();
             FP.classList.add('fp-open');
             FP.classList.remove('fp-minimized');
-            if (fpMinBtn) { fpMinBtn.innerHTML = '<i class="fas fa-minus"></i>'; fpMinBtn.title = 'Küçült'; }
+            if (fpMinBtn) { fpMinBtn.innerHTML = '<i class="fas fa-minus"></i>'; fpMinBtn.title = _t('fp.minimize', 'Küçült'); }
             _isOpen = true;
         }
     };
@@ -914,7 +914,7 @@
                 function _fpSetMicListening(on) {
                     _fpListening = on;
                     fpMicBtn.classList.toggle('listening', on);
-                    fpMicBtn.title = on ? 'Dinleniyor — durdurmak için tıkla' : 'Sesle Yaz';
+                    fpMicBtn.title = on ? _t('mic.listeningstop', 'Dinleniyor — durdurmak için tıkla') : _t('cf.voicewrite', 'Sesle Yaz');
                     FP.classList.toggle('fp-mic-listening', on);
                     if (!on) { if (interimEl) { interimEl.textContent = ''; interimEl.classList.remove('visible'); } _fpSetPaused(false); }
                 }
@@ -969,7 +969,7 @@
                 if (fpTitle) fpTitle.readOnly = locked;
                 if (fpBodyEl) fpBodyEl.classList.toggle('fp-locked', locked);
                 fpLockBtn.classList.toggle('locked', locked);
-                fpLockBtn.title = locked ? 'Kilidi Aç' : 'Notu Kilitle';
+                fpLockBtn.title = locked ? _t('cf.unlock', 'Kilidi Aç') : _t('cf.lock', 'Notu Kilitle');
                 fpLockBtn.innerHTML = locked ? '<i class="fas fa-lock"></i>' : '<i class="fas fa-lock-open"></i>';
                 /* FP notunun kilit verisini kaydet */
                 if (_fpNoteId && typeof getNote === 'function' && typeof saveNotes === 'function') {
@@ -1153,7 +1153,7 @@
             count++;
         });
         if (count === 0) {
-            resultsEl.innerHTML = '<div class="esp-empty"><i class="fas fa-search" style="opacity:.3"></i><br>"' + esc(kw) + '" bulunamadı</div>';
+            resultsEl.innerHTML = '<div class="esp-empty"><i class="fas fa-search" style="opacity:.3"></i><br>' + NotedI18n.t('editor.search.notfound').replace('{kw}', esc(kw)) + '</div>';
         }
     }
 })();

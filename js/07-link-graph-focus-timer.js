@@ -85,8 +85,7 @@
         if (!nodes.length) {
             const empty = document.createElement('div');
             empty.className = 'graph-empty';
-            empty.innerHTML = 'Henüz bağlantılı notunuz yok.<br>' +
-                'Bir nottan diğerine <code>[[Not Adı]]</code> yazarak bağlantı oluşturabilirsiniz.';
+            empty.innerHTML = NotedI18n.t('graph.empty');
             body.appendChild(empty);
             return;
         }
@@ -439,7 +438,7 @@
         if (limited) {
             const note = document.createElement('div');
             note.style.cssText = 'position:absolute;bottom:36px;left:12px;font-size:.7rem;color:var(--text-muted);pointer-events:none;';
-            note.textContent = `İlk ${MAX_NODES} not gösteriliyor.`;
+            note.textContent = NotedI18n.t('graph.limitednotice').replace('{n}', MAX_NODES);
             body.appendChild(note);
         }
     }
@@ -594,8 +593,8 @@
         const timeEl = $('ft-time'), toggleEl = $('ft-toggle'), sessEl = $('ft-sessions');
         const d25 = $('ft-dur-25'), d50 = $('ft-dur-50');
         if (timeEl)  timeEl.textContent = fmtMMSS(focusTimerState.remaining);
-        if (toggleEl) toggleEl.textContent = focusTimerState.running ? 'Duraklat' : (focusTimerState.remaining < focusTimerState.duration * 60 ? 'Devam Et' : 'Başlat');
-        if (sessEl)  sessEl.textContent = 'Bugün: ' + focusTimerState.sessionsToday + ' oturum';
+        if (toggleEl) toggleEl.textContent = focusTimerState.running ? _t('vri.pause', 'Duraklat') : (focusTimerState.remaining < focusTimerState.duration * 60 ? _t('vri.resume', 'Devam Et') : _t('ft.start', 'Başlat'));
+        if (sessEl)  sessEl.textContent = _t('ft.sessionscount', 'Bugün: {n} oturum').replace('{n}', focusTimerState.sessionsToday);
         [[d25, 25], [d50, 50]].forEach(([el, m]) => {
             if (!el) return;
             el.classList.toggle('active', focusTimerState.duration === m);
@@ -614,7 +613,7 @@
             focusTimerState.sessionsToday++;
             clearInterval(_focusTimerInterval);
             _focusTimerInterval = null;
-            showFocusTimerToast('Odak oturumu tamamlandı! 🎉 Bugün ' + focusTimerState.sessionsToday + '. oturumunuz.');
+            showFocusTimerToast(NotedI18n.t('ft.sessioncomplete').replace('{n}', focusTimerState.sessionsToday));
             focusTimerState.remaining = focusTimerState.duration * 60;
         }
         renderFocusTimer();
@@ -876,11 +875,11 @@
         qsResultsCache = qsFilterNotes(query);
         qsActiveIndex = qsResultsCache.length ? 0 : -1;
         if (!qsResultsCache.length) {
-            wrap.innerHTML = '<div id="qs-empty"><i class="fas fa-circle-question"></i> Sonuç bulunamadı</div>';
+            wrap.innerHTML = '<div id="qs-empty"><i class="fas fa-circle-question"></i> ' + NotedI18n.t('qs.noresults') + '</div>';
             return;
         }
         wrap.innerHTML = qsResultsCache.map((n, i) => {
-            const title = esc(n.title || '(Başlıksız Not)');
+            const title = esc(n.title || NotedI18n.t('note.untitled'));
             const group = esc(n.group || 'Genel');
             return '<div class="qs-item' + (i === 0 ? ' active' : '') + '" data-id="' + esc(String(n.id)) + '" data-idx="' + i + '">'
                 + '<i class="fas fa-file-lines"></i><span class="qs-title">' + title + '</span>'
@@ -952,13 +951,13 @@
 
             const btnTop = document.createElement('button');
             btnTop.className = 'scroll-jump-btn sjb-top';
-            btnTop.title = 'Başa Git';
+            btnTop.title = _t('graph.gototop', 'Başa Git');
             btnTop.innerHTML = '<i class="fas fa-chevron-up"></i>';
             btnTop.addEventListener('click', () => scrollEl.scrollTo({ top: 0, behavior: 'smooth' }));
 
             const btnBot = document.createElement('button');
             btnBot.className = 'scroll-jump-btn sjb-bot';
-            btnBot.title = 'Sona Git';
+            btnBot.title = _t('graph.gotobottom', 'Sona Git');
             btnBot.innerHTML = '<i class="fas fa-chevron-down"></i>';
             btnBot.addEventListener('click', () => scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' }));
 

@@ -169,7 +169,7 @@
         });
 
         if (count === 0) {
-            resultsEl.innerHTML = '<div class="esp-empty"><i class="fas fa-search" style="opacity:.3"></i><br>"' + esc(kw) + '" bulunamadı</div>';
+            resultsEl.innerHTML = '<div class="esp-empty"><i class="fas fa-search" style="opacity:.3"></i><br>' + NotedI18n.t('editor.search.notfound').replace('{kw}', esc(kw)) + '</div>';
         }
     }
 })();

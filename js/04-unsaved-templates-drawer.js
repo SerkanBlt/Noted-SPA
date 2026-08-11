@@ -33,9 +33,9 @@ function toggleFocusMode(forceOff) {
     if (btn) {
         btn.classList.toggle('active', State.focusModeActive);
         btn.title = State.focusModeActive
-            ? 'Odaklanma Modundan Çık (Esc veya Ctrl+Shift+F)'
-            : 'Odaklanma Modu (Ctrl+Shift+F)';
-        btn.innerHTML = '<i class="fas fa-' + (State.focusModeActive ? 'compress-alt' : 'expand-alt') + '"></i><span>' + (State.focusModeActive ? 'Odaklanmadan Çık' : 'Odaklanma Modu') + '</span>';
+            ? _t('em.focusmode.exittitle', 'Odaklanma Modundan Çık (Esc veya Ctrl+Shift+F)')
+            : _t('em.focusmode.title', 'Odaklanma Modu (Ctrl+Shift+F)');
+        btn.innerHTML = '<i class="fas fa-' + (State.focusModeActive ? 'compress-alt' : 'expand-alt') + '"></i><span>' + (State.focusModeActive ? _t('em.focusmode.exit', 'Odaklanmadan Çık') : _t('em.focusmode', 'Odaklanma Modu')) + '</span>';
     }
 }
 
@@ -149,12 +149,12 @@ function buildTemplateDropdownContent() {
     dropdown.innerHTML = '';
     var hdr = document.createElement('div');
     hdr.className = 'tpl-header';
-    hdr.textContent = 'Hazır Şablonlar';
+    hdr.textContent = _t('tpl.header', 'Hazır Şablonlar');
     dropdown.appendChild(hdr);
     var builtins = [
-        { key:'daily',   label:'\uD83D\uDCC5 Günlük Not' },
-        { key:'meeting', label:'\uD83E\uDD1D Toplantı Notları' },
-        { key:'idea',    label:'\uD83D\uDCA1 Fikir' }
+        { key:'daily',   label:_t('tpl.daily', '\uD83D\uDCC5 Günlük Not') },
+        { key:'meeting', label:_t('tpl.meeting', '\uD83E\uDD1D Toplantı Notları') },
+        { key:'idea',    label:_t('tpl.idea', '\uD83D\uDCA1 Fikir') }
     ];
     builtins.forEach(function(b) {
         var d = document.createElement('div');
@@ -163,12 +163,12 @@ function buildTemplateDropdownContent() {
     });
     var saveBtn = document.createElement('div');
     saveBtn.className = 'tpl-item tpl-save-btn';
-    saveBtn.innerHTML = '<i class="fas fa-plus-circle"></i><span>Bu Notu Şablon Kaydet</span>';
+    saveBtn.innerHTML = '<i class="fas fa-plus-circle"></i><span>' + _t('tpl.savebtn', 'Bu Notu Şablon Kaydet') + '</span>';
     saveBtn.addEventListener('click', function(e) { e.stopPropagation(); saveCurrentNoteAsTemplate(); });
     dropdown.appendChild(saveBtn);
     if (State.customTemplates.length > 0) {
         var sep = document.createElement('div');
-        sep.className = 'tpl-header'; sep.textContent = 'Özel Şablonlar'; sep.style.marginTop = '4px';
+        sep.className = 'tpl-header'; sep.textContent = _t('tpl.customheader', 'Özel Şablonlar'); sep.style.marginTop = '4px';
         dropdown.appendChild(sep);
         State.customTemplates.forEach(function(tpl) {
             var row = document.createElement('div');
@@ -180,7 +180,7 @@ function buildTemplateDropdownContent() {
             var delBtn = document.createElement('button');
             delBtn.className = 'tpl-item-del';
             delBtn.innerHTML = '<i class="fas fa-times"></i>';
-            delBtn.title = NotedI18n.t('tpl.deletebtn');
+            delBtn.title = _t('tpl.deletebtn', 'Şablonu Sil');
             delBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (confirm(NotedI18n.t('msg.tpldeleteconfirm').replace('{name}', tpl.name))) {
@@ -255,10 +255,10 @@ function buildSortDropdown() {
     if (!DOM.$sortDropdown) return;
     DOM.$sortDropdown.innerHTML = '';
     const SORT_ITEMS = [
-        { value:'newest', label:'En Yeni' },
-        { value:'oldest', label:'En Eski' },
-        { value:'az',     label:'A -> Z Baslik' },
-        { value:'za',     label:'Z -> A Baslik' },
+        { value:'newest', label:NotedI18n.t('lhr.sort.newest') },
+        { value:'oldest', label:NotedI18n.t('lhr.sort.oldest') },
+        { value:'az',     label:NotedI18n.t('lhr.sort.aztitle') },
+        { value:'za',     label:NotedI18n.t('lhr.sort.zatitle') },
     ];
     SORT_ITEMS.forEach(it => {
         const d = document.createElement('div');
@@ -275,13 +275,15 @@ State.listView = getUiCfg().listView || 'standard';
 DOM.$viewBadge    = $('view-badge');
 DOM.$viewDropdown = $('view-dropdown');
 
-Const.VIEW_ITEMS = [
-    { value:'standard', label:'Standart', icon:'fa-list' },
-    { value:'wide',     label:'Geniş',    icon:'fa-align-justify' },
-    { value:'compact',  label:'Kompakt',  icon:'fa-bars' },
-    { value:'cascade',  label:'Cascade',  icon:'fa-layer-group' },
-    { value:'pill',     label:'Pil',      icon:'fa-tags' },
-];
+Object.defineProperty(Const, 'VIEW_ITEMS', { configurable: true, get: function () {
+    return [
+        { value:'standard', label:_t('view.standard', 'Standart'), icon:'fa-list' },
+        { value:'wide',     label:_t('view.wide', 'Geniş'),        icon:'fa-align-justify' },
+        { value:'compact',  label:_t('view.compact', 'Kompakt'),   icon:'fa-bars' },
+        { value:'cascade',  label:_t('view.cascade', 'Cascade'),   icon:'fa-layer-group' },
+        { value:'pill',     label:_t('view.pill', 'Pil'),          icon:'fa-tags' },
+    ];
+}});
 
 function applyListView(v) {
     ['view-wide','view-compact','view-cascade','view-pill'].forEach(c => DOM.$mainList.classList.remove(c));
@@ -332,8 +334,8 @@ function applySort(arr) {
     switch (State.sortOrder) {
         case 'newest': return a.sort((x, y) => ((y.updatedAt||y.id||0) - (x.updatedAt||x.id||0)));
         case 'oldest': return a.sort((x, y) => ((x.updatedAt||x.id||0) - (y.updatedAt||y.id||0)));
-        case 'az':     return a.sort((x, y) => (x.title||'').localeCompare(y.title||'', 'tr'));
-        case 'za':     return a.sort((x, y) => (y.title||'').localeCompare(x.title||'', 'tr'));
+        case 'az':     return a.sort((x, y) => (x.title||'').localeCompare(y.title||'', _notedLocale()));
+        case 'za':     return a.sort((x, y) => (y.title||'').localeCompare(x.title||'', _notedLocale()));
         default:       return a;
     }
 }
@@ -686,7 +688,7 @@ function applySlashCommand(type) {
             body.dataset.placeholder = cfg.ph;
             const delBtn = document.createElement('button');
             delBtn.className = 'callout-del';
-            delBtn.title = 'Vurgu bloğunu sil';
+            delBtn.title = _t('callout.deleteblock', 'Vurgu bloğunu sil');
             delBtn.innerHTML = '<i class="fas fa-times"></i>';
             delBtn.contentEditable = 'false';
             delBtn.addEventListener('mousedown', e => e.preventDefault());
