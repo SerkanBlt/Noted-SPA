@@ -516,6 +516,25 @@ function getAllTags() {
     return [...all].sort();
 }
 
+/* v1.16.15: HTML/Markdown dışa aktarma — kaydedilmemiş not desteği.
+   exportNoteAsHtml/exportNoteAsMarkdown eskiden yalnızca State.notes'tan ID ile bulunan
+   KAYDEDİLMİŞ bir notu kabul ediyordu; henüz kaydedilmemiş bir notun orada karşılığı
+   olmadığından dışa aktarma tamamen imkansızdı (kullanıcı raporu). Bu, o iki fonksiyonun
+   "not bulunamazsa" düştüğü ortak fallback — canlı editör durumundan (title/content/group/
+   tags) geçici bir not nesnesi kurar. Kaydedilmiş bir not için ID bulunursa bu hiç çağrılmaz,
+   var olan (State.notes'taki) group/tags/updatedAt korunur — yalnızca kayıtsız notlar için
+   devreye girer. */
+function _buildLiveNoteForExport() {
+    const html = DOM.$content ? DOM.$content.innerHTML : '';
+    return {
+        title: (DOM.$title.value || '').trim() || 'Başlıksız',
+        content: html,
+        group: State.editorGroup || 'Genel',
+        tags: typeof parseTagsFromContent === 'function' ? parseTagsFromContent(html) : [],
+        updatedAt: Date.now(),
+    };
+}
+
 /* ══ htmlToMd: HTML → temiz Markdown (AI context için) ══ */
 function _mdNode(node) {
     if (node.nodeType === 3) return node.textContent;

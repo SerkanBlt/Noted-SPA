@@ -43,7 +43,8 @@ $('focus-btn').addEventListener('click', function() { toggleFocusMode(); });
 
 /* ── v1.4: HTML DIŞA AKTARMA ── */
 function exportNoteAsHtml(noteId) {
-    var n = State.notes.find(function(x) { return String(x.id) === String(noteId); });
+    var n = noteId ? State.notes.find(function(x) { return String(x.id) === String(noteId); }) : null;
+    if (!n) n = typeof _buildLiveNoteForExport === 'function' ? _buildLiveNoteForExport() : null;
     if (!n) return;
     var safeContent = sanitize(convertWikiSyntax(n.content));
     var dateStr = n.updatedAt
@@ -105,8 +106,7 @@ function exportNoteAsHtml(noteId) {
 }
 
 $('export-html-btn').addEventListener('click', function() {
-    var eId = DOM.$editId.value;
-    if (eId) exportNoteAsHtml(eId);
+    exportNoteAsHtml(DOM.$editId.value || null);
 });
 
 /* v1.6: İçindekiler */
@@ -132,8 +132,7 @@ setTimeout(checkReminders, 2000);
 
 /* v1.6: Markdown dışa aktar */
 if (DOM.$exportMdBtn) DOM.$exportMdBtn.addEventListener('click', function() {
-    var eId = DOM.$editId.value;
-    if (eId) exportNoteAsMarkdown(eId);
+    exportNoteAsMarkdown(DOM.$editId.value || null);
 });
 
 /* ── v1.4: ÖZEL ŞABLONLAR ── */

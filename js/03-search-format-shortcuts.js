@@ -707,9 +707,8 @@ function editNote(id) {
     updateReminderBtn(_rems, n.reminderNote || (n.reminder && n.reminder.reminderNote) || '');
     State.tocOpen = false; buildTocPanel();
     if (DOM.$reminderBtn) DOM.$reminderBtn.classList.remove('hidden');
-    if (DOM.$exportMdBtn) DOM.$exportMdBtn.removeAttribute('disabled');
-    const _expHtmlBtn = $('export-html-btn'); if (_expHtmlBtn) _expHtmlBtn.removeAttribute('disabled');
     DOM.$editor.classList.add('editing-active'); DOM.$cancelBtn.removeAttribute('disabled'); $('edit-del-btn').classList.remove('hidden');
+    /* export-md-btn/export-html-btn artık updateFooterVisibility() içinde (hasTitle kriteriyle) etkinleşiyor */
     updateFooterVisibility();
     window.scrollTo({top:0,behavior:'smooth'});
     const _splitMp = document.querySelector('.main-panel.fp-split-mode');
@@ -736,8 +735,7 @@ function resetEditor() {
     if (DOM.$editorTocList) DOM.$editorTocList.innerHTML='';
     if (DOM.$tocToggleBtn) { DOM.$tocToggleBtn.classList.add('hidden'); DOM.$tocToggleBtn.classList.remove('active'); }
     if (DOM.$reminderBtn) DOM.$reminderBtn.classList.add('hidden');
-    if (DOM.$exportMdBtn) DOM.$exportMdBtn.setAttribute('disabled', '');
-    const _expHtmlBtn2 = $('export-html-btn'); if (_expHtmlBtn2) _expHtmlBtn2.setAttribute('disabled', '');
+    /* export-md-btn/export-html-btn artık updateFooterVisibility() içinde (hasTitle kriteriyle) devre dışı bırakılıyor */
     closeReminderPopup();
     DOM.$editor.classList.remove('editing-active'); DOM.$cancelBtn.setAttribute('disabled', ''); $('edit-del-btn').classList.add('hidden');
     updateFooterVisibility();
@@ -944,6 +942,14 @@ function updateFooterVisibility() {
     /* Başlık varsa footer görünür — içerik şartı yok */
     const hasTitle = !!((DOM.$title.value || '').trim());
     cf.classList.toggle('cf-empty', !hasTitle);
+    /* v1.16.15: HTML/Markdown dışa aktarma artık kaydedilmemiş notlarda da (canlı editör
+       durumundan) çalışıyor — bu yüzden düğmeler artık yalnızca editNote()'ta (kayıtlı not
+       açılışında) değil, footer'ın geri kalanıyla AYNI kriterle (başlık var mı) her yerde
+       tutarlı şekilde etkinleşiyor. Bu fonksiyon zaten her içerik/başlık değişiminde çağrılıyor
+       (input dinleyicileri, editNote, resetEditor, applyTemplate, undo/redo, grid'ler, AI…). */
+    if (DOM.$exportMdBtn) DOM.$exportMdBtn.toggleAttribute('disabled', !hasTitle);
+    const _expHtmlBtn3 = document.getElementById('export-html-btn');
+    if (_expHtmlBtn3) _expHtmlBtn3.toggleAttribute('disabled', !hasTitle);
 }
 DOM.$content.addEventListener('input', () => { updateFooterVisibility(); }, { passive: true });
 /* Panel içerikleri değişince footer'ı güncelle */

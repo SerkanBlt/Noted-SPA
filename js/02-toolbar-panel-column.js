@@ -210,24 +210,37 @@ function htmlToMarkdown(html) {
         return out;
     }
     function block(node, lines) {
-        Array.from(node.children).forEach(el => {
+        /* TUZAK: eskiden yalnızca node.children (ELEMENT düğümleri) geziliyordu — kök
+           seviyesinde SARMALANMAMIŞ çıplak bir metin düğümü (contenteditable'a hiç <p>/<div>
+           yokken atılan ilk tuş vuruşunun ürettiği şekil — bkz. document.execCommand('insertText')
+           testinde doğrulandı) tamamen ATLANIYOR, sessizce kayboluyordu. Artık childNodes gezilip
+           metin/blok-olmayan içerik bir tampon'da biriktirilip bir sonraki gerçek blok elemanında
+           (veya sonunda) paragraf olarak akıtılıyor. */
+        let buffer = '';
+        function flush() { const t = buffer.trim(); if (t) lines.push(t); buffer = ''; }
+        Array.from(node.childNodes).forEach(el => {
+            if (el.nodeType === 3) { buffer += el.textContent; return; }
+            if (el.nodeType !== 1) return;
             const tag = el.tagName.toLowerCase();
-            if (tag === 'h2') lines.push('## ' + inline(el).trim());
-            else if (tag === 'h3') lines.push('### ' + inline(el).trim());
-            else if (tag === 'blockquote') lines.push('> ' + inline(el).trim());
-            else if (tag === 'pre') lines.push('```\n' + el.textContent.replace(/\n+$/,'') + '\n```');
-            else if (tag === 'ul') Array.from(el.children).forEach(li => { if (li.classList && li.classList.contains('todo-item')) { lines.push((li.dataset.checked === 'true' ? '- [x] ' : '- [ ] ') + inline(li).trim()); } else lines.push('- ' + inline(li).trim()); });
-            else if (tag === 'ol') Array.from(el.children).forEach((li, i) => lines.push((i+1) + '. ' + inline(li).trim()));
-            else if (tag === 'p' || tag === 'div') { const t = inline(el).trim(); if (t) lines.push(t); }
-            else { const t = inline(el).trim(); if (t) lines.push(t); }
+            if (tag === 'h2') { flush(); lines.push('## ' + inline(el).trim()); }
+            else if (tag === 'h3') { flush(); lines.push('### ' + inline(el).trim()); }
+            else if (tag === 'blockquote') { flush(); lines.push('> ' + inline(el).trim()); }
+            else if (tag === 'pre') { flush(); lines.push('```\n' + el.textContent.replace(/\n+$/,'') + '\n```'); }
+            else if (tag === 'ul') { flush(); Array.from(el.children).forEach(li => { if (li.classList && li.classList.contains('todo-item')) { lines.push((li.dataset.checked === 'true' ? '- [x] ' : '- [ ] ') + inline(li).trim()); } else lines.push('- ' + inline(li).trim()); }); }
+            else if (tag === 'ol') { flush(); Array.from(el.children).forEach((li, i) => lines.push((i+1) + '. ' + inline(li).trim())); }
+            else if (tag === 'p' || tag === 'div') { flush(); const t = inline(el).trim(); if (t) lines.push(t); }
+            else if (tag === 'br') { flush(); }
+            else { buffer += inline(el); }
         });
+        flush();
     }
     const lines = [];
     block(root, lines);
     return lines.join('\n\n');
 }
 function exportNoteAsMarkdown(noteId) {
-    const n = State.notes.find(x => String(x.id) === String(noteId));
+    let n = noteId ? State.notes.find(x => String(x.id) === String(noteId)) : null;
+    if (!n) n = typeof _buildLiveNoteForExport === 'function' ? _buildLiveNoteForExport() : null;
     if (!n) return;
     const dateStr = n.updatedAt ? new Date(n.updatedAt).toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric'}) : '';
     const tags = (n.tags && n.tags.length) ? n.tags.map(t => '#'+t).join(' ') : '';
