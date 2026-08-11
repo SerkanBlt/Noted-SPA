@@ -705,7 +705,7 @@ function editNote(id) {
     /* Migrate legacy single reminder → array */
     const _rems = n.reminders || (n.reminder && n.reminder.at ? [{ at: n.reminder.at, fired: n.reminder.fired || false, title: n.reminder.reminderTitle || '' }] : []);
     updateReminderBtn(_rems, n.reminderNote || (n.reminder && n.reminder.reminderNote) || '');
-    State.tocOpen = false; buildTocPanel(n.id);
+    State.tocOpen = false; buildTocPanel();
     if (DOM.$reminderBtn) DOM.$reminderBtn.classList.remove('hidden');
     if (DOM.$exportMdBtn) DOM.$exportMdBtn.removeAttribute('disabled');
     const _expHtmlBtn = $('export-html-btn'); if (_expHtmlBtn) _expHtmlBtn.removeAttribute('disabled');
@@ -837,6 +837,10 @@ function applyTemplate(tplKey) {
     DOM.$content.innerHTML = sanitize(tpl.content);
     EditorState._snapTitle = '';
     updateFooterVisibility();
+    /* innerHTML atamasi native 'input' olayi FIRLATMAZ (yalnizca kullanici yazimi/execCommand
+       fırlatır) — buildTocPanel()'in dinleyicisi bu yuzden burada kendiliginden tetiklenmez,
+       elle cagirmak gerekiyor (bkz. why-buildtocpanel-needs-explicit-calls-for-programmatic-inserts). */
+    if (typeof buildTocPanel === 'function') buildTocPanel();
     DOM.$title.focus();
 }
 

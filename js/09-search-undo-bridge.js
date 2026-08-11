@@ -266,6 +266,7 @@
             if (typeof _markDirty === 'function') _markDirty();
             if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
             if (typeof window._todoUpdateBadge === 'function') window._todoUpdateBadge();
+            if (typeof buildTocPanel === 'function') buildTocPanel();
         });
     };
 
@@ -285,6 +286,7 @@
             if (typeof _markDirty === 'function') _markDirty();
             if (typeof updateFooterVisibility === 'function') updateFooterVisibility();
             if (typeof window._todoUpdateBadge === 'function') window._todoUpdateBadge();
+            if (typeof buildTocPanel === 'function') buildTocPanel();
         });
     };
 

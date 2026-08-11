@@ -1555,13 +1555,9 @@ function applyColorLabel(key) {
 }
 
 /* ══ v1.6: İÇİNDEKİLER PANELİ ══ */
-function buildTocPanel(noteId) {
-    if (!DOM.$editorToc || !DOM.$editorTocList) return;
-    const n = State.notes.find(x => String(x.id) === String(noteId));
-    if (!n) { DOM.$editorToc.style.display = 'none'; DOM.$editorTocList.innerHTML = ''; if(DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.add('hidden'); return; }
-    const tmp = document.createElement('div');
-    tmp.innerHTML = sanitize(n.content);
-    const heads = Array.from(tmp.querySelectorAll('h2, h3'));
+function buildTocPanel() {
+    if (!DOM.$editorToc || !DOM.$editorTocList || !DOM.$content) return;
+    const heads = Array.from(DOM.$content.querySelectorAll('h2, h3'));
     if (DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.toggle('hidden', heads.length === 0);
     if (heads.length === 0) { DOM.$editorToc.style.display = 'none'; DOM.$editorTocList.innerHTML = ''; State.tocOpen = false; if(DOM.$tocToggleBtn) DOM.$tocToggleBtn.classList.remove('active'); return; }
     DOM.$editorTocList.innerHTML = '';
@@ -1597,4 +1593,9 @@ function toggleTocPanel() {
     if (State.tocOpen) positionTocPanel();
     if (DOM.$editorToc) DOM.$editorToc.style.display = (State.tocOpen && DOM.$editorTocList && DOM.$editorTocList.children.length) ? '' : 'none';
 }
+/* v1.16.14: buildTocPanel() artık canlı DOM.$content'ten okuyor (kaydedilmiş State.notes'tan
+   değil — kullanıcı raporu: yeni/kaydedilmemiş bir notta başlıklar ekranda görünse de İçindekiler
+   düğmesi gizli/boş kalıyordu). Bu yüzden not AÇILIRKEN tek seferlik çağrı yetmiyor — kullanıcı
+   yeni bir başlık eklerken/silerken de güncellenmeli, aksi halde panel yazarken bayatlar. */
+DOM.$content.addEventListener('input', () => buildTocPanel(), { passive: true });
 
