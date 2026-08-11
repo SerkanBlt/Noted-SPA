@@ -608,6 +608,27 @@ DOM.$content.addEventListener('input', () => {
     const GH_OWNER = 'SerkanBlt';
     const GH_REPO  = 'Noted-SPA';
 
+    /* GitHub'ın ham API mesajları (özellikle fine-grained PAT izin hataları) teknik olmayan
+       kullanıcı için anlaşılmaz — bilinen durumlarda somut, adım adım Türkçe yönlendirme
+       veriyoruz. Eşleşmeyen hatalarda null döner, çağıran ham mesaja düşer. */
+    function _ghErrorHint(status, rawMsg) {
+        const msg = (rawMsg || '').toLowerCase();
+        if (status === 403 && msg.includes('resource not accessible')) {
+            return 'Token\'ın "Issues" izni yok. GitHub → Settings → Developer settings → ' +
+                'Fine-grained tokens → token\'ınızı açın → Repository permissions\'ta ' +
+                '"Issues" satırını "Read and write" yapın (varsayılan "No access"tir).';
+        }
+        if (status === 404) {
+            return 'Depo bulunamadı veya token bu depoya erişemiyor. Fine-grained token\'ın ' +
+                'Repository access alanında "' + GH_OWNER + '/' + GH_REPO + '" seçili mi kontrol edin.';
+        }
+        if (status === 401) {
+            return 'GitHub erişim anahtarı geçersiz veya süresi dolmuş. Ayarlar > Gelişmiş\'ten ' +
+                'yeni bir token girin.';
+        }
+        return null;
+    }
+
     function setHint(msg, cls) {
         hint.textContent = msg || '';
         hint.className = 'sys-modal-hint' + (cls ? ' ' + cls : '');
@@ -664,7 +685,7 @@ DOM.$content.addEventListener('input', () => {
             });
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || ('HTTP ' + res.status));
+                throw new Error(_ghErrorHint(res.status, errData.message) || (errData.message || ('HTTP ' + res.status)));
             }
             if (typeof _showSnack === 'function') _showSnack('Hata bildirimi gönderildi, teşekkürler!', 'ok');
             close();

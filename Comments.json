@@ -221,7 +221,7 @@
       "level": "critical",
       "type": "trap",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 1467,
+      "line": 1488,
       "anchor": "window._notesReadyPromise.then(render);",
       "symbol": "INIT",
       "title": "'gereksiz async' sanip senkron render()'a geri cevirme — her acilista bos not listesi gosterir",
@@ -363,7 +363,7 @@
       "level": "info",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 882,
+      "line": 903,
       "anchor": "function ccbExport(id) {",
       "symbol": "ccbExport / ccbImportFromObjects",
       "title": "Disa aktarilan CCB dosyasi _type/_version alanlari tasir",
@@ -650,7 +650,7 @@
       "level": "important",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 1066,
+      "line": 1087,
       "anchor": "target.dispatchEvent(new Event('input', { bubbles: true }));",
       "symbol": "insertCcb",
       "title": "CCB eklendikten sonra sahte 'input' event'i dispatch edilir",
@@ -664,7 +664,7 @@
       "level": "info",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 1456,
+      "line": 1477,
       "anchor": "var _obs = new MutationObserver(function() { _schedule(); });",
       "symbol": "otomatik kayit gozlemcisi",
       "title": "MutationObserver keyup/input'un yakalamadigi degisiklikleri yakalar",
@@ -1103,7 +1103,7 @@
       "level": "important",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 699,
+      "line": 720,
       "anchor": "function _parseVersionMd(md) {",
       "symbol": "Ayarlar > Versiyonlar sekmesi",
       "title": "Version.md TEK kaynak — ayri bir JS surum listesi elle tutulmuyor",
@@ -1131,7 +1131,7 @@
       "level": "important",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 771,
+      "line": 792,
       "anchor": "const toggle = document.getElementById('privacy-toggle');",
       "symbol": "Ayarlar > Genel > Gizlilik Politikası akordeonu",
       "title": "privacy.html TEK kaynak — icerik burada kopyalanmiyor, ilk acilista fetch edilip enjekte ediliyor",
@@ -1159,13 +1159,27 @@
       "level": "info",
       "type": "why",
       "file": "js/06-bookmark-settings-ccb.js",
-      "line": 663,
+      "line": 684,
       "anchor": "labels: ['hata-bildirimi', 'durum:yeni']",
       "symbol": "Hata Bildir — GitHub issue etiketleri",
       "title": "'durum:yeni' etiketi, kullanicinin planladigi ayri bir otomasyon icin (bu surumde KURULMADI)",
       "body": "Kullanici ileride bu Issues listesini (label:durum:yeni VEYA label:durum:renew, state:open filtreleriyle) baska bir otomasyon/ajan surecinin (kendi ifadesiyle 'Coworks') periyodik olarak islemesini planliyor: 10 birikince degerlendirme, daha once 'Closed' olup tekrar 'durum:renew' etiketiyle ac ilanlar disinda islem, vs. Bu SURECI (zamanlanmis tetikleyici, e-posta, otomatik surum yayinlama) bu surumde KURULMADI — yalnizca veri modeli (baslik+govde+iki etiket) o gelecekteki surecin tuketebilecegi sekilde tasarlandi. Etiket adlarini (hata-bildirimi/durum:yeni) degistirirsen, kullanicinin kuracagi otomasyonun sorgu filtresini de guncellemesi gerekecegini unutma.",
       "refs": [
         "v1.16.11"
+      ]
+    },
+    {
+      "id": "why-ghErrorHint-maps-known-github-errors",
+      "level": "info",
+      "type": "why",
+      "file": "js/06-bookmark-settings-ccb.js",
+      "line": 614,
+      "anchor": "function _ghErrorHint(status, rawMsg) {",
+      "symbol": "Hata Bildir — GitHub API hata mesajlari",
+      "title": "gercek kullanici raporundan geldi: 403 'Resource not accessible' fine-grained PAT'in varsayilan Issues=No access izninden",
+      "body": "v1.16.12'de kullanici gercekten bir fine-grained PAT olusturup repo'yu secti ama 'Resource not accessible by personal access token' hatasi aldi — GitHub'in fine-grained token'larda HER izni (Issues dahil) varsayilan 'No access' yapmasindan kaynaklaniyor, repo secimi tek basina yetmiyor. Ham GitHub mesaji teknik olmayan kullanici icin anlamsiz oldugundan, bilinen 403/404/401 durumlari icin somut adim-adim Turkce yonlendirmeye cevriliyor. Eslesmeyen (ornegin 422 validation) hatalarda null donup cagiran ham mesaja duser — YENI bir bilinen hata deseni bulunursa buraya eklenmeli, ama fallback'i kaldirma (ham mesaj hep gorunebilir kalmali).",
+      "refs": [
+        "v1.16.12"
       ]
     }
   ]

@@ -2,6 +2,14 @@
 
 ---
 
+## v1.16.13
+**Fix — Hata Bildir'in ham GitHub API hataları anlaşılır Türkçe yönlendirmeye çevrildi (gerçek kullanıcı raporu: fine-grained PAT oluşturup repository'yi seçmesine rağmen "Gönderilemedi: Resource not accessible by personal access token" hatası aldı)**
+- **Kök neden (kullanıcı ortamında doğrulandı):** GitHub'ın fine-grained PAT'leri, seçilen depo için HER izni (Issues dahil) varsayılan olarak **"No access"** yapıyor — yalnızca repository'yi seçmek yetmiyor, "Issues" iznini ayrıca "Read and write" olarak işaretlemek gerekiyor. Kullanıcıya bunu açıklayıp adım adım (GitHub → Settings → Developer settings → Fine-grained tokens → token → Repository permissions → Issues → Read and write) düzeltme yolunu gösterdim
+- **Kod tarafında kalıcı iyileştirme:** `_ghErrorHint(status, rawMsg)` eklendi — GitHub'ın ham, teknik mesajlarını (403 "Resource not accessible", 404, 401) somut Türkçe yönlendirmeye çeviriyor; eşleşmeyen hata kodlarında (örn. 422 validation) fonksiyon `null` döner ve çağıran GERİ ham GitHub mesajına düşer (bilgi kaybı yok, yalnızca bilinen desenler için ek açıklama var)
+- Doğrulama: Kullanıcının gerçekte aldığı 403/"Resource not accessible by personal access token" hatası `fetch` mock'lanarak birebir tekrar oluşturuldu, düzeltme sonrası panelde doğru adım-adım Türkçe mesajın çıktığı doğrulandı; ayrıca 404 ve 401 durumları ile bilinçli olarak eşleşmeyen bir 422 hatası da ayrı ayrı test edilip 422'de ham mesajın kaybolmadan göründüğü (fallback çalışıyor) doğrulandı; konsolda yeni hata yok; `node tools/comments-check.js` temiz
+
+---
+
 ## v1.16.12
 **Feat — Hamburger menüsüne "Hata Bildir" (kullanıcı isteği: zengin metin kutulu bir panel, ikon Cancel/Submit düğmeleri, gönderilince kayıt altına alınması, sonradan "Coworks" ile değerlendirilecek durum alanları)**
 - **Kapsam netleştirmesi (kullanıcıya iki soru sorularak):** Uygulama GitHub Pages'te statik olarak yayınlanıyor — sunucu tarafında kod çalıştırmıyor, bu yüzden `ReportedBugs.json`'a **sunucu tarafında** yazmak teknik olarak mümkün değildi. Kullanıcı "GitHub Issues kullan" seçeneğini seçti. Ayrıca kullanıcının tarif ettiği büyük otomasyon (10 bildirim birikince "Coworks"un devreye girmesi, e-posta atması, "Closed" kontrolü, otomatik sürüm yayınlaması) bu oturumda kod olarak kurulamayacak kadar büyük ve dış altyapı (zamanlanmış tetikleyici, e-posta servisi, otomatik deploy yetkisi) gerektirdiği için kullanıcı "Yalnızca Hata Bildir UI + kayıt" kapsamını onayladı — otomasyon ayrı, sonraki bir konu
