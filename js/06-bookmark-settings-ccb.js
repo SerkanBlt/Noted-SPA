@@ -519,6 +519,8 @@ DOM.$content.addEventListener('input', () => {
     /* hm-theme-btn: hover submenu yeterli, tıklama kapatmasın */
     if (hmTheme) hmTheme.addEventListener('click', e => e.stopPropagation());
     if (hmSettings) hmSettings.addEventListener('click', () => { closeHM(); openSettings(); });
+    const hmBugreport = $('hm-bugreport-btn');
+    if (hmBugreport) hmBugreport.addEventListener('click', () => { closeHM(); if (typeof window.openBugReportPanel === 'function') window.openBugReportPanel(); });
     if (hmFullscreen) hmFullscreen.addEventListener('click', () => {
         closeHM();
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -587,6 +589,91 @@ DOM.$content.addEventListener('input', () => {
             });
         });
     }
+})();
+
+/* ── Hata Bildir paneli ── */
+/* GitHub'a doğrudan tarayıcıdan (backend yok — GitHub Pages statik hosting) POST atar,
+   bu yüzden kullanıcının kendi GitHub PAT'ini Ayarlar > Gelişmiş'e girmesi gerekir —
+   AI sağlayıcı anahtarlarıyla AYNI güven modeli (yalnızca localStorage, sunucuya gitmez). */
+(function() {
+    const overlay   = document.getElementById('bugreport-overlay');
+    const closeBtn  = document.getElementById('bugreport-close');
+    const cancelBtn = document.getElementById('bugreport-cancel');
+    const submitBtn = document.getElementById('bugreport-submit');
+    const content   = document.getElementById('bugreport-content');
+    const hint      = document.getElementById('bugreport-hint');
+    const toolbar   = document.querySelector('.bugreport-toolbar');
+    if (!overlay || !content || !submitBtn) return;
+
+    const GH_OWNER = 'SerkanBlt';
+    const GH_REPO  = 'Noted-SPA';
+
+    function setHint(msg, cls) {
+        hint.textContent = msg || '';
+        hint.className = 'sys-modal-hint' + (cls ? ' ' + cls : '');
+    }
+
+    window.openBugReportPanel = function() {
+        content.innerHTML = '';
+        setHint('');
+        overlay.classList.add('open');
+        setTimeout(() => content.focus(), 60);
+    };
+    function close() { overlay.classList.remove('open'); }
+
+    if (closeBtn)  closeBtn.addEventListener('click', close);
+    if (cancelBtn) cancelBtn.addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) { e.stopPropagation(); close(); }
+    }, true);
+
+    /* Mini biçim araç çubuğu — mousedown+preventDefault ile seçim korunur (toolbar'daki desenle aynı) */
+    if (toolbar) {
+        toolbar.querySelectorAll('button[data-cmd]').forEach(b => {
+            b.addEventListener('mousedown', e => {
+                e.preventDefault();
+                content.focus();
+                document.execCommand(b.dataset.cmd, false, null);
+            });
+        });
+    }
+
+    submitBtn.addEventListener('click', async () => {
+        const html = content.innerHTML.trim();
+        const text = (typeof stripHtml === 'function' ? stripHtml(html) : html.replace(/<[^>]+>/g, '')).trim();
+        if (!text) { setHint('Lütfen bir açıklama yazın.', 'bugreport-hint-warn'); content.focus(); return; }
+        const token = (localStorage.getItem('noted_gh_pat') || '').trim();
+        if (!token) {
+            setHint('Önce Ayarlar > Gelişmiş\'ten GitHub erişim anahtarınızı girin.', 'bugreport-hint-warn');
+            return;
+        }
+        submitBtn.disabled = true; if (cancelBtn) cancelBtn.disabled = true;
+        setHint('Gönderiliyor…');
+        try {
+            const body  = typeof htmlToMd === 'function' ? htmlToMd(html) : text;
+            const title = 'Hata Bildirimi — ' + new Date().toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' });
+            const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/issues`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'token ' + token,
+                    'Accept': 'application/vnd.github+json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, body, labels: ['hata-bildirimi', 'durum:yeni'] }),
+            });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || ('HTTP ' + res.status));
+            }
+            if (typeof _showSnack === 'function') _showSnack('Hata bildirimi gönderildi, teşekkürler!', 'ok');
+            close();
+        } catch (e) {
+            setHint('Gönderilemedi: ' + e.message, 'bugreport-hint-err');
+        } finally {
+            submitBtn.disabled = false; if (cancelBtn) cancelBtn.disabled = false;
+        }
+    });
 })();
 
 /* ── Versiyonlar Sekmesi: Version.md'den canlı okuma ── */
@@ -1256,14 +1343,28 @@ DOM.$content.addEventListener('input', () => {
 
 /* ── Gelişmiş Ayarlar sekmesi ── */
 (function initAdvancedSettings() {
-    const tab    = document.querySelector('.stab[data-stab="tab3"]');
-    const toggle = document.getElementById('cfg-export-ai');
-    if (!tab || !toggle) return;
+    const tab       = document.querySelector('.stab[data-stab="tab3"]');
+    const toggle    = document.getElementById('cfg-export-ai');
+    const ghPat     = document.getElementById('cfg-gh-pat');
+    const ghPatTgl  = document.getElementById('cfg-gh-pat-toggle');
+    if (!tab) return;
     tab.addEventListener('click', () => {
-        toggle.checked = getAiCfg().exportAi === true;
+        if (toggle) toggle.checked = getAiCfg().exportAi === true;
+        if (ghPat)  ghPat.value = localStorage.getItem('noted_gh_pat') || '';
     });
-    toggle.addEventListener('change', () => {
+    if (toggle) toggle.addEventListener('change', () => {
         patchAiCfg({ exportAi: toggle.checked });
+    });
+    /* GitHub PAT — AI sağlayıcı anahtarlarıyla aynı model: yalnızca localStorage, değişince kaydedilir */
+    if (ghPat) ghPat.addEventListener('change', () => {
+        const v = ghPat.value.trim();
+        if (v) localStorage.setItem('noted_gh_pat', v); else localStorage.removeItem('noted_gh_pat');
+    });
+    if (ghPatTgl) ghPatTgl.addEventListener('click', () => {
+        if (!ghPat) return;
+        const show = ghPat.type === 'password';
+        ghPat.type = show ? 'text' : 'password';
+        ghPatTgl.innerHTML = `<i class="fas fa-${show ? 'eye-slash' : 'eye'}"></i>`;
     });
 })();
 
