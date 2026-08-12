@@ -679,7 +679,10 @@
     "ai.ratelimit": "Rate limit — resets soon",
     "ai.tempdisabled": "Error — temporarily disabled",
     "note.movedtogroup": "Note moved to \"{group}\"",
-    "cb.copied": "Code copied"
+    "cb.copied": "Code copied",
+    "cb.titleplaceholder": "Title…",
+    "cb.wrap": "Wrap lines",
+    "cb.nowrap": "Turn off wrap"
   },
   "de": {
     "qs.discover": "Schnellzugriff (Strg+K)",
@@ -1361,7 +1364,10 @@
     "ai.ratelimit": "Rate-Limit — wird bald zurückgesetzt",
     "ai.tempdisabled": "Fehler — vorübergehend deaktiviert",
     "note.movedtogroup": "Notiz nach „{group}\" verschoben",
-    "cb.copied": "Code kopiert"
+    "cb.copied": "Code kopiert",
+    "cb.titleplaceholder": "Titel…",
+    "cb.wrap": "Zeilen umbrechen",
+    "cb.nowrap": "Umbruch ausschalten"
   },
   "it": {
     "qs.discover": "Vai rapido (Ctrl+K)",
@@ -2043,7 +2049,10 @@
     "ai.ratelimit": "Rate limit — si azzera a breve",
     "ai.tempdisabled": "Errore — temporaneamente disabilitato",
     "note.movedtogroup": "Nota spostata in \"{group}\"",
-    "cb.copied": "Codice copiato"
+    "cb.copied": "Codice copiato",
+    "cb.titleplaceholder": "Titolo…",
+    "cb.wrap": "Vai a capo",
+    "cb.nowrap": "Disattiva a capo"
   },
   "fr": {
     "qs.discover": "Accès rapide (Ctrl+K)",
@@ -2725,7 +2734,10 @@
     "ai.ratelimit": "Limite de débit — réinitialisation bientôt",
     "ai.tempdisabled": "Erreur — désactivé temporairement",
     "note.movedtogroup": "Note déplacée vers « {group} »",
-    "cb.copied": "Code copié"
+    "cb.copied": "Code copié",
+    "cb.titleplaceholder": "Titre…",
+    "cb.wrap": "Retour à la ligne",
+    "cb.nowrap": "Désactiver le retour à la ligne"
   },
   "tr": {
     "qs.discover": "Hızlı Git (Ctrl+K)",
@@ -3399,6 +3411,9 @@
     "ai.tempdisabled": "Hata — geçici devre dışı",
     "note.movedtogroup": "Not \"{group}\" grubuna taşındı",
     "cb.copied": "Kod kopyalandı",
+    "cb.titleplaceholder": "Başlık…",
+    "cb.wrap": "Satırları Kaydır",
+    "cb.nowrap": "Kaydırmayı Kapat",
     "help.data.6": "<strong>Uygulama Olarak Kurulum (PWA):</strong> Noted, Android/iOS/Windows üzerinde bağımsız bir uygulama gibi kurulabilir (tarayıcının \"Yükle\" seçeneği veya paylaş menüsündeki \"Ana Ekrana Ekle\"). Kurulu uygulama çevrimdışı da çalışır; sayfa kabuğu Service Worker ile önbelleğe alınır.",
     "help.data.7": "<strong>Hata Bildirimi:</strong> Hamburger menüsündeki \"Hata Bildir\" seçeneğiyle karşılaşılan sorunlar doğrudan tarayıcıdan bir GitHub Issue olarak gönderilebilir. Kendi GitHub erişim anahtarınızı (fine-grained token) girmeniz gerekir; anahtar yalnızca cihazınızda saklanır.",
     "hmnav.lang": "🌐 Dil &amp; Çeviri",

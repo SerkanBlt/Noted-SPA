@@ -947,6 +947,18 @@ function inflateCodeBlocks(root) {
         const bar = document.createElement('div');
         bar.className = 'cb-toolbar';
         bar.setAttribute('contenteditable', 'false');
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'cb-title';
+        titleInput.placeholder = _t('cb.titleplaceholder', 'Başlık…');
+        titleInput.value = pre.dataset.cbTitle || '';
+        /* Baslik degeri pre'nin data-cb-title'ina hemen yaziliyor — .cb-toolbar zaten
+           saveNote() oncesi _stripUiChromeAndRead() ile cikarilip geri konuyor (bkz.
+           Comments.json why-savenote-strips-ui-chrome-classlist), input'un KENDISI degil
+           bu data-attribute kalici kayittir; sanitize() ALLOWED_ATTR'a eklenmesi sart. */
+        titleInput.addEventListener('input', () => { pre.dataset.cbTitle = titleInput.value; });
+        titleInput.addEventListener('mousedown', e => e.stopPropagation());
+        titleInput.addEventListener('keydown', e => e.stopPropagation());
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
         copyBtn.className = 'cb-btn cb-copy';
@@ -961,6 +973,21 @@ function inflateCodeBlocks(root) {
                 }).catch(() => {});
             }
         });
+        const wrapBtn = document.createElement('button');
+        wrapBtn.type = 'button';
+        wrapBtn.className = 'cb-btn cb-wrap-toggle';
+        function syncWrap() {
+            const wrapped = pre.classList.contains('cb-wrap');
+            wrapBtn.title = wrapped ? _t('cb.nowrap', 'Kaydırmayı Kapat') : _t('cb.wrap', 'Satırları Kaydır');
+            wrapBtn.innerHTML = wrapped ? '<i class="fas fa-align-left"></i>' : '<i class="fas fa-arrows-left-right"></i>';
+            wrapBtn.classList.toggle('active', wrapped);
+        }
+        wrapBtn.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            pre.classList.toggle('cb-wrap');
+            syncWrap();
+        });
+        syncWrap();
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'cb-btn cb-toggle';
@@ -976,7 +1003,9 @@ function inflateCodeBlocks(root) {
             syncToggle();
         });
         syncToggle();
+        bar.appendChild(titleInput);
         bar.appendChild(copyBtn);
+        bar.appendChild(wrapBtn);
         bar.appendChild(toggleBtn);
         pre.appendChild(bar);
     });

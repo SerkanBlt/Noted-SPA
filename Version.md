@@ -2,6 +2,17 @@
 
 ---
 
+## v1.17.5
+**Feat — issue #7: kod bloğuna başlık + Wrap düğmesi, toolbar artık yatay scroll'dan bağımsız sabit**
+- **Başlık:** `.cb-toolbar`'da her zaman görünen düzenlenebilir bir `<input class="cb-title">` eklendi. Değeri `input` olayında hemen `pre.dataset.cbTitle`'a yazılıyor — kalıcı kayıt bu `data-cb-title` niteliğidir, toolbar'ın kendisi değil (zaten `saveNote()` öncesi `_stripUiChromeAndRead()` ile çıkarılıp geri konuyor). `data-cb-title` `sanitize()` ALLOWED_ATTR'a eklenmezse kayıtta sessizce silinirdi, eklendi
+- **Wrap düğmesi:** Yeni ikon düğmesi (`fa-arrows-left-right` / `fa-align-left`) satır kaydırmayı blok bazında açıp kapatıyor, `cb-wrap` class'ı ile kalıcı (class zaten kayıtta korunuyordu, `cb-collapsed` gibi)
+- **Toolbar artık gerçekten sabit:** Eskiden `.cb-toolbar`, `<pre>`'in kendisiyle aynı `overflow-x:auto` konteynerinin içindeydi — wrap kapalıyken uzun bir satırda yatay scroll yapılınca toolbar da içerikle birlikte kayıyordu (issue #7'nin asıl şikayeti). Yatay scroll artık `<pre>`'den `<code>`'a taşındı (`display:block; overflow-x:auto`), `<pre>` kendisi artık kaymıyor — toolbar'ın containing block'u sabit kaldığı için butonlar+başlık input'u yatay scroll'dan bağımsız sabit kalıyor. Kod bloğu eklerken her zaman `<pre><code>` çifti oluşturulduğu için (js/02, js/05) yeni bir DOM sarmalayıcısına gerek kalmadı, kayıtlı not içeriğinin yapısı değişmedi
+- **Yol açtığı CSS specificity hatası (canlı testte bulundu):** `#content pre`'in taban kuralı ID içerdiği için, class-only `pre.cb-collapsed`'i eziyordu — daraltılmış bir kod bloğunda dikey scroll tamamen çalışmıyordu (computed `overflow-y` hep `visible` çıkıyordu, `.cb-collapsed`'in `auto`'su hiç uygulanmıyordu). `#content pre.cb-collapsed` / `.fp-editor-content pre.cb-collapsed` şeklinde scope'lanarak düzeltildi — tam olarak CLAUDE.md'nin uyardığı ID specificity tuzağının bir örneği, `Comments.json`'a yeni bir `trap-*` girdisiyle kaydedildi
+- **Doğrulama:** Playwright ile canlı tarayıcıda test edildi — başlık yazma, wrap aç/kapa (satır yüksekliği + `white-space` computed style ile ölçüldü), toolbar'ın scroll öncesi/sonrası piksel-eşit sabit kaldığı (`getBoundingClientRect`), kaydet→kapat→tekrar aç sonrası başlık+wrap'ın kalıcı kaldığı (`data-cb-title`/`cb-wrap` + input `.value`), 8+ satırlık blokta otomatik daraltma + dikey+yatay scroll'un ikisinin de çalıştığı ölçülerek doğrulandı
+- i18n: `cb.titleplaceholder`, `cb.wrap`, `cb.nowrap` anahtarları 5 dile eklendi
+
+---
+
 ## v1.17.4
 **Fix — Hata Bildir özelliğiyle GitHub'a gelen 10 açık kullanıcı raporunun otomatik düzeltme turu (issue #5,#6,#8,#9,#10,#12,#13,#14)**
 - **#5 — Sürükle-bırakla grup değiştirilince editör rozeti güncellenmiyordu:** Not açıkken başka bir gruba sürüklenip bırakıldığında `n.group` güncelleniyor ama `State.editorGroup` (badge'in okuduğu snapshot) senkronize edilmiyordu — grup picker'daki `applyGroup()`'un zaten yaptığı senkronizasyon sürükle-bırak yolunda eksikti. `_setupNoteDragDrop()`'un `drop` dinleyicisine aynı senkronizasyon eklendi (ana editör + float panel rozeti)

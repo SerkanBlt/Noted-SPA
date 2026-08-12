@@ -994,10 +994,14 @@
             background:var(--pre-bg); color:var(--pre-text);
             border:1px solid var(--pre-border);
             padding:30px 16px 14px; border-radius:12px; margin:8px 0;
-            overflow-x:auto; position:relative;
+            overflow-x:visible; position:relative;
             font-family:var(--font-mono); font-size:.81em; line-height:1.65;
         }
-        #content pre code { background:none; border:none; padding:0; color:inherit; font-size:1em; }
+        /* v1.17.5: yatay scroll artık <pre>'de değil <code>'da çalışıyor — .cb-toolbar
+           böylece yatay kaydırmadan bağımsız, <pre>'in (artık kaymayan) kutusuna sabit
+           kalıyor (issue #7). cb-wrap ile satır kaydırma açılınca overflow-x kapanır. */
+        #content pre code { background:none; border:none; padding:0; color:inherit; font-size:1em; display:block; overflow-x:auto; }
+        #content pre.cb-wrap code { white-space:pre-wrap; word-break:break-word; overflow-x:visible; }
         /* v1.17.2: kod bloğu araç çubuğu (kopyala/genişlet-daralt) — eskiden ::before ile
            statik 'kod' etiketi vardı, artık gerçek (tıklanabilir) DOM düğmeleri. contenteditable
            ="false" ile bloğun geri kalanından ayrılır — metin gibi seçilip düzenlenemez.
@@ -1011,8 +1015,22 @@
             transition:background .12s, color .12s;
         }
         .cb-btn:hover { background:var(--surface-2); color:var(--accent); }
-        /* Daraltılmış kod bloğu: sabit yükseklik + alt kenarda yumuşak geçiş */
-        pre.cb-collapsed { max-height:130px; overflow:auto; }
+        .cb-btn.active { background:var(--surface-2); color:var(--accent); }
+        .cb-title {
+            background:none; border:none; outline:none; color:var(--pre-text);
+            font-family:var(--font-ui); font-size:.72rem; font-weight:600;
+            padding:4px 4px; margin-right:2px; width:120px; min-width:0;
+            text-overflow:ellipsis;
+        }
+        .cb-title::placeholder { color:var(--pre-label); font-weight:400; opacity:.7; }
+        .cb-title:focus { width:180px; }
+        /* Daraltılmış kod bloğu: sabit yükseklik + alt kenarda yumuşak geçiş.
+           Yatay scroll artık <code>'da (bkz. yukarısı) — burada yalnızca dikey.
+           #content/.fp-editor-content ile SCOPE'LU: aksi halde #content pre (ID) taban
+           kuralının overflow-x:visible'ı, class-only pre.cb-collapsed'i specificity'de
+           ezer — canlı testte tam bu şekilde bulundu (dikey scroll hiç çalışmıyordu). */
+        #content pre.cb-collapsed,
+        .fp-editor-content pre.cb-collapsed { max-height:130px; overflow-y:auto; overflow-x:hidden; }
         pre.cb-collapsed::after {
             content:''; position:absolute; left:0; right:0; bottom:0; height:34px;
             background:linear-gradient(to bottom, transparent, var(--pre-bg));
@@ -3013,8 +3031,12 @@ input[type="file"] { display:none; }
         .fp-editor-content ul,.fp-editor-content ol { padding-left:20px; margin:5px 0; }
         .fp-editor-content li { margin:2px 0; }
         .fp-editor-content blockquote { border-left:3px solid var(--accent); padding:5px 12px; margin:6px 0; color:var(--text-muted); font-style:italic; }
-        .fp-editor-content pre { background:var(--pre-bg,var(--surface-2)); color:var(--pre-text,var(--text)); border:1px solid var(--pre-border,var(--border)); padding:28px 14px 12px; border-radius:10px; margin:6px 0; overflow-x:auto; position:relative; font-family:var(--font-mono); font-size:.8em; line-height:1.6; }
+        .fp-editor-content pre { background:var(--pre-bg,var(--surface-2)); color:var(--pre-text,var(--text)); border:1px solid var(--pre-border,var(--border)); padding:28px 14px 12px; border-radius:10px; margin:6px 0; overflow-x:visible; position:relative; font-family:var(--font-mono); font-size:.8em; line-height:1.6; }
         .fp-editor-content code { background:var(--code-bg,var(--surface-2)); color:var(--code-text,var(--text)); border:1px solid var(--code-border,var(--border)); padding:2px 5px; border-radius:4px; font-family:var(--font-mono); font-size:.76em; }
+        /* v1.17.5: #content pre code ile aynı desen — issue #7, toolbar sabit kalsın */
+        .fp-editor-content pre code { display:block; overflow-x:auto; }
+        .fp-editor-content pre.cb-wrap code { white-space:pre-wrap; word-break:break-word; overflow-x:visible; }
+        /* pre.cb-collapsed kurali (#content'in ustunde) zaten scope'suz — burada tekrar gerekmiyor */
         .fp-editor-content a { color:var(--accent); }
         /* :not(.noted-grid) — Faz 1'de #content için düzeltilen aynı tuzak (bkz.
            trap-orphan-selector-list-id-specificity, Comments.json): bu kurallar yapıştırılan

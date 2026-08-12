@@ -470,7 +470,7 @@ function sanitize(html) {
             'data-shape','data-sx','data-sy','data-sw','data-sh',
             'data-stroke','data-fill-mode','data-rotate',
             'data-valign','data-halign','data-ccb-id','data-checked',
-            'data-cb-touched',
+            'data-cb-touched','data-cb-title',
         ],
         FORCE_BODY: false,
     });
