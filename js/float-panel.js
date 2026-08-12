@@ -102,7 +102,7 @@
         const _fpExpM = document.getElementById('fp-export-md-btn');
         if (_fpExpH) _fpExpH.removeAttribute('disabled');
         if (_fpExpM) _fpExpM.removeAttribute('disabled');
-        setTimeout(() => { if (typeof _fpSyncFooter === 'function') _fpSyncFooter(); if (typeof window._fpSyncLock === 'function') window._fpSyncLock(_fpNoteId); }, 0);
+        setTimeout(() => { if (typeof _fpSyncFooter === 'function') _fpSyncFooter(); if (typeof window._fpSyncLock === 'function') window._fpSyncLock(_fpNoteId); if (typeof _fpUpdateTocBtnVisibility === 'function') _fpUpdateTocBtnVisibility(); }, 0);
         return true;
     }
     function loadLatest() {
@@ -119,6 +119,7 @@
 
     /* ── Otomatik kayıt (1.2 s gecikme) ── */
     fpContent.addEventListener('input', () => { document.body.classList.add('cf-ready');
+        if (typeof _fpUpdateTocBtnVisibility === 'function') _fpUpdateTocBtnVisibility();
 
         clearTimeout(_saveTimer);
         _saveTimer = setTimeout(() => {
@@ -802,6 +803,17 @@
     /* ── İçindekiler (fp-footer) ── */
     const fpTocBtn = document.getElementById('fp-toc-btn');
     let _fpTocPopup = null, _fpTocOpen = false;
+    /* Başlık yoksa düğmeyi gizle — ana editördeki buildTocPanel()'in .hidden toggle'ıyla aynı desen */
+    function _fpUpdateTocBtnVisibility() {
+        if (!fpTocBtn) return;
+        const hasHeads = !!fpContent.querySelector('h2,h3');
+        fpTocBtn.classList.toggle('hidden', !hasHeads);
+        if (!hasHeads) {
+            _fpTocOpen = false;
+            fpTocBtn.classList.remove('active');
+            if (_fpTocPopup) _fpTocPopup.style.display = 'none';
+        }
+    }
     function buildFpToc() {
         if (!_fpTocPopup) {
             _fpTocPopup = document.createElement('div');

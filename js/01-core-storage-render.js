@@ -470,6 +470,7 @@ function sanitize(html) {
             'data-shape','data-sx','data-sy','data-sw','data-sh',
             'data-stroke','data-fill-mode','data-rotate',
             'data-valign','data-halign','data-ccb-id','data-checked',
+            'data-cb-touched',
         ],
         FORCE_BODY: false,
     });
@@ -1098,6 +1099,17 @@ function _setupNoteDragDrop() {
         if (n && targetGroup && n.group !== targetGroup) {
             n.group = targetGroup;
             saveNotes();
+            /* Açık not sürüklenen notla aynıysa editör rozetini de senkronize et (applyGroup() ile aynı desen) */
+            if (DOM.$editId.value && String(n.id) === String(DOM.$editId.value)) {
+                State.editorGroup = targetGroup;
+            }
+            const _fpBadge = document.getElementById('fp-badge-text');
+            if (_fpBadge && typeof window._fpGetCurrentNoteId === 'function' &&
+                String(window._fpGetCurrentNoteId()) === String(n.id)) {
+                _fpBadge.textContent = targetGroup;
+                const _fpBadgeEl = document.getElementById('fp-editor-badge');
+                if (_fpBadgeEl) { const c = getColor(targetGroup); _fpBadgeEl.style.color = c.main; _fpBadgeEl.style.backgroundColor = c.bg; }
+            }
             render();
             if (typeof _showSnack === 'function') _showSnack(NotedI18n.t('note.movedtogroup').replace('{group}', targetGroup), 'ok', 1800);
         }

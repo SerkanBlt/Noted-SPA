@@ -16,6 +16,7 @@
     let graphHoveredNodeId = null;
     let graphRafId = null;
     let nodeData = [];
+    let graphActiveGroup = null; /* null = Tüm Notlar; bir grup adıysa Group Legend filtresi aktif */
 
     function rotateSphere(ax, ay) {
         const cosY = Math.cos(ay), sinY = Math.sin(ay);
@@ -89,10 +90,22 @@
             body.appendChild(empty);
             return;
         }
+        /* Group Legend filtresi: bir grup seçiliyse yalnızca o grubun notlarını + onlara
+           bağlı (başka gruptaki) ilişkili notları göster — ilişkili notlar dimmed çizilir. */
+        let filteredNodes = nodes;
+        if (graphActiveGroup) {
+            const targetIds = new Set(nodes.filter(n => n.group === graphActiveGroup).map(n => n.id));
+            const relatedIds = new Set(targetIds);
+            edges.forEach(e => {
+                if (targetIds.has(e.from)) relatedIds.add(e.to);
+                if (targetIds.has(e.to)) relatedIds.add(e.from);
+            });
+            filteredNodes = nodes.filter(n => relatedIds.has(n.id));
+        }
         const MAX_NODES = 80;
-        let shownNodes = nodes;
+        let shownNodes = filteredNodes;
         let limited = false;
-        if (nodes.length > MAX_NODES) { shownNodes = nodes.slice(0, MAX_NODES); limited = true; }
+        if (filteredNodes.length > MAX_NODES) { shownNodes = filteredNodes.slice(0, MAX_NODES); limited = true; }
         const idSet = new Set(shownNodes.map(n => n.id));
         const shownEdges = edges.filter(e => idSet.has(e.from) && idSet.has(e.to));
 
@@ -120,7 +133,8 @@
             const rr = Math.sqrt(Math.max(0, 1 - yy * yy));
             const th = PHI_GA * i;
             return { n, ox: Math.cos(th) * rr, oy: yy, oz: Math.sin(th) * rr,
-                     x: 0, y: 0, z: 0, color: getColor(n.group || 'Genel').main };
+                     x: 0, y: 0, z: 0, color: getColor(n.group || 'Genel').main,
+                     dimmed: !!(graphActiveGroup && n.group !== graphActiveGroup) };
         });
         const nodeById = new Map(nodeData.map(nd => [nd.n.id, nd]));
 
@@ -274,7 +288,7 @@
         /* ── Draw node ── */
         function drawNode(nd, p, hovered) {
             ctx.save();
-            ctx.globalAlpha = p.alpha;
+            ctx.globalAlpha = nd.dimmed ? p.alpha * 0.35 : p.alpha;
             if (nd.z < 0.1) { ctx.shadowColor = nd.color; ctx.shadowBlur = hovered ? 20 : 9; }
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
             ctx.fillStyle = nd.color; ctx.fill();
@@ -288,7 +302,7 @@
                 const lbl = nd.n.title.length > 20 ? nd.n.title.slice(0,20) + '…' : nd.n.title;
                 const fs  = Math.max(9, Math.min(13, p.size * 1.5));
                 ctx.font = `${hovered ? '600' : '400'} ${fs}px var(--font-ui,system-ui)`;
-                ctx.globalAlpha = p.alpha * (0.55 + (0.35 - nd.z) * 1.2);
+                ctx.globalAlpha = (nd.dimmed ? p.alpha * 0.35 : p.alpha) * (0.55 + (0.35 - nd.z) * 1.2);
                 const dk = document.documentElement.getAttribute('data-theme') === 'dark';
                 ctx.fillStyle = hovered ? (dk ? '#fff' : '#111') : (dk ? 'rgba(215,228,255,0.88)' : 'rgba(25,38,80,0.82)');
                 ctx.textBaseline = 'middle';
@@ -304,10 +318,16 @@
         nodeData.forEach(nd => { const g = nd.n.group || 'Genel'; if (!groupColorCache[g]) groupColorCache[g] = nd.color; });
         const legend = document.createElement('div');
         legend.id = 'graph-legend';
+        const allItem = document.createElement('div');
+        allItem.className = 'graph-legend-item graph-legend-all' + (graphActiveGroup ? '' : ' active');
+        allItem.innerHTML = `<span class="graph-legend-dot graph-legend-dot-all"></span>${esc(NotedI18n.t('graph.allnotes'))}`;
+        allItem.addEventListener('click', () => { graphActiveGroup = null; renderLinkGraph(); });
+        legend.appendChild(allItem);
         Object.entries(groupColorCache).sort((a, b) => a[0].localeCompare(b[0], 'tr')).forEach(([grp, clr]) => {
             const item = document.createElement('div');
-            item.className = 'graph-legend-item';
+            item.className = 'graph-legend-item' + (graphActiveGroup === grp ? ' active' : '');
             item.innerHTML = `<span class="graph-legend-dot" style="background:${clr}"></span>${esc(grp)}`;
+            item.addEventListener('click', () => { graphActiveGroup = (graphActiveGroup === grp ? null : grp); renderLinkGraph(); });
             legend.appendChild(item);
         });
         body.appendChild(legend);
@@ -542,6 +562,7 @@
     function openLinkGraph() {
         const overlay = $('graph-overlay');
         if (!overlay) return;
+        graphActiveGroup = null; /* her açılışta temiz durum — Tüm Notlar */
         renderLinkGraph();
         overlay.classList.add('open');
     }

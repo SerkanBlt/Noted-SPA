@@ -42,6 +42,9 @@ function _buildRpItem(r) {
     div.querySelector('.rp-time').value = timeVal;
     div.querySelector('.rp-item-note').value = (r && r.note) || '';
     div.querySelector('.rp-item-del').addEventListener('click', () => div.remove());
+    /* saveReminderFromPopup() zaman degismediyse fired durumunu koruyabilsin diye */
+    div.dataset.origAt = (r && r.at) || '';
+    div.dataset.wasFired = (r && r.fired) ? '1' : '0';
     return div;
 }
 
@@ -105,7 +108,13 @@ function saveReminderFromPopup() {
             if (isNaN(dt.getTime())) return;
             const title = (item.querySelector('.rp-item-title') || {}).value || '';
             const note  = (item.querySelector('.rp-item-note')  || {}).value || '';
-            reminders.push({ at: dt.getTime(), fired: false, title: title.trim(), note: note.trim() });
+            /* Tarih/saat degismediyse (yalnizca baslik/not duzenlendiyse ya da popup sirf
+               yeni bir hatirlatici eklemek icin acildiysa) onceki fired durumu korunur —
+               aksi halde her kaydetmede tum satirlar fired:false'a sifirlanip gecmis/ates-
+               lenmis bir hatirlatici tekrar "atesli" hale geliyordu. */
+            const origAt = item.dataset.origAt ? Number(item.dataset.origAt) : null;
+            const fired = (origAt === dt.getTime()) ? item.dataset.wasFired === '1' : false;
+            reminders.push({ at: dt.getTime(), fired, title: title.trim(), note: note.trim() });
         });
     }
     updateReminderBtn(reminders, '');
@@ -145,12 +154,19 @@ function formatReminderShort(at) {
     return sameDay ? ('Bugün ' + time) : (d.toLocaleDateString(_notedLocale(),{day:'2-digit',month:'short'}) + ' ' + time);
 }
 function showReminderToast(note, reminder) {
+    const r = reminder || {};
+    const rawHeading = r.title || r.reminderTitle || (note && note.title) || 'Başlıksız not';
+    const rawNoteText = (r && (r.note || r.reminderNote)) || (note && note.reminderNote) || '';
+    /* Sekme arka plandaysa/simge durumuna kucultulmusse in-page toast gorunmez —
+       tarayici bildirimi (izin daha once verildiyse) sekme odakta olmasa da ulasir. */
+    if (typeof Notification === 'function' && Notification.permission === 'granted' && document.hidden) {
+        try { new Notification(rawHeading, { body: rawNoteText, icon: 'icons/icon-192.png', tag: 'noted-reminder-' + (note ? note.id : Date.now()) }); } catch (_e) {}
+    }
     if (!DOM.$reminderToastOverlay) return;
     const t = document.createElement('div');
     t.className = 'reminder-toast';
-    const r = reminder || {};
-    const heading = esc(r.title || r.reminderTitle || (note && note.title) || 'Başlıksız not');
-    const noteText = (r && (r.note || r.reminderNote)) || (note && note.reminderNote) || '';
+    const heading = esc(rawHeading);
+    const noteText = rawNoteText;
     const sub = noteText ? '<span style="display:block;margin-top:3px;opacity:.8;font-size:.82em">' + esc(noteText) + '</span>' : '';
     t.innerHTML = '<b><i class="fas fa-bell"></i> ' + heading + '</b>' + sub;
     function _dismiss() {
@@ -912,6 +928,7 @@ function focusTodoLi(li) {
    innerHTML yeniden ayrıştırıldığında eski düğmeler DOM'da kalır ama dinleyicileri KAYBOLUR
    (innerHTML string'den yeniden üretilen elementler orijinal addEventListener'ı taşımaz);
    "zaten var, atla" kontrolü bu durumda tıklamayı sessizce çalışmaz bırakırdı. */
+const CB_AUTO_COLLAPSE_LINES = 8; /* bu satırdan uzun kod blokları varsayılan olarak daraltılmış gelir */
 function inflateCodeBlocks(root) {
     const _r = root || document;
     const nodes = [];
@@ -921,6 +938,12 @@ function inflateCodeBlocks(root) {
         const old = pre.querySelector(':scope > .cb-toolbar');
         if (old) old.remove();
         const code = pre.querySelector('code') || pre;
+        /* Uzun kod blokları varsayılan olarak daraltılmış gelsin — ancak kullanıcı daha
+           önce elle genişlet/daralt yaptıysa (data-cb-touched) o tercihe dokunma. */
+        if (!pre.dataset.cbTouched) {
+            const lineCount = (code.textContent || '').split('\n').length;
+            pre.classList.toggle('cb-collapsed', lineCount > CB_AUTO_COLLAPSE_LINES);
+        }
         const bar = document.createElement('div');
         bar.className = 'cb-toolbar';
         bar.setAttribute('contenteditable', 'false');
@@ -949,6 +972,7 @@ function inflateCodeBlocks(root) {
         toggleBtn.addEventListener('click', e => {
             e.preventDefault(); e.stopPropagation();
             pre.classList.toggle('cb-collapsed');
+            pre.dataset.cbTouched = '1';
             syncToggle();
         });
         syncToggle();

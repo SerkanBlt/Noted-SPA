@@ -3,19 +3,19 @@ EditorState._aiInserting = false; /* AI text eklerken bookmark tetiklenmesin */
 EditorState._bmMousedownInGutter = false; /* mousedown gutter içinde başlamadıysa bookmark koyma */
 DOM.$content.addEventListener('mousemove', function(e) {
     const xInContent = e.clientX - DOM.$content.getBoundingClientRect().left;
-    this.style.cursor = xInContent < 28 ? 'pointer' : '';
+    this.style.cursor = xInContent < 20 ? 'pointer' : '';
 });
 DOM.$content.addEventListener('mouseleave', function() { this.style.cursor = ''; });
 DOM.$content.addEventListener('mousedown', function(e) {
-    EditorState._bmMousedownInGutter = (e.clientX - DOM.$content.getBoundingClientRect().left) < 28;
+    EditorState._bmMousedownInGutter = (e.clientX - DOM.$content.getBoundingClientRect().left) < 20;
 });
 DOM.$content.addEventListener('click', function(e) {
     if (EditorState._aiInserting) return;
     if (!EditorState._bmMousedownInGutter) return;
     const xInContent = e.clientX - DOM.$content.getBoundingClientRect().left;
-    if (xInContent > 28) return;
+    if (xInContent > 20) return;
     const rect = DOM.$content.getBoundingClientRect();
-    const el = document.elementFromPoint(rect.left + 36, e.clientY);
+    const el = document.elementFromPoint(rect.left + 28, e.clientY);
     if (!el) return;
 
     /* Tıklanan noktadan yukarı çıkarak en uygun bookmark hedefini bul */
