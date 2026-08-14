@@ -682,7 +682,9 @@
     "cb.copied": "Code copied",
     "cb.titleplaceholder": "Title…",
     "cb.wrap": "Wrap lines",
-    "cb.nowrap": "Turn off wrap"
+    "cb.nowrap": "Turn off wrap",
+    "bm.prev": "Previous bookmark",
+    "bm.next": "Next bookmark"
   },
   "de": {
     "qs.discover": "Schnellzugriff (Strg+K)",
@@ -1367,7 +1369,9 @@
     "cb.copied": "Code kopiert",
     "cb.titleplaceholder": "Titel…",
     "cb.wrap": "Zeilen umbrechen",
-    "cb.nowrap": "Umbruch ausschalten"
+    "cb.nowrap": "Umbruch ausschalten",
+    "bm.prev": "Vorheriges Lesezeichen",
+    "bm.next": "Nächstes Lesezeichen"
   },
   "it": {
     "qs.discover": "Vai rapido (Ctrl+K)",
@@ -2052,7 +2056,9 @@
     "cb.copied": "Codice copiato",
     "cb.titleplaceholder": "Titolo…",
     "cb.wrap": "Vai a capo",
-    "cb.nowrap": "Disattiva a capo"
+    "cb.nowrap": "Disattiva a capo",
+    "bm.prev": "Segnalibro precedente",
+    "bm.next": "Segnalibro successivo"
   },
   "fr": {
     "qs.discover": "Accès rapide (Ctrl+K)",
@@ -2737,7 +2743,9 @@
     "cb.copied": "Code copié",
     "cb.titleplaceholder": "Titre…",
     "cb.wrap": "Retour à la ligne",
-    "cb.nowrap": "Désactiver le retour à la ligne"
+    "cb.nowrap": "Désactiver le retour à la ligne",
+    "bm.prev": "Signet précédent",
+    "bm.next": "Signet suivant"
   },
   "tr": {
     "qs.discover": "Hızlı Git (Ctrl+K)",
@@ -3414,6 +3422,8 @@
     "cb.titleplaceholder": "Başlık…",
     "cb.wrap": "Satırları Kaydır",
     "cb.nowrap": "Kaydırmayı Kapat",
+    "bm.prev": "Önceki işaret",
+    "bm.next": "Sonraki işaret",
     "help.data.6": "<strong>Uygulama Olarak Kurulum (PWA):</strong> Noted, Android/iOS/Windows üzerinde bağımsız bir uygulama gibi kurulabilir (tarayıcının \"Yükle\" seçeneği veya paylaş menüsündeki \"Ana Ekrana Ekle\"). Kurulu uygulama çevrimdışı da çalışır; sayfa kabuğu Service Worker ile önbelleğe alınır.",
     "help.data.7": "<strong>Hata Bildirimi:</strong> Hamburger menüsündeki \"Hata Bildir\" seçeneğiyle karşılaşılan sorunlar doğrudan tarayıcıdan bir GitHub Issue olarak gönderilebilir. Kendi GitHub erişim anahtarınızı (fine-grained token) girmeniz gerekir; anahtar yalnızca cihazınızda saklanır.",
     "hmnav.lang": "🌐 Dil &amp; Çeviri",

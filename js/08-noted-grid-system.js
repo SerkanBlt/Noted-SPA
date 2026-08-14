@@ -688,14 +688,16 @@ function applyBookmark() {
     const fpEl = document.getElementById('fp-content');
     const root = (fpEl && fpEl.contains(node)) ? fpEl : DOM.$content;
 
+    /* v1.17.6: js/06'daki gutter tıklama fix'iyle aynı desen (bkz. o dosyadaki açıklama) —
+       LI artık todo-item şartı olmadan hemen duruyor, .ai-block'un doğrudan çocuğu da eklendi. */
     let block = null;
     let cur = node;
     while (cur && cur !== root) {
         if (cur.tagName === 'TR') { block = cur; break; }
-        if (cur.tagName === 'LI' && cur.classList.contains('todo-item')) { block = cur; break; }
+        if (cur.tagName === 'LI') { block = cur; break; }
         const par = cur.parentElement;
         if (!par) break;
-        if (par.classList && (par.classList.contains('col-panel-content') || par.classList.contains('layout-col'))) {
+        if (par.classList && (par.classList.contains('col-panel-content') || par.classList.contains('layout-col') || par.classList.contains('ai-block'))) {
             block = cur; break;
         }
         if (par === root) { block = cur; break; }

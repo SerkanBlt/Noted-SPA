@@ -668,7 +668,8 @@ function editNote(id) {
     if ((n.title||'').trim()||(n.content||'').trim()) document.body.classList.add('cf-ready');
     _upgradeGridWraps(DOM.$content);
     if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks(DOM.$content);
-    if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(DOM.$content);
+    /* forceCollapse=true — issue #16: not açıldığında kod blokları her zaman daraltılmış gelsin */
+    if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(DOM.$content, true);
     if (typeof window._resetEditorZoom === 'function') window._resetEditorZoom();
     initShapeOverlays();
 

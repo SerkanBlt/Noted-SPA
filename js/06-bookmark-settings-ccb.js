@@ -1,11 +1,64 @@
 /* ══ BOOKMARK GUTTER ══ */
 EditorState._aiInserting = false; /* AI text eklerken bookmark tetiklenmesin */
 EditorState._bmMousedownInGutter = false; /* mousedown gutter içinde başlamadıysa bookmark koyma */
+
+/* v1.17.6 (issue #19): gutter üzerine gelince (bookmark alanı, x<20) imlecin yanında küçük
+   bir panel — üstte önceki, altta sonraki bookmark'a atlama düğmesi. Notta hiç bookmark yoksa
+   gösterilmez. */
+let _bmNavPopup = null, _bmNavHideT = null;
+function _getBookmarkedBlocks() {
+    return Array.from(DOM.$content.querySelectorAll('[data-bookmark]'));
+}
+function _showBmNavPopup(x, y) {
+    const blocks = _getBookmarkedBlocks();
+    if (!blocks.length) { _hideBmNavPopup(); return; }
+    if (!_bmNavPopup) {
+        _bmNavPopup = document.createElement('div');
+        _bmNavPopup.className = 'bm-nav-popup';
+        _bmNavPopup.innerHTML =
+            '<button type="button" class="bm-nav-btn bm-nav-prev" title="' + _t('bm.prev', 'Önceki işaret') + '"><i class="fas fa-chevron-up"></i></button>' +
+            '<button type="button" class="bm-nav-btn bm-nav-next" title="' + _t('bm.next', 'Sonraki işaret') + '"><i class="fas fa-chevron-down"></i></button>';
+        document.body.appendChild(_bmNavPopup);
+        _bmNavPopup.addEventListener('mouseenter', () => clearTimeout(_bmNavHideT));
+        _bmNavPopup.addEventListener('mouseleave', _scheduleHideBmNavPopup);
+        _bmNavPopup.querySelector('.bm-nav-prev').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); _jumpToBookmark(-1); });
+        _bmNavPopup.querySelector('.bm-nav-next').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); _jumpToBookmark(1); });
+    }
+    clearTimeout(_bmNavHideT);
+    _bmNavPopup.style.left = (x + 14) + 'px';
+    _bmNavPopup.style.top  = (y - 20) + 'px';
+    _bmNavPopup.classList.add('show');
+}
+function _scheduleHideBmNavPopup() {
+    clearTimeout(_bmNavHideT);
+    _bmNavHideT = setTimeout(_hideBmNavPopup, 250);
+}
+function _hideBmNavPopup() {
+    if (_bmNavPopup) _bmNavPopup.classList.remove('show');
+}
+function _jumpToBookmark(dir) {
+    const blocks = _getBookmarkedBlocks();
+    if (!blocks.length) return;
+    const vh = window.innerHeight;
+    /* Görünür alanın üst ~%60'ında olan ilk bookmark "şu an burdayız" kabul edilir */
+    let idx = blocks.findIndex(b => {
+        const r = b.getBoundingClientRect();
+        return r.top >= 0 && r.top < vh * 0.6;
+    });
+    if (idx === -1) idx = dir > 0 ? -1 : blocks.length;
+    idx += dir;
+    if (idx < 0) idx = blocks.length - 1;
+    if (idx >= blocks.length) idx = 0;
+    blocks[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 DOM.$content.addEventListener('mousemove', function(e) {
     const xInContent = e.clientX - DOM.$content.getBoundingClientRect().left;
     this.style.cursor = xInContent < 20 ? 'pointer' : '';
+    if (xInContent >= 0 && xInContent < 20) _showBmNavPopup(e.clientX, e.clientY);
+    else _scheduleHideBmNavPopup();
 });
-DOM.$content.addEventListener('mouseleave', function() { this.style.cursor = ''; });
+DOM.$content.addEventListener('mouseleave', function() { this.style.cursor = ''; _scheduleHideBmNavPopup(); });
 DOM.$content.addEventListener('mousedown', function(e) {
     EditorState._bmMousedownInGutter = (e.clientX - DOM.$content.getBoundingClientRect().left) < 20;
 });
@@ -18,20 +71,25 @@ DOM.$content.addEventListener('click', function(e) {
     const el = document.elementFromPoint(rect.left + 28, e.clientY);
     if (!el) return;
 
-    /* Tıklanan noktadan yukarı çıkarak en uygun bookmark hedefini bul */
+    /* Tıklanan noktadan yukarı çıkarak en uygun bookmark hedefini bul.
+       v1.17.6: LI artık todo-item şartı olmadan (madde imi/numaralı liste öğeleri de dahil)
+       hemen durduruyor, .ai-block'un DOĞRUDAN çocuğu da (col-panel-content/layout-col ile
+       aynı desen) — aksi halde tırmanma en yakın "gerçek" satırı değil tüm <ul>/.ai-block
+       sarmalayıcısını hedef alıyordu: bookmark bloğun ortasına düşüyor, AI etiketi ::before'ı
+       koca bloğa yayılmış gibi görünüyordu (issue #17). */
     let block = null;
     let node = el;
     while (node && node !== DOM.$content) {
         /* Tablo satırı */
         if (node.tagName === 'TR') { block = node; break; }
-        /* Todo liste öğesi */
-        if (node.tagName === 'LI' && node.classList.contains('todo-item')) { block = node; break; }
+        /* Liste öğesi (todo dahil her li) — üst <ul>/<ol>'a tırmanmadan hemen dur */
+        if (node.tagName === 'LI') { block = node; break; }
         const par = node.parentElement;
         if (!par) break;
         /* DOM.$content'in doğrudan çocuğu */
         if (par === DOM.$content) { block = node; break; }
-        /* Panel veya kolon içeriğinin doğrudan çocuğu */
-        if (par.classList && (par.classList.contains('col-panel-content') || par.classList.contains('layout-col'))) {
+        /* Panel, kolon veya AI bloğu içeriğinin doğrudan çocuğu */
+        if (par.classList && (par.classList.contains('col-panel-content') || par.classList.contains('layout-col') || par.classList.contains('ai-block'))) {
             block = node; break;
         }
         node = par;

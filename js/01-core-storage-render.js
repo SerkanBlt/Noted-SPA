@@ -1282,6 +1282,30 @@ DOM.$wlPreviewInner = document.getElementById('wl-preview-inner');
 EditorState._extPanelTimer = null; EditorState._extPanelZ = 99999;
 EditorState._extPanelMap = new Map(); /* link → panel */
 EditorState._extPanelPending = new Map(); /* link → {cancelled} — erişilebilirlik kontrolü sürerken */
+EditorState._extLinkSpinnerMap = new Map(); /* link → spinner elementi (issue #18) */
+
+/* v1.17.6 (issue #18): panel açılana kadar (3sn bekleme + erişilebilirlik fetch'i, toplamda
+   birkaç saniye sürebiliyor) kullanıcı bir şey olup olmadığını anlamıyordu — hover başlar
+   başlamaz linkin yanında dönen bir ikon gösteriyoruz, panel açılınca/kontrol bitince kaldırılır. */
+function _showExtLinkSpinner(link) {
+    if (!link || EditorState._extLinkSpinnerMap.has(link)) return;
+    const r = link.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'ext-link-spinner';
+    el.innerHTML = '<i class="fas fa-spinner"></i>';
+    el.style.top  = (r.top + r.height / 2 - 8) + 'px';
+    el.style.left = (r.right + 4) + 'px';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    EditorState._extLinkSpinnerMap.set(link, el);
+}
+function _hideExtLinkSpinner(link) {
+    const el = EditorState._extLinkSpinnerMap.get(link);
+    if (!el) return;
+    EditorState._extLinkSpinnerMap.delete(link);
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 200);
+}
 
 /* AbortSignal.timeout() her yerde yok (eski Chromium/WebView) — elle AbortController ile taklit. */
 function _fetchWithTimeout(url, opts, ms) {
@@ -1310,11 +1334,11 @@ function _notifyExtPanelUnavailable() {
 }
 
 function createExtLinkPanel(link) {
-    if (!link || !link.isConnected) return;
-    if (EditorState._extPanelMap.has(link)) { EditorState._extPanelMap.get(link).style.zIndex = ++EditorState._extPanelZ; return; }
+    if (!link || !link.isConnected) { _hideExtLinkSpinner(link); return; }
+    if (EditorState._extPanelMap.has(link)) { _hideExtLinkSpinner(link); EditorState._extPanelMap.get(link).style.zIndex = ++EditorState._extPanelZ; return; }
     if (EditorState._extPanelPending.has(link)) return; /* zaten kontrol ediliyor */
     const url = link.getAttribute('href') || '';
-    if (!url || url.startsWith('#') || url.startsWith('javascript')) return;
+    if (!url || url.startsWith('#') || url.startsWith('javascript')) { _hideExtLinkSpinner(link); return; }
 
     const isYT = !!extractYouTubeId(url);
     const token = { cancelled: false };
@@ -1323,6 +1347,7 @@ function createExtLinkPanel(link) {
     check.then(ok => {
         if (EditorState._extPanelPending.get(link) !== token) return; /* daha yeni bir kontrol devrede */
         EditorState._extPanelPending.delete(link);
+        _hideExtLinkSpinner(link);
         if (token.cancelled || !link.isConnected) return; /* kullanıcı mouseout yaptı ya da not kapandı */
         if (ok) _buildExtLinkPanel(link, url, isYT);
         else _notifyExtPanelUnavailable();
@@ -1402,6 +1427,7 @@ function _buildExtLinkPanel(link, url, isYT) {
 function scheduleExtLinkPreview(link) {
     clearTimeout(EditorState._extPanelTimer);
     if (EditorState._extPanelMap.has(link)) return;
+    _showExtLinkSpinner(link); /* issue #18: hover başlar başlamaz görsel geri bildirim */
     EditorState._extPanelTimer = setTimeout(() => createExtLinkPanel(link), 3000);
 }
 
@@ -1540,6 +1566,7 @@ function buildExtLinkPreview(url, text) {
    için aniden panel açmasın diye. */
 function _cancelExtPanelCheck(a) {
     clearTimeout(EditorState._extPanelTimer);
+    _hideExtLinkSpinner(a);
     const pending = EditorState._extPanelPending.get(a);
     if (pending) pending.cancelled = true;
 }

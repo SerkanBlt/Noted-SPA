@@ -993,7 +993,7 @@
         #content pre {
             background:var(--pre-bg); color:var(--pre-text);
             border:1px solid var(--pre-border);
-            padding:30px 16px 14px; border-radius:12px; margin:8px 0;
+            padding:8px 16px 14px; border-radius:12px; margin:8px 0;
             overflow-x:visible; position:relative;
             font-family:var(--font-mono); font-size:.81em; line-height:1.65;
         }
@@ -1006,8 +1006,20 @@
            statik 'kod' etiketi vardı, artık gerçek (tıklanabilir) DOM düğmeleri. contenteditable
            ="false" ile bloğun geri kalanından ayrılır — metin gibi seçilip düzenlenemez.
            #content/.fp-editor-content pre HER İKİSİ de position:relative taşır (mutlak
-           konumlandırma için gerekli) — .cb-toolbar iki yüzeyde de aynı sınıfla çalışır. */
-        .cb-toolbar { position:absolute; top:6px; right:8px; z-index:2; display:flex; align-items:center; gap:2px; }
+           konumlandırma için gerekli) — .cb-toolbar iki yüzeyde de aynı sınıfla çalışır.
+           v1.17.6 (issue #15): eskiden position:absolute overlay idi — daraltılmış (overflow-y:
+           auto) bloklarda aşağı scroll yapınca header de içerikle birlikte kayıp gidiyordu, başlık
+           de tüm bar sağa yaslı olduğu için "sağa dayalı" görünüyordu. Artık pre'nin normal akışta
+           İLK çocuğu + position:sticky top:0 — dikey scroll'da üstte sabit kalır; negatif margin
+           pre'nin kendi padding'ini "yiyerek" üst köşelere tam oturur. justify-content:space-between
+           başlığı sola, düğme grubunu sağa yaslar. */
+        .cb-toolbar {
+            position:sticky; top:0; z-index:2;
+            display:flex; align-items:center; justify-content:space-between; gap:6px;
+            margin:-8px -16px 6px; padding:6px 10px 6px 12px;
+            background:var(--pre-bg); border-radius:12px 12px 0 0;
+        }
+        .cb-toolbar-btns { display:flex; align-items:center; gap:2px; flex-shrink:0; }
         .cb-btn {
             background:none; border:none; color:var(--pre-label); cursor:pointer;
             padding:4px 6px; border-radius:5px; font-size:.72rem; line-height:1;
@@ -1019,7 +1031,8 @@
         .cb-title {
             background:none; border:none; outline:none; color:var(--pre-text);
             font-family:var(--font-ui); font-size:.72rem; font-weight:600;
-            padding:4px 4px; margin-right:2px; width:120px; min-width:0;
+            text-align:left;
+            padding:4px 4px; margin-right:2px; width:120px; min-width:0; flex-shrink:1;
             text-overflow:ellipsis;
         }
         .cb-title::placeholder { color:var(--pre-label); font-weight:400; opacity:.7; }
@@ -1575,7 +1588,16 @@ input[type="file"] { display:none; }
 
             /* Editör */
             .editor-card { border-radius:10px; }
-            .editor-top { padding:9px 12px 8px; }
+            /* v1.17.6 (issue #21): masaüstünde .editor-top'un sol padding'i (30px, satır 712'de)
+               #editor-menu-wrap'in (position:absolute, left:4px) yerini ayırıyordu — bu mobil
+               kural onu 12px'e düşürünce buton başlık metninin ilk harfinin üstüne biniyordu.
+               Kullanıcı isteği: menü sağa, sağ kenara yakın taşınsın — #title solda tam genişlik
+               kazanır, sağda buton için yer ayrılır. */
+            .editor-top { padding:9px 30px 8px 12px; }
+            #editor-menu-wrap { left:auto; right:4px; }
+            /* Dropdown eskiden butonun soluna hizalıydı (left:0) — buton artık sağda, dropdown
+               olduğu gibi kalırsa dar ekranda sağdan taşar; sola açılsın diye ters çevrildi. */
+            #editor-menu-dropdown { left:auto; right:0; }
             /* #title font-size base ile aynı kalır */
             #content { padding:10px 12px; min-height:90px; }
 
@@ -2859,6 +2881,33 @@ input[type="file"] { display:none; }
             color:var(--accent); font-size:.68rem;
             pointer-events:none; user-select:none; opacity:.85;
         }
+        /* v1.17.6 (issue #17): madde imi/numaralı liste satırı bookmark — eskiden gutter
+           tıklaması bunlarda hep üst <ul>/<ol>'u hedefliyordu, o yüzden hiç stili yoktu.
+           .todo-item zaten kendi (daha spesifik) kuralına sahip, burada hariç tutuluyor. */
+        #content li[data-bookmark]:not(.todo-item),
+        .fp-editor-content li[data-bookmark]:not(.todo-item) {
+            position:relative; background:color-mix(in srgb, var(--accent) 7%, transparent); border-radius:3px;
+        }
+        #content li[data-bookmark]:not(.todo-item)::before,
+        .fp-editor-content li[data-bookmark]:not(.todo-item)::before {
+            content:'\f02e';
+            font-family:'Font Awesome 6 Free'; font-weight:900;
+            position:absolute; left:-18px; top:50%; transform:translateY(-50%);
+            color:var(--accent); font-size:.68rem;
+            pointer-events:none; user-select:none; opacity:.85;
+        }
+        /* v1.17.6 (issue #17): AI bloğu içindeki tek bir satır (p/h3/ul/blockquote…) bookmark —
+           eskiden bunlar da hep tüm .ai-block'u hedefliyordu (AI etiketi ::before ile birlikte
+           bookmark ikonu koca bloğun ortasına düşüyordu). .col-panel-content/.layout-col ile
+           aynı "doğrudan çocuk" deseni. */
+        .ai-block > [data-bookmark] { position:relative; }
+        .ai-block > [data-bookmark]::before {
+            content:'\f02e';
+            font-family:'Font Awesome 6 Free'; font-weight:900;
+            position:absolute; left:-18px; top:50%; transform:translateY(-50%);
+            color:var(--accent); font-size:.68rem;
+            pointer-events:none; user-select:none; opacity:.85;
+        }
         @media (max-width:640px) {
             #content { padding-left:16px; }
             #content > [data-bookmark]::before,
@@ -3031,10 +3080,14 @@ input[type="file"] { display:none; }
         .fp-editor-content ul,.fp-editor-content ol { padding-left:20px; margin:5px 0; }
         .fp-editor-content li { margin:2px 0; }
         .fp-editor-content blockquote { border-left:3px solid var(--accent); padding:5px 12px; margin:6px 0; color:var(--text-muted); font-style:italic; }
-        .fp-editor-content pre { background:var(--pre-bg,var(--surface-2)); color:var(--pre-text,var(--text)); border:1px solid var(--pre-border,var(--border)); padding:28px 14px 12px; border-radius:10px; margin:6px 0; overflow-x:visible; position:relative; font-family:var(--font-mono); font-size:.8em; line-height:1.6; }
+        .fp-editor-content pre { background:var(--pre-bg,var(--surface-2)); color:var(--pre-text,var(--text)); border:1px solid var(--pre-border,var(--border)); padding:6px 14px 12px; border-radius:10px; margin:6px 0; overflow-x:visible; position:relative; font-family:var(--font-mono); font-size:.8em; line-height:1.6; }
         .fp-editor-content code { background:var(--code-bg,var(--surface-2)); color:var(--code-text,var(--text)); border:1px solid var(--code-border,var(--border)); padding:2px 5px; border-radius:4px; font-family:var(--font-mono); font-size:.76em; }
         /* v1.17.5: #content pre code ile aynı desen — issue #7, toolbar sabit kalsın */
         .fp-editor-content pre code { display:block; overflow-x:auto; }
+        /* v1.17.6 (issue #15): .cb-toolbar'ın negatif margin'i #content pre'nin (8px/16px)
+           padding'ine göre ayarlı — float panelin kendi pre padding'i (6px/14px) farklı,
+           burada üst köşelere tam otursun diye scope'lu üzerine yazılıyor. */
+        .fp-editor-content pre > .cb-toolbar { margin:-6px -14px 6px; padding:6px 8px 6px 10px; }
         .fp-editor-content pre.cb-wrap code { white-space:pre-wrap; word-break:break-word; overflow-x:visible; }
         /* pre.cb-collapsed kurali (#content'in ustunde) zaten scope'suz — burada tekrar gerekmiyor */
         .fp-editor-content a { color:var(--accent); }
@@ -3847,6 +3900,37 @@ input[type="file"] { display:none; }
             transition:background .12s, color .12s;
         }
         .wl-preview-close-btn:hover { background:var(--surface-2); color:var(--text); }
+        /* v1.17.6 (issue #18): dış bağlantı üzerine gelince panel açılana kadar (3sn bekleme +
+           erişilebilirlik kontrolü) dönen bir ikon — ai-tb-spin keyframe'i (.ai-gutter-ind ile
+           paylaşılıyor) yeniden kullanılıyor. */
+        .ext-link-spinner {
+            position:fixed; z-index:9250; width:16px; height:16px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:.66rem; color:var(--accent); pointer-events:none;
+            opacity:0; transform:scale(.6);
+            transition:opacity .18s, transform .18s;
+        }
+        .ext-link-spinner.show { opacity:1; transform:scale(1); }
+        .ext-link-spinner i { animation:ai-tb-spin .8s linear infinite; }
+        /* v1.17.6 (issue #19): bookmark gutter üzerine gelince imlecin yanında önceki/sonraki
+           bookmark'a atlama paneli */
+        .bm-nav-popup {
+            position:fixed; z-index:9300;
+            display:flex; flex-direction:column; gap:2px;
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:8px; padding:3px;
+            box-shadow:0 4px 14px rgba(0,0,0,.22);
+            opacity:0; pointer-events:none; transform:scale(.9);
+            transition:opacity .15s, transform .15s;
+        }
+        .bm-nav-popup.show { opacity:1; pointer-events:auto; transform:scale(1); }
+        .bm-nav-btn {
+            background:none; border:none; color:var(--text-muted); cursor:pointer;
+            width:22px; height:22px; display:flex; align-items:center; justify-content:center;
+            border-radius:5px; font-size:.7rem;
+            transition:background .12s, color .12s;
+        }
+        .bm-nav-btn:hover { background:var(--surface-2); color:var(--accent); }
         .ext-resize-handle { position:absolute; bottom:0; right:0; width:18px; height:18px; cursor:se-resize; background:transparent; z-index:2; touch-action:none; }
         @media (max-width:600px) { .wl-preview { display:none !important; } }
 
@@ -4819,6 +4903,12 @@ input[type="file"] { display:none; }
             .noted-grid.grid-panel thead tr th,
             .noted-grid.grid-panel tbody tr td {
                 display: block; width: 100% !important;
+                /* v1.17.6 (issue #20): masaüstünde td { height:52px } table-cell bağlamında
+                   minimum gibi davranıyor (satır arttıkça hücre büyüyor — bkz. .grid-table'daki
+                   benzer yorum), ama burada display:block'a geçince aynı height KESİN bir kutu
+                   oluyor: çok satırlı panel içeriği taşıyor, son satır kartın alt kenarına
+                   yapışıyordu. auto ile içerik/satır sayısına göre büyüsün. */
+                height: auto;
             }
             .noted-grid.grid-panel thead tr th .ng-v-wrap,
             .noted-grid.grid-panel tbody tr td .ng-v-wrap {

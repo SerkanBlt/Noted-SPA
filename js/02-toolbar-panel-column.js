@@ -929,7 +929,12 @@ function focusTodoLi(li) {
    (innerHTML string'den yeniden üretilen elementler orijinal addEventListener'ı taşımaz);
    "zaten var, atla" kontrolü bu durumda tıklamayı sessizce çalışmaz bırakırdı. */
 const CB_AUTO_COLLAPSE_LINES = 8; /* bu satırdan uzun kod blokları varsayılan olarak daraltılmış gelir */
-function inflateCodeBlocks(root) {
+/* v1.17.6 (issue #16): forceCollapse=true yalnızca "not açılışı" çağrı noktalarından (editNote,
+   float panel loadNote) geçiriliyor — not her açıldığında TÜM kod blokları uzunluğuna/daha önce
+   elle dokunulmuş olmasına bakılmaksızın daraltılmış gelsin isteniyor. undo/redo, şablon
+   uygulama, yeni blok ekleme gibi "not zaten açık" çağrılarda bu param verilmez — aksi halde
+   kullanıcı aktif düzenlerken kendi az önce genişlettiği blok her re-render'da geri kapanırdı. */
+function inflateCodeBlocks(root, forceCollapse) {
     const _r = root || document;
     const nodes = [];
     if (_r.tagName === 'PRE') nodes.push(_r);
@@ -938,9 +943,11 @@ function inflateCodeBlocks(root) {
         const old = pre.querySelector(':scope > .cb-toolbar');
         if (old) old.remove();
         const code = pre.querySelector('code') || pre;
-        /* Uzun kod blokları varsayılan olarak daraltılmış gelsin — ancak kullanıcı daha
-           önce elle genişlet/daralt yaptıysa (data-cb-touched) o tercihe dokunma. */
-        if (!pre.dataset.cbTouched) {
+        if (forceCollapse) {
+            pre.classList.add('cb-collapsed');
+        } else if (!pre.dataset.cbTouched) {
+            /* Uzun kod blokları varsayılan olarak daraltılmış gelsin — ancak kullanıcı daha
+               önce elle genişlet/daralt yaptıysa (data-cb-touched) o tercihe dokunma. */
             const lineCount = (code.textContent || '').split('\n').length;
             pre.classList.toggle('cb-collapsed', lineCount > CB_AUTO_COLLAPSE_LINES);
         }
@@ -1003,11 +1010,20 @@ function inflateCodeBlocks(root) {
             syncToggle();
         });
         syncToggle();
+        /* v1.17.6 (issue #15): başlık solda, düğmeler sağda ayrı bir gruba alındı — .cb-toolbar
+           artık justify-content:space-between ile bu ikisini iki uca yaslıyor (eskiden tüm
+           bar tek blok halinde sağa yaslanıyordu, başlık de "sağa dayalı" görünüyordu). bar
+           artık pre'nin İLK çocuğu (code'dan önce) — position:sticky ile normal akışta üstte
+           kalabilmesi için: absolute overlay iken daraltılmış (overflow-y:auto) bloklarda
+           aşağı scroll'da header de kayıp gidiyordu (issue #15), sticky bunu düzeltir. */
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'cb-toolbar-btns';
+        btnGroup.appendChild(copyBtn);
+        btnGroup.appendChild(wrapBtn);
+        btnGroup.appendChild(toggleBtn);
         bar.appendChild(titleInput);
-        bar.appendChild(copyBtn);
-        bar.appendChild(wrapBtn);
-        bar.appendChild(toggleBtn);
-        pre.appendChild(bar);
+        bar.appendChild(btnGroup);
+        pre.insertBefore(bar, pre.firstChild);
     });
 }
 window._inflateCodeBlocks = inflateCodeBlocks;

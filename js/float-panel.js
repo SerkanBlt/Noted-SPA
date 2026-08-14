@@ -84,7 +84,8 @@
         if (typeof _restoreGrids === 'function') _restoreGrids(fpContent);
         if (typeof initShapeOverlays === 'function') initShapeOverlays(fpContent);
         if (typeof window._inflateCcbBlocks === 'function') window._inflateCcbBlocks(fpContent);
-        if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(fpContent);
+        /* forceCollapse=true — issue #16: not açıldığında kod blokları her zaman daraltılmış gelsin */
+        if (typeof window._inflateCodeBlocks === 'function') window._inflateCodeBlocks(fpContent, true);
         if (_fpInst) { _fpInst._stack = [{ html: n.content || '', cursor: null }]; _fpInst._idx = 0; _fpInst.noteId = String(id); }
         if (_fpResetZoom) _fpResetZoom();
         /* Grup badge güncelle — metin + renk */
